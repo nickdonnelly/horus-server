@@ -39,6 +39,7 @@ fn main() {
         .attach(Template::fairing())
         .mount("/name/", routes![index])
         .mount("/user", routes![self::routes::user::show])
+        .mount("/user", routes![self::routes::user::update])
         .manage(self::init_pool())
         .launch();
 }
