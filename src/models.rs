@@ -1,4 +1,4 @@
-#[derive(Queryable)]
+#[derive(Queryable, Serialize)]
 pub struct User {
     pub id: i32,
     pub first_name: String,
