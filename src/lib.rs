@@ -27,6 +27,7 @@ use std::ops::Deref;
 pub mod schema;
 pub mod models;
 pub mod routes;
+pub mod fields;
 
 static DATABASE_URL: &'static str = env!("DATABASE_URL");
 
@@ -60,14 +61,4 @@ pub fn init_pool() -> Pool {
     let manager = ConnectionManager::<PgConnection>::new(DATABASE_URL);
 
     r2d2::Pool::new(config, manager).expect("db pool")
-}
-
-pub fn establish_connect() -> PgConnection {
-    dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL envvar must be set");
-
-    PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url))
 }

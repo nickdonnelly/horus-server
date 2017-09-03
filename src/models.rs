@@ -13,9 +13,9 @@ pub struct User {
 #[derive(AsChangeset, Deserialize)]
 #[table_name="horus_users"]
 pub struct UserForm {
-    first_name: Option<String>,
-    last_name: Option<String>,
-    email: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub email: Option<String>,
 }
 
 #[derive(Queryable)]
