@@ -11,7 +11,7 @@ CREATE TABLE horus_license_keys (
 
 CREATE TABLE horus_licenses (
     key CHAR(32) NOT NULL REFERENCES horus_license_keys(key),
-    owner SERIAL REFERENCES horus_users(id),
+    owner integer REFERENCES horus_users(id),
     type SMALLINT DEFAULT 1,
     PRIMARY KEY (key)
 );

@@ -12,7 +12,7 @@ CREATE TABLE horus_users (
 
 CREATE TABLE horus_licenses(
     license_key CHAR(32) UNIQUE NOT NULL,
-    issued_to SERIAL REFERENCES horus_users(id),
+    issued_to integer REFERENCES horus_users(id),
     issued_on date NOT NULL,
     valid_until date NOT NULL,
     rate_limit int,
