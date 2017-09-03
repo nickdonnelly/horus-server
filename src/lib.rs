@@ -28,11 +28,12 @@ pub mod schema;
 pub mod models;
 pub mod routes;
 pub mod fields;
+pub mod conv;
 
 static DATABASE_URL: &'static str = env!("DATABASE_URL");
 
 // Database pooling definitions
-type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub struct DbConn(pub r2d2::PooledConnection<ConnectionManager<PgConnection>>);
 
 impl<'a, 'r> FromRequest<'a, 'r> for DbConn {

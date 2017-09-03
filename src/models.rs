@@ -1,4 +1,7 @@
+extern crate chrono;
+
 use diesel::associations::Identifiable;
+use self::chrono::NaiveDate;
 use super::schema::*;
 
 #[derive(Queryable, Identifiable, Serialize, Deserialize)]
@@ -21,8 +24,15 @@ pub struct UserForm {
 #[derive(Queryable)]
 pub struct LicenseKey {
     pub license_key: String,
-    pub issued_to: u32,
-    pub issued_on: String,
-    pub valid_until: String,
-    pub rate_limit: u32,
+    pub privilege_level: Option<i16>,
+    pub issued_on: NaiveDate, // DO NOT MEASURE TIME
+    pub valid_until: NaiveDate, // WITH THESE VALUES! NOT MONOTONIC!
+    //pub rate_limit: u32,
+}
+
+#[derive(Queryable)]
+pub struct License {
+    pub key: String,
+    pub owner: u32,
+    pub license_type: i16,
 }

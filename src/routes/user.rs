@@ -6,8 +6,8 @@ extern crate rocket;
 extern crate rocket_contrib;
 
 use super::super::DbConn;
-use super::super::models::{User,UserForm};
-use super::super::schema;
+use super::super::models::{User,UserForm,LicenseKey};
+use super::super::schema::{self, horus_users::dsl::*};
 use diesel::prelude::*;
 use rocket_contrib::{Json, Value};
 
@@ -15,7 +15,6 @@ use rocket_contrib::{Json, Value};
 // by just returning "None".
 #[get("/<uid>")]
 pub fn show(uid: i32, conn: DbConn) -> Option<Json<User>> {
-    use schema::horus_users::dsl::*;
 
     // let user = horus_users.filter(id.eq(uid))
         // .first(&*conn);
@@ -30,8 +29,7 @@ pub fn show(uid: i32, conn: DbConn) -> Option<Json<User>> {
 }
 
 #[put("/<uid>", format = "application/json", data = "<updated_values>")]
-pub fn update(uid: i32, updated_values: Json<UserForm>, conn: DbConn) -> Option<Json<Value>> {
-    use schema::horus_users::dsl::*;
+pub fn update(uid: i32, apikey: ApiKey, updated_values: Json<UserForm>, conn: DbConn) -> Option<Json<Value>> {
     let user = updated_values.into_inner();
 
     let result = diesel::update(horus_users.filter(id.eq(uid)))
@@ -44,3 +42,9 @@ pub fn update(uid: i32, updated_values: Json<UserForm>, conn: DbConn) -> Option<
 
     Some(Json(json!({ "status":"ok" })))
 }
+
+//#[delete("/<uid>"]
+//pub fn delete(uid: i32, apikey: LicenseKey, conn: DbConn) -> Option<Json<Value>> {
+    // TODO: Check if license matches user id before deleting.
+
+//}

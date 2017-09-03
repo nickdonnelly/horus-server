@@ -1,2 +1,8 @@
 /target/
 **/*.rs.bk
+
+swp
+.swp
+*.swp
+.*.swp
+*.*.swp
