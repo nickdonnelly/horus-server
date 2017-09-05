@@ -6,6 +6,7 @@ use self::regex::Regex;
 use super::models::*;
 // This file contains the implementations of fields like "email" and other fields that require thorough validation. Only definitions should go here, actual usage should be within new/update methods for any given controller.
 
+// Basically: it's magic.
 const EMAIL_REGEX: &str = r"^[^@]+@[^@]+\.[^@]+$";
 
 pub trait Validatable {
@@ -57,7 +58,7 @@ pub fn is_valid_email(email: &str) -> bool {
 
 // TODO
 pub fn is_valid_name_str(name: &str) -> bool {
-    true
+    !(name.contains(" ") || name.contains(";") || name.contains("_"))
 }
 
 

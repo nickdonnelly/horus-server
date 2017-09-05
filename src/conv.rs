@@ -1,13 +1,19 @@
+/// This file holds conversions for various types. Primarily,
+/// it is here for request guards.
+
 use rocket::{State, Outcome};
 use rocket::http::Status;
 use rocket::request::{self, Request, FromRequest};
 use super::models::LicenseKey;
 use super::Pool;
 use super::schema;
+use super::dbtools;
 use super::{DbConn, fields};
 use diesel::prelude::*;
+use std::ops::Deref;
 
-// This only works on valid keys. Will error on invalid ones.
+
+// LicenseKey
 impl<'a, 'r> FromRequest<'a, 'r> for LicenseKey {
     type Error = String;
 
@@ -25,13 +31,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for LicenseKey {
         }
 
         // Get database handle
-        let pool = request.guard::<State<Pool>>().unwrap();
-        let conn = match pool.get() {
-            Ok(conn) => Ok(DbConn(conn)),
-            Err(_) => Err(""),
-        };
-        let conn = conn.unwrap();
-
+        let conn = dbtools::get_db_conn(&request).unwrap();
         let key_ = keys[0];
 
         // Basic format checks
@@ -49,5 +49,26 @@ impl<'a, 'r> FromRequest<'a, 'r> for LicenseKey {
         }
 
         return Outcome::Success(result.unwrap()); 
+    }
+}
+
+// DbConn
+impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
+    type Error = ();
+
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<DbConn, ()> {
+        let pool = request.guard::<State<Pool>>().unwrap();
+        match pool.get() {
+            Ok(conn) => Outcome::Success(DbConn(conn)),
+            Err(_) => Outcome::Failure((Status::ServiceUnavailable, ())),
+        }
+    }
+}
+
+impl Deref for DbConn {
+    type Target = PgConnection;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

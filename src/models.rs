@@ -1,5 +1,8 @@
+#![feature(plugin)]
+#![plugin(rocket_codegen)]
 extern crate chrono;
 
+use diesel::prelude::*;
 use diesel::associations::Identifiable;
 use self::chrono::NaiveDate;
 use super::schema::*;
@@ -21,18 +24,21 @@ pub struct UserForm {
     pub email: Option<String>,
 }
 
-#[derive(Queryable)]
+#[derive(Insertable, Queryable, Serialize)]
+#[table_name="horus_license_keys"]
 pub struct LicenseKey {
-    pub license_key: String,
+    pub key: String,
     pub privilege_level: Option<i16>,
     pub issued_on: NaiveDate, // DO NOT MEASURE TIME
     pub valid_until: NaiveDate, // WITH THESE VALUES! NOT MONOTONIC!
     //pub rate_limit: u32,
 }
 
-#[derive(Queryable)]
+#[derive(Insertable, Queryable, Serialize)]
+#[table_name="horus_licenses"]
 pub struct License {
     pub key: String,
-    pub owner: u32,
-    pub license_type: i16,
+    pub owner: i32,
+    pub type_: Option<i16>, // This way we still match "type", which is 
+                            // otherwise a rust-reserved keyword.
 }
