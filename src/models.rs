@@ -3,7 +3,6 @@
 extern crate chrono;
 
 use diesel::prelude::*;
-use diesel::associations::Identifiable;
 use self::chrono::NaiveDate;
 use super::schema::*;
 

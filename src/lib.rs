@@ -13,7 +13,6 @@ extern crate r2d2;
 
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
-use std::env;
 
 pub mod schema;
 pub mod models;

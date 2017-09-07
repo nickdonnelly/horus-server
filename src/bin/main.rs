@@ -40,6 +40,8 @@ fn main() {
         .mount("/name/", routes![index])
         .mount("/user", routes![self::routes::user::show])
         .mount("/user", routes![self::routes::user::update])
+        .mount("/license", routes![self::routes::key::validity_check])
+        .mount("/key", routes![self::routes::key::issue])
         .manage(self::dbtools::init_pool())
         .launch();
 }
