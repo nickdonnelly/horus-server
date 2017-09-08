@@ -65,6 +65,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
     }
 }
 
+
 impl Deref for DbConn {
     type Target = PgConnection;
 

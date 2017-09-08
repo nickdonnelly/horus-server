@@ -12,6 +12,7 @@ extern crate rocket_contrib;
 use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::schema;
+use super::super::dbtools;
 use super::super::schema::horus_license_keys::dsl::*;
 use super::super::schema::horus_licenses::dsl::*;
 use super::super::models::{License, LicenseKey};
@@ -27,7 +28,17 @@ pub fn issue(uid: i32)
 {
     Json(issue_license_with_key(1, 3, 3).unwrap())
 }
-    
+
+// TODO: Check if the key is expired before returning
+pub fn key_valid(keystr: &str) -> bool
+{
+    let conn = dbtools::get_db_conn_requestless().unwrap();
+
+    let _key = horus_license_keys.filter(
+        schema::horus_license_keys::dsl::key.eq(keystr))
+        .first(&conn);
+    return _key.is_err();
+}
 
 /// Endpoint: Check API Key
 #[get("/<apikey>/validity-check")]
@@ -47,8 +58,7 @@ pub fn validity_check(
     Ok(Json(_key.unwrap()))
 }
 
-/// Requestless license issuance.
-/// TODO: Transfer this to a single relation, it's overly verbose at the moment
+/// Requestless license issuance. To be used with caution...
 pub fn issue_license_with_key(
     owner_id: i32, 
     l_type: i16, 
