@@ -41,3 +41,49 @@ pub struct License {
     pub type_: Option<i16>, // This way we still match "type", which is 
                             // otherwise a rust-reserved keyword.
 }
+
+#[derive(Queryable)]
+#[table_name="horus_images"]
+pub struct HImage {
+    pub id: String,
+    pub title: Option<String>,
+    pub owner: i16,
+    pub filepath: String,
+    pub date_added: NaiveDate,
+    pub is_expiry: bool,
+    pub expiration_time: Option<NaiveDateTime>
+}
+
+#[derive(Queryable)]
+#[table_name="horus_videos"]
+pub struct HVideo {
+    pub id: String,
+    pub title: Option<String>,
+    pub owner: i16,
+    pub filepath: String,
+    pub date_added: NaiveDate,
+    pub is_expiry: bool,
+    pub expiration_time: Option<NaiveDateTime>
+}
+
+#[derive(Queryable, Deserialize)]
+#[table_name="horus_pastes"]
+pub struct HPaste {
+    pub id: String,
+    pub title: Option<String>,
+    pub paste_data: String,
+    pub owner: i16,
+    pub date_added: NaiveDate,
+    pub is_expiry: bool,
+    pub expiration_time: Option<NaiveDateTime>
+}
+
+#[derive(Insertable)]
+#[table_name="horus_pastes"]
+pub struct HPasteForm {
+    pub title: Option<String>,
+    pub paste_data: String,
+    pub owner: i16,
+    pub is_expiry: bool,
+    pub expiration_time: Option<NaiveDateTime>,
+}

@@ -70,3 +70,8 @@ pub fn is_valid_api_key(key: &str) -> bool {
     }
     true
 }
+
+// TODO
+pub fn is_valid_paste(_form: HPasteForm) -> bool {
+    true
+}
