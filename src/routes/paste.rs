@@ -12,12 +12,14 @@ use self::rocket::http::Status;
 use self::rocket_contrib::Json;
 use schema::horus_pastes::dsl::*;
 use super::super::models::{HPaste, HPasteForm, LicenseKey};
+use rocket_contrib::Template;
+use std::collections::HashMap;
 
 #[get("/<paste_id>")]
 pub fn show(
     paste_id: String, 
     conn: DbConn) 
-    -> Option<String> 
+    -> Option<Template> 
 {
     let paste = horus_pastes.find(paste_id)
         .first::<HPaste>(&*conn);
@@ -25,8 +27,17 @@ pub fn show(
     if paste.is_err() {
         return None;
     }
+    let paste = paste.unwrap();
 
-    Some(paste.unwrap().paste_data)
+    let mut context = HashMap::new();
+    context.insert("paste_data", paste.paste_data);
+    if paste.title != None {
+        context.insert("title", paste.title.unwrap());
+    }else{
+        context.insert("title", "Horus Paste".to_string());
+    }
+
+    Some(Template::render("paste", &context))
 }
 
 /// Acceptance string is the ID of the new paste

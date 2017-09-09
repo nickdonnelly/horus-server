@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }}</title>
+  <style>
+    html, body {
+      background: #111;
+      font-family: Lucida, sans-serif;
+    }
+    h1 {
+      text-align: center;
+      font-weight: bold;
+      color: white;
+    }
+    #paste_container {
+      background: #333;
+      color: #ddd;
+      width: 95%;
+      height: 95%;
+      margin: 0 auto;
+      border-radius: 8px;
+      padding: 1em;
+    }
+  </style>
+</head>
+<body>
+<h1>{{ title }}</h1>
+<div id="paste_container">
+  {{ paste_data }} 
+</div>
+  
+</body>
+</html>
