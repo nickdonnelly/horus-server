@@ -42,6 +42,8 @@ fn main() {
         .mount("/user", routes![self::routes::user::update])
         .mount("/license", routes![self::routes::key::validity_check])
         .mount("/key", routes![self::routes::key::issue])
+        .mount("/paste", routes![self::routes::paste::new])
+        .mount("/paste", routes![self::routes::paste::show])
         .manage(self::dbtools::init_pool())
         .launch();
 }

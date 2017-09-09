@@ -1,6 +1,5 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
-#![allow(deprecated)]
 
 /// API routes for handling keys.
 extern crate chrono;
@@ -34,7 +33,7 @@ pub fn key_valid(keystr: &str) -> bool
 {
     let conn = dbtools::get_db_conn_requestless().unwrap();
 
-    let _key = horus_license_keys.filter(
+    let _key: Result<LicenseKey, diesel::result::Error> = horus_license_keys.filter(
         schema::horus_license_keys::dsl::key.eq(keystr))
         .first(&conn);
     return _key.is_err();

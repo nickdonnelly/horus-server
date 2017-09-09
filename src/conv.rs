@@ -88,7 +88,7 @@ impl Into<HPaste> for HPasteForm {
             title: self.title,
             paste_data: self.paste_data,
             owner: self.owner,
-            date_added: _date,
+            date_added: _date.naive_utc(),
             is_expiry: self.is_expiry,
             expiration_time: self.expiration_time, // TODO Dont do it this way.
         }

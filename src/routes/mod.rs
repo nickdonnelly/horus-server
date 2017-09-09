@@ -4,4 +4,5 @@
 pub mod user;
 pub mod image;
 pub mod video;
+pub mod paste;
 pub mod key;

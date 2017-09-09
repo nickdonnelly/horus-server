@@ -1,5 +1,6 @@
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
+#![recursion_limit="128"] // For diesel schema inference.
 
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_codegen;

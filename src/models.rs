@@ -4,6 +4,7 @@ extern crate chrono;
 
 use diesel::prelude::*;
 use self::chrono::NaiveDate;
+use self::chrono::NaiveDateTime;
 use super::schema::*;
 
 #[derive(Queryable, Identifiable, Serialize, Deserialize)]
@@ -43,11 +44,11 @@ pub struct License {
 }
 
 #[derive(Queryable)]
-#[table_name="horus_images"]
+//#[table_name="horus_images"]
 pub struct HImage {
     pub id: String,
     pub title: Option<String>,
-    pub owner: i16,
+    pub owner: i32,
     pub filepath: String,
     pub date_added: NaiveDate,
     pub is_expiry: bool,
@@ -55,35 +56,34 @@ pub struct HImage {
 }
 
 #[derive(Queryable)]
-#[table_name="horus_videos"]
+//#[table_name="horus_videos"]
 pub struct HVideo {
     pub id: String,
     pub title: Option<String>,
-    pub owner: i16,
+    pub owner: i32,
     pub filepath: String,
     pub date_added: NaiveDate,
     pub is_expiry: bool,
     pub expiration_time: Option<NaiveDateTime>
 }
 
-#[derive(Queryable, Deserialize)]
+#[derive(Insertable, Queryable, Deserialize)]
 #[table_name="horus_pastes"]
 pub struct HPaste {
     pub id: String,
     pub title: Option<String>,
     pub paste_data: String,
-    pub owner: i16,
+    pub owner: i32,
     pub date_added: NaiveDate,
     pub is_expiry: bool,
     pub expiration_time: Option<NaiveDateTime>
 }
 
-#[derive(Insertable)]
-#[table_name="horus_pastes"]
+#[derive(Deserialize)]
 pub struct HPasteForm {
     pub title: Option<String>,
     pub paste_data: String,
-    pub owner: i16,
+    pub owner: i32,
     pub is_expiry: bool,
     pub expiration_time: Option<NaiveDateTime>,
 }
