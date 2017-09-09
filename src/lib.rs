@@ -16,6 +16,7 @@ use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 
 pub mod schema;
+pub mod permissions;
 pub mod models;
 pub mod routes;
 pub mod fields;

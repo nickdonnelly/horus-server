@@ -44,6 +44,7 @@ fn main() {
         .mount("/key", routes![self::routes::key::issue])
         .mount("/paste", routes![self::routes::paste::new])
         .mount("/paste", routes![self::routes::paste::show])
+        .mount("/paste", routes![self::routes::paste::delete])
         .manage(self::dbtools::init_pool())
         .launch();
 }

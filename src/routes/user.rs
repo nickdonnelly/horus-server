@@ -51,3 +51,20 @@ pub fn update(
     Ok(status::Accepted(None))
 }
 
+#[delete("/<uid>")]
+pub fn delete(
+    uid: i32,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Custom<()>, Failure>
+{
+    if !apikey.belongs_to(uid) {
+        return Err(Failure(Status::Unauthorized))
+    }
+
+    diesel::delete(horus_users.filter(id.eq(uid)))
+        .execute(&*conn);
+
+    Ok(status::Custom(Status::Ok, ()))
+
+}

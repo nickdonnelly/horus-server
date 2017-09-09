@@ -51,10 +51,6 @@ pub fn new(
     use schema::horus_pastes;
 
     let paste_form_data = paste.into_inner();
-    if !fields::is_valid_paste(&paste_form_data) {
-        return Err(Failure(Status::BadRequest));
-    }
-
     let paste: HPaste = paste_form_data.into();
 
     let result = diesel::insert(&paste)
@@ -68,4 +64,31 @@ pub fn new(
     let result = result.unwrap();
 
     Ok(status::Created(String::from("/paste/") + result.id.as_str(), None))
+}
+
+#[delete("/<paste_id>")]
+pub fn delete(
+    paste_id: String,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Custom<()>, Failure>
+{
+    let paste = horus_pastes
+        .filter(id.eq(paste_id))
+        .first::<HPaste>(&*conn);
+
+    if paste.is_err() {
+        return Err(Failure(Status::NotFound))
+    }
+
+    let paste = paste.unwrap();
+
+    // Don't delete other people's pastes!
+    if !apikey.belongs_to(paste.owner) {
+        return Err(Failure(Status::Unauthorized))
+    }
+
+    diesel::delete(&paste).execute(&*conn);
+    
+    Ok(status::Custom(Status::Ok, ()))
 }

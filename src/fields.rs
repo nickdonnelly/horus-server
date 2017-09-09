@@ -1,9 +1,10 @@
 extern crate regex;
 
-use diesel;
+use diesel::prelude::*;
 use diesel::expression::Expression;
 use self::regex::Regex;
 use super::models::*;
+use super::dbtools;
 // This file contains the implementations of fields like "email" and other fields that require thorough validation. Only definitions should go here, actual usage should be within new/update methods for any given controller.
 
 // Basically: it's magic.
@@ -71,7 +72,14 @@ pub fn is_valid_api_key(key: &str) -> bool {
     true
 }
 
-// TODO
-pub fn is_valid_paste(_form: &HPasteForm) -> bool {
-    true
+impl LicenseKey {
+    pub fn belongs_to(&self, uid: i32) -> bool {
+        use super::schema::horus_licenses::dsl::*;
+
+        let conn = dbtools::get_db_conn_requestless().unwrap();
+        let license = horus_licenses.filter(key.eq(&self.key))
+            .first::<License>(&conn);
+        // If we have records, they own the key.
+        return !license.is_err();
+    }
 }

@@ -67,7 +67,7 @@ pub struct HVideo {
     pub expiration_time: Option<NaiveDateTime>
 }
 
-#[derive(Insertable, Queryable, Deserialize)]
+#[derive(Identifiable, Insertable, Queryable, Deserialize)]
 #[table_name="horus_pastes"]
 pub struct HPaste {
     pub id: String,
