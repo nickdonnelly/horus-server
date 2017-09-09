@@ -43,8 +43,8 @@ pub struct License {
                             // otherwise a rust-reserved keyword.
 }
 
-#[derive(Queryable)]
-//#[table_name="horus_images"]
+#[derive(Queryable, Identifiable, Insertable)]
+#[table_name="horus_images"]
 pub struct HImage {
     pub id: String,
     pub title: Option<String>,

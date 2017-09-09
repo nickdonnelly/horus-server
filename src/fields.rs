@@ -82,4 +82,13 @@ impl LicenseKey {
         // If we have records, they own the key.
         return !license.is_err();
     }
+
+    /// This function assumes the LicenseKey object is valid and in the db.
+    pub fn get_owner(&self) -> i32 {
+        use super::schema::horus_licenses::dsl::*;
+        let conn = dbtools::get_db_conn_requestless().unwrap();
+        let license = horus_licenses.filter(key.eq(&self.key))
+            .first::<License>(&conn).unwrap();
+        license.owner
+    }
 }

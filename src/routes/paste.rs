@@ -1,15 +1,14 @@
 extern crate diesel; // this might not even be necessary but im not deleting it
-extern crate rocket;
 extern crate rocket_contrib;
 
 use self::diesel::prelude::*;
 use super::super::DbConn;
 use super::super::fields;
 use super::super::schema;
-use self::rocket::response::Failure;
-use self::rocket::response::status;
-use self::rocket::http::Status;
-use self::rocket_contrib::Json;
+use rocket::response::Failure;
+use rocket::response::status;
+use rocket::http::Status;
+use rocket_contrib::Json;
 use schema::horus_pastes::dsl::*;
 use super::super::models::{HPaste, HPasteForm, LicenseKey};
 use rocket_contrib::Template;
