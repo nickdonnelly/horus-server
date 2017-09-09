@@ -5,20 +5,21 @@
   <title>{{ title }}</title>
   <style>
     *{ user-select: none; }
-    html, body {
-      background: #111;
+    body {
       font-family: Lucida, sans-serif;
     }
+
     h1 {
       text-align: center;
       font-weight: bold;
       color: white;
     }
+
     #paste_container {
-      background: #333;
-      color: #ddd;
+      border: 1px outset;
       width: 95%;
       height: 95%;
+      bottom: 0;
       margin: 0 auto;
       border-radius: 8px;
       padding: 1em;
@@ -32,5 +33,23 @@
   {{ paste_data }} 
 </div>
   
+<script>
+document.addEventListener("DOMContentLoaded", function(event){
+  var colors = [
+    ["#3949ab", "#ffffff"], // blue
+    ["#43a047", "#000000"], // green
+    ["#b71c1c", "#ffffff"], // red
+    ["#fb8c00", "#000000"] // orange
+  ];
+
+  var color = colors[Math.floor(Math.random()*colors.length)];
+
+  var body = document.getElementsByTagName("body")[0];
+
+  body.style.background = color[0];
+  body.style.color = color[1];
+
+});
+</script>
 </body>
 </html>
