@@ -1,6 +1,10 @@
 /target/
 **/*.rs.bk
 
+/live/
+/live
+/live/*
+
 swp
 .swp
 *.swp
