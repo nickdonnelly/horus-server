@@ -1,6 +1,9 @@
 extern crate rand;
 extern crate chrono;
+extern crate base64;
+extern crate diesel;
 
+use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::schema;
 use super::super::models::{LicenseKey,HImage};
@@ -14,6 +17,9 @@ use self::rand::Rng;
 
 use std::collections::HashMap;
 use std::path::Path;
+use std::io::{Error, Read};
+use std::io::prelude::*;
+use std::fs::File;
 
 #[get("/<image_id>")]
 pub fn show(
@@ -26,16 +32,19 @@ pub fn show(
     Some(Template::render("image", &context))
 }
 
+/// Note: This doesn't support custom titles yet.
+/// Also TODO: Abstract the fuck out of this
 #[post("/", format="image/png", data = "<img_data>")]
 pub fn new(
     img_data: Data,
     apikey: LicenseKey,
     conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
+    -> Result<status::Created<()>, Failure>
 {
+    use schema::horus_images;
     let iid: String = rand::thread_rng().gen_ascii_chars().take(8).collect();
 
-    let mut path_str = String::from("images/");
+    let mut path_str = String::from("live/images/");
     path_str += iid.as_str();
     path_str += ".png";
 
@@ -51,7 +60,41 @@ pub fn new(
         expiration_time: None,
     };
     // SAVE THE FILE THEN INSERT DB
+    let img_data: Vec<u8> = img_data.open()
+        .bytes()
+        .map(|x| {
+            // TODO: Only unwrap if this is a byte that comes after
+            // the base64 MIME prefix.
+            x.unwrap()
+        }).collect();
+
+    let raw_img_data = base64::decode(&img_data[20..]);
+
+    if raw_img_data.is_err() {
+        return Err(Failure(Status::BadRequest));
+    }
+
+    let raw_img_data = raw_img_data.unwrap();
+    let buffer = File::create(&path);
+
+    if buffer.is_err() {
+        return Err(Failure(Status::BadRequest));
+    }
+
+    let mut buffer = buffer.unwrap();
+
+    buffer.write(&raw_img_data);
+    
+    let result = diesel::insert(&image)
+        .into(horus_images::table)
+        .get_result::<HImage>(&*conn);
+    
+    if result.is_err() {
+        return Err(Failure(Status::InternalServerError));
+    }
+    let result = result.unwrap();
 
     // TODO Consider using Data.stream_to_file
-    Err(Failure(Status::Unauthorized))
+    Ok(status::Created(String::from("/image/") + result.id.as_str(), None))
 }
+
