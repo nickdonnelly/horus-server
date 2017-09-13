@@ -1,14 +1,11 @@
 /// This file holds conversions for various types. Primarily,
 /// it is here for request guards.
-
 extern crate chrono;
-extern crate rand;
 
 use rocket::{State, Outcome};
 use rocket::http::Status;
 use rocket::request::{self, Request, FromRequest};
 use self::chrono::{Local, Date};
-use self::rand::Rng;
 use super::models::{LicenseKey, HPaste, HPasteForm};
 use super::Pool;
 use super::schema;
@@ -81,7 +78,7 @@ impl Deref for DbConn {
 
 impl Into<HPaste> for HPasteForm {
     fn into(self) -> HPaste {
-        let _id = rand::thread_rng().gen_ascii_chars().take(8).collect();
+        let _id = dbtools::get_random_char_id(8);
         let _date: Date<Local> = Local::today();
         HPaste {
             id: _id,

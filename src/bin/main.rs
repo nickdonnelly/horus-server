@@ -19,7 +19,15 @@ fn main() {
         .mount("/paste", routes![self::routes::paste::new])
         .mount("/paste", routes![self::routes::paste::show])
         .mount("/paste", routes![self::routes::paste::delete])
+        .mount("/paste", routes![self::routes::paste::list])
         .mount("/image", routes![self::routes::image::new])
+        .mount("/image", routes![self::routes::image::show])
+        .mount("/image", routes![self::routes::image::delete])
+        .mount("/image", routes![self::routes::image::list])
+        .mount("/video", routes![self::routes::video::new])
+        .mount("/video", routes![self::routes::video::show])
+        .mount("/video", routes![self::routes::video::delete])
+        .mount("/video", routes![self::routes::video::list])
         .manage(self::dbtools::init_pool())
         .launch();
 }

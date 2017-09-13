@@ -51,7 +51,7 @@ pub fn validity_check(
         .first(&*conn);
 
     if _key.is_err() {
-        return Err(String::from(""));
+        return Err(String::from("invalid"));
     }
 
     Ok(Json(_key.unwrap()))

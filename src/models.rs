@@ -43,7 +43,7 @@ pub struct License {
                             // otherwise a rust-reserved keyword.
 }
 
-#[derive(Queryable, Identifiable, Insertable)]
+#[derive(Queryable, Serialize, Identifiable, Insertable)]
 #[table_name="horus_images"]
 pub struct HImage {
     pub id: String,
@@ -55,8 +55,8 @@ pub struct HImage {
     pub expiration_time: Option<NaiveDateTime>
 }
 
-#[derive(Queryable)]
-//#[table_name="horus_videos"]
+#[derive(Queryable, Serialize, Identifiable, Insertable)]
+#[table_name="horus_videos"]
 pub struct HVideo {
     pub id: String,
     pub title: Option<String>,
@@ -67,7 +67,7 @@ pub struct HVideo {
     pub expiration_time: Option<NaiveDateTime>
 }
 
-#[derive(Identifiable, Insertable, Queryable, Deserialize)]
+#[derive(Identifiable, Serialize, Insertable, Queryable, Deserialize)]
 #[table_name="horus_pastes"]
 pub struct HPaste {
     pub id: String,

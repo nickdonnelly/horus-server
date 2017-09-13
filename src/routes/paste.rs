@@ -39,6 +39,33 @@ pub fn show(
     Some(Template::render("paste", &context))
 }
 
+#[get("/<uid>/list/<page>")]
+pub fn list(
+    uid: i32,
+    page: u32,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<Json<Vec<HPaste>>, Failure>
+{
+    if !apikey.belongs_to(uid) {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    let pastes = horus_pastes
+        .filter(owner.eq(uid))
+        .order(date_added.desc())
+        .limit(48)
+        .offset((page * 48) as i64)
+        .get_results::<HPaste>(&*conn);
+
+    if pastes.is_err() {
+        println!("Paste selection failed with error: {}", pastes.err().unwrap());
+        return Err(Failure(Status::InternalServerError));
+    }
+
+    Ok(Json(pastes.unwrap()))
+}
+
 /// Acceptance string is the ID of the new paste
 #[post("/new", format = "application/json", data = "<paste>")]
 pub fn new(
