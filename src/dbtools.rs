@@ -3,13 +3,11 @@ extern crate rand;
 
 use rocket::{State};
 use rocket::request::Request;
-use super::{DbConn, Pool, fields};
+use super::{DbConn, Pool};
 use diesel::Connection; // Required for trait access to PgConnection
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 use dbtools::rand::Rng;
-
-use std::path::Path;
 
 pub fn get_db_conn(request: &Request) -> Result<DbConn, ()> {
     let pool = request.guard::<State<Pool>>().unwrap();

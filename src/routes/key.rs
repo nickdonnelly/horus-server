@@ -1,11 +1,7 @@
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
-
 /// API routes for handling keys.
 extern crate chrono;
 extern crate rand;
 extern crate diesel;
-extern crate rocket;
 extern crate rocket_contrib;
 
 use diesel::prelude::*;
@@ -16,13 +12,12 @@ use super::super::schema::horus_license_keys::dsl::*;
 use super::super::schema::horus_licenses::dsl::*;
 use super::super::models::{License, LicenseKey};
 use self::chrono::{Local, Date, Duration};
-use self::chrono::naive::NaiveDate;
 use self::rand::Rng;
 use self::rocket_contrib::Json;
 
 // TODO: Temporary - will be secured
-#[post("/issue/<uid>")]
-pub fn issue(uid: i32) 
+#[post("/issue/<_uid>")]
+pub fn issue(_uid: i32) 
     -> Json<(License, LicenseKey)>
 {
     Json(issue_license_with_key(1, 3, 3).unwrap())
@@ -99,14 +94,18 @@ pub fn issue_license_with_key(
 
     if license_result.is_err() || license_key_result.is_err() {
         // Remove extra records in the event one was successful
-        diesel::delete(
+        let d_license_result = diesel::delete(
             horus_licenses.filter(schema::horus_licenses::dsl::key.eq(&keystr)))
             .execute(&conn);
         
-        diesel::delete(
+        let d_license_key_result = diesel::delete(
             horus_license_keys.filter(schema::horus_license_keys::dsl::key.eq(&keystr)))
             .execute(&conn);
-
+    
+        if d_license_result.is_err() || d_license_key_result.is_err() {
+            println!(
+                "NOTICE: Database error while trying to delete faultily created license!");
+        }
 
         return Err(());
     }

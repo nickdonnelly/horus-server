@@ -1,8 +1,5 @@
-#![feature(plugin)]
-#![plugin(rocket_codegen)]
 extern crate chrono;
 
-use diesel::prelude::*;
 use self::chrono::NaiveDate;
 use self::chrono::NaiveDateTime;
 use super::schema::*;
@@ -14,14 +11,6 @@ pub struct User {
     pub first_name: String,
     pub last_name: Option<String>,
     pub email: String,
-}
-
-#[derive(AsChangeset, Deserialize)]
-#[table_name="horus_users"]
-pub struct UserForm {
-    pub first_name: Option<String>,
-    pub last_name: Option<String>,
-    pub email: Option<String>,
 }
 
 #[derive(Insertable, Queryable, Serialize)]

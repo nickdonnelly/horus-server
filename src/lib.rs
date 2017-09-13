@@ -4,11 +4,12 @@
 
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_codegen;
-extern crate serde_json;
-#[macro_use] extern crate serde_derive;
+
+#[allow(unused_extern_crates)] extern crate serde_json;
+#[allow(unused_extern_crates)] #[macro_use] extern crate serde_derive;
+
 extern crate rocket;
-#[macro_use] extern crate rocket_contrib;
-extern crate dotenv;
+#[allow(unused_imports)] #[macro_use] extern crate rocket_contrib;
 extern crate r2d2_diesel;
 extern crate r2d2;
 
@@ -16,7 +17,7 @@ use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 
 pub mod schema;
-pub mod permissions;
+pub mod forms;
 pub mod models;
 pub mod routes;
 pub mod fields;

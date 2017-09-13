@@ -1,16 +1,15 @@
 extern crate diesel;
 extern crate rocket;
-extern crate rocket_contrib;
 
 use super::super::DbConn;
 use diesel::prelude::*;
-use super::super::models::{User,UserForm,LicenseKey};
-use super::super::schema;
+use super::super::models::{User, LicenseKey};
+use super::super::forms::UserForm;
 use super::super::schema::horus_users::dsl::*;
 use self::rocket::response::Failure;
 use self::rocket::response::status;
 use self::rocket::http::Status;
-use rocket_contrib::{Json, Value};
+use rocket_contrib::Json;
 
 // Option usage allows us to automatically 404 if the record is not found
 // by just returning "None".
@@ -33,11 +32,15 @@ pub fn show(
 #[put("/<uid>", format = "application/json", data = "<updated_values>")]
 pub fn update(
     uid: i32, 
-    _apikey: LicenseKey, 
+    apikey: LicenseKey, 
     updated_values: Json<UserForm>, 
     conn: DbConn) 
     -> Result<status::Accepted<()>, Failure>
 {
+    if !apikey.belongs_to(uid) {
+        return Err(Failure(Status::Unauthorized));
+    }
+
     let user = updated_values.into_inner();
 
     let result = diesel::update(horus_users.filter(id.eq(uid)))
@@ -62,9 +65,13 @@ pub fn delete(
         return Err(Failure(Status::Unauthorized))
     }
 
-    diesel::delete(horus_users.filter(id.eq(uid)))
+    let result = diesel::delete(horus_users.filter(id.eq(uid)))
         .execute(&*conn);
 
-    Ok(status::Custom(Status::Ok, ()))
+    if result.is_err() {
+        println!("Database error while deleting user: {}", result.err().unwrap());
+        return Err(Failure(Status::InternalServerError));
+    }
 
+    Ok(status::Custom(Status::Ok, ()))
 }

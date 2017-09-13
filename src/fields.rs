@@ -1,9 +1,9 @@
 extern crate regex;
 
 use diesel::prelude::*;
-use diesel::expression::Expression;
 use self::regex::Regex;
-use super::models::*;
+use super::models::{License, LicenseKey};
+use super::forms::UserForm;
 use super::dbtools;
 // This file contains the implementations of fields like "email" and other fields that require thorough validation. Only definitions should go here, actual usage should be within new/update methods for any given controller.
 
@@ -79,8 +79,14 @@ impl LicenseKey {
         let conn = dbtools::get_db_conn_requestless().unwrap();
         let license = horus_licenses.filter(key.eq(&self.key))
             .first::<License>(&conn);
-        // If we have records, they own the key.
-        return !license.is_err();
+        
+        if license.is_err() {
+            return false;
+        }
+
+        let license = license.unwrap();
+
+        return license.owner == uid;
     }
 
     /// This function assumes the LicenseKey object is valid and in the db.

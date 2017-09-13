@@ -1,10 +1,7 @@
 extern crate diesel; // this might not even be necessary but im not deleting it
-extern crate rocket_contrib;
 
 use self::diesel::prelude::*;
 use super::super::DbConn;
-use super::super::fields;
-use super::super::schema;
 use rocket::response::Failure;
 use rocket::response::status;
 use rocket::http::Status;
@@ -114,7 +111,12 @@ pub fn delete(
         return Err(Failure(Status::Unauthorized))
     }
 
-    diesel::delete(&paste).execute(&*conn);
+    let result = diesel::delete(&paste).execute(&*conn);
+
+    if result.is_err() {
+        println!("Databse error while deleting paste: {}", result.err().unwrap());
+        return Err(Failure(Status::InternalServerError));
+    }
     
     Ok(status::Custom(Status::Ok, ()))
 }

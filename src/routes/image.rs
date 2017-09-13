@@ -4,25 +4,25 @@ extern crate diesel;
 
 use diesel::prelude::*;
 use super::super::DbConn;
-use super::super::{dbtools, schema};
+use super::super::dbtools;
 use super::super::models::{LicenseKey,HImage};
 use rocket::response::Failure;
 use rocket::response::status;
 use rocket::data::Data;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
-use self::chrono::{Local, Date};
+use self::chrono::Local;
 
 use std::collections::HashMap;
 use std::path::Path;
-use std::io::{Error, Read};
+use std::io::Read;
 use std::io::prelude::*;
 use std::fs::File;
 
-#[get("/<image_id>")]
+#[get("/<_image_id>")]
 pub fn show(
-    image_id: String,
-    conn: DbConn)
+    _image_id: String,
+    _conn: DbConn)
     -> Option<Template>
 {
     let mut context = HashMap::new();
@@ -83,7 +83,12 @@ pub fn delete(
         return Err(Failure(Status::Unauthorized));
     }
 
-    diesel::delete(&image).execute(&*conn);
+    let result = diesel::delete(&image).execute(&*conn);
+
+    if result.is_err() {
+        println!("Database error while deleting image: {}", result.err().unwrap());
+        return Err(Failure(Status::InternalServerError));
+    }
 
     Ok(status::Custom(Status::Ok, ()))
 }
@@ -136,13 +141,13 @@ pub fn new(
 
     let mut buffer = buffer.unwrap();
 
-    buffer.write(&raw_img_data);
+    let buffer = buffer.write(&raw_img_data);
     
     let result = diesel::insert(&image)
         .into(horus_images::table)
         .get_result::<HImage>(&*conn);
     
-    if result.is_err() {
+    if buffer.is_err() || result.is_err() {
         return Err(Failure(Status::InternalServerError));
     }
     

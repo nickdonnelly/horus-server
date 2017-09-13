@@ -4,13 +4,13 @@ extern crate chrono;
 
 use diesel::prelude::*;
 use super::super::DbConn;
-use super::super::{dbtools, schema};
+use super::super::dbtools;
 use super::super::models::{LicenseKey, HVideo};
 use rocket::response::{status, Failure};
 use rocket::data::Data;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
-use self::chrono::{Local, Date};
+use self::chrono::Local;
 
 use std::io::prelude::*;
 use std::fs::File;
@@ -59,13 +59,13 @@ pub fn new(
     }
     
     let mut buffer = buffer.unwrap();
-    buffer.write(&vid_data_decoded);
+    let buffer = buffer.write(&vid_data_decoded);
 
     let result = diesel::insert(&video)
         .into(horus_videos::table)
         .get_result::<HVideo>(&*conn);
 
-    if result.is_err() {
+    if buffer.is_err() || result.is_err() {
         return Err(Failure(Status::InternalServerError));
     }
 
@@ -127,15 +127,20 @@ pub fn delete(
         return Err(Failure(Status::Unauthorized));
     }
 
-    diesel::delete(&video).execute(&*conn);
+    let result = diesel::delete(&video).execute(&*conn);
+
+    if result.is_err() {
+        println!("Database error while deleting video: {}", result.err().unwrap());
+        return Err(Failure(Status::InternalServerError));
+    }
 
     Ok(status::Custom(Status::Ok, ()))
 }
 
-#[get("/<vid_id>")]
+#[get("/<_vid_id>")]
 pub fn show(
-    vid_id: String,
-    conn: DbConn)
+    _vid_id: String,
+    _conn: DbConn)
     -> Option<Template>
 {
     let mut context = HashMap::new();

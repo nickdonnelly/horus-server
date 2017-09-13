@@ -8,7 +8,6 @@ use rocket::request::{self, Request, FromRequest};
 use self::chrono::{Local, Date};
 use super::models::{LicenseKey, HPaste, HPasteForm};
 use super::Pool;
-use super::schema;
 use super::dbtools;
 use super::{DbConn, fields};
 use diesel::prelude::*;
