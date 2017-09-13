@@ -5,8 +5,9 @@ extern crate chrono;
 use rocket::{State, Outcome};
 use rocket::http::Status;
 use rocket::request::{self, Request, FromRequest};
-use self::chrono::{Local, Date};
-use super::models::{LicenseKey, HPaste, HPasteForm};
+use self::chrono::{Local, DateTime};
+use super::models::{LicenseKey, HPaste};
+use super::forms::HNewPasteForm;
 use super::Pool;
 use super::dbtools;
 use super::{DbConn, fields};
@@ -75,10 +76,10 @@ impl Deref for DbConn {
     }
 }
 
-impl Into<HPaste> for HPasteForm {
+impl Into<HPaste> for HNewPasteForm {
     fn into(self) -> HPaste {
         let _id = dbtools::get_random_char_id(8);
-        let _date: Date<Local> = Local::today();
+        let _date: DateTime<Local> = Local::now();
         HPaste {
             id: _id,
             title: self.title,

@@ -113,7 +113,7 @@ pub fn new(
         title: None,
         owner: apikey.get_owner(),
         filepath: pathstr.clone(),
-        date_added: Local::today().naive_utc(),
+        date_added: Local::now().naive_utc(),
         is_expiry: false,
         expiration_time: None,
     };

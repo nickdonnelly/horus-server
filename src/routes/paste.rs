@@ -7,7 +7,8 @@ use rocket::response::status;
 use rocket::http::Status;
 use rocket_contrib::Json;
 use schema::horus_pastes::dsl::*;
-use super::super::models::{HPaste, HPasteForm, LicenseKey};
+use super::super::models::{HPaste, LicenseKey};
+use super::super::forms::HNewPasteForm;
 use rocket_contrib::Template;
 use std::collections::HashMap;
 
@@ -66,7 +67,7 @@ pub fn list(
 /// Acceptance string is the ID of the new paste
 #[post("/new", format = "application/json", data = "<paste>")]
 pub fn new(
-    paste: Json<HPasteForm>, 
+    paste: Json<HNewPasteForm>, 
     _apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>

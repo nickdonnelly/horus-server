@@ -39,7 +39,7 @@ pub struct HImage {
     pub title: Option<String>,
     pub owner: i32,
     pub filepath: String,
-    pub date_added: NaiveDate,
+    pub date_added: NaiveDateTime,
     pub is_expiry: bool,
     pub expiration_time: Option<NaiveDateTime>
 }
@@ -51,7 +51,7 @@ pub struct HVideo {
     pub title: Option<String>,
     pub owner: i32,
     pub filepath: String,
-    pub date_added: NaiveDate,
+    pub date_added: NaiveDateTime,
     pub is_expiry: bool,
     pub expiration_time: Option<NaiveDateTime>
 }
@@ -63,16 +63,9 @@ pub struct HPaste {
     pub title: Option<String>,
     pub paste_data: String,
     pub owner: i32,
-    pub date_added: NaiveDate,
+    pub date_added: NaiveDateTime,
     pub is_expiry: bool,
     pub expiration_time: Option<NaiveDateTime>
 }
 
-#[derive(Deserialize)]
-pub struct HPasteForm {
-    pub title: Option<String>,
-    pub paste_data: String,
-    pub owner: i32,
-    pub is_expiry: bool,
-    pub expiration_time: Option<NaiveDateTime>,
-}
+
