@@ -8,7 +8,7 @@ use rocket::http::Status;
 use rocket_contrib::Json;
 use schema::horus_pastes::dsl::*;
 use super::super::models::{HPaste, LicenseKey};
-use super::super::forms::HNewPasteForm;
+use super::super::forms::{HNewPasteForm, HPasteChangesetForm};
 use rocket_contrib::Template;
 use std::collections::HashMap;
 
@@ -120,4 +120,35 @@ pub fn delete(
     }
     
     Ok(status::Custom(Status::Ok, ()))
+}
+
+#[put("/<paste_id>", format = "application/json", data = "<updated_values>")]
+pub fn update(
+    paste_id: String,
+    updated_values: Json<HPasteChangesetForm>,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Accepted<()>, Failure>
+{
+    let paste = horus_pastes.filter(id.eq(&paste_id))
+        .first::<HPaste>(&*conn);
+
+    if paste.is_err() {
+        return Err(Failure(Status::NotFound));
+    }
+    let paste = paste.unwrap();
+
+    if !apikey.belongs_to(paste.owner) {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    let paste_update = updated_values.into_inner();
+    let result = diesel::update(horus_pastes.filter(id.eq(paste_id)))
+        .set(&paste_update)
+        .execute(&*conn);
+
+    match result {
+        Ok(_) => Ok(status::Accepted(None)),
+        Err(_) => Err(Failure(Status::InternalServerError)),
+    }
 }

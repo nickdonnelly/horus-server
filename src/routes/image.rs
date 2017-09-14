@@ -6,6 +6,7 @@ use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
 use super::super::models::{LicenseKey,HImage};
+use super::super::forms::HImageChangesetForm;
 use rocket::response::Failure;
 use rocket::response::status;
 use rocket::data::Data;
@@ -155,5 +156,38 @@ pub fn new(
 
     // TODO Consider using Data.stream_to_file
     Ok(status::Created(String::from("/image/") + result.id.as_str(), None))
+}
+
+#[put("/<image_id>", format = "application/json", data = "<updated_values>")]
+pub fn update(
+    image_id: String,
+    updated_values: Json<HImageChangesetForm>,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Accepted<()>, Failure>
+{
+    use schema::horus_images::dsl::*;
+
+    let img = horus_images.filter(id.eq(&image_id))
+        .first::<HImage>(&*conn);
+
+    if img.is_err() {
+        return Err(Failure(Status::NotFound));
+    }
+    let img = img.unwrap();
+
+    if !apikey.belongs_to(img.owner) {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    let img_update = updated_values.into_inner();
+    let result = diesel::update(horus_images.filter(id.eq(image_id)))
+        .set(&img_update)
+        .execute(&*conn);
+
+    match result {
+        Ok(_) => Ok(status::Accepted(None)),
+        Err(_) => Err(Failure(Status::InternalServerError)),
+    }
 }
 

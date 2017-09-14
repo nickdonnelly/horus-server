@@ -6,6 +6,7 @@ use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
 use super::super::models::{LicenseKey, HVideo};
+use super::super::forms::HVideoChangesetForm;
 use rocket::response::{status, Failure};
 use rocket::data::Data;
 use rocket::http::Status;
@@ -135,6 +136,39 @@ pub fn delete(
     }
 
     Ok(status::Custom(Status::Ok, ()))
+}
+
+#[put("/<vid_id>", format = "application/json", data = "<updated_values>")]
+pub fn update(
+    vid_id: String,
+    updated_values: Json<HVideoChangesetForm>,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Accepted<()>, Failure>
+{
+    use schema::horus_videos::dsl::*;
+
+    let vid = horus_videos.filter(id.eq(&vid_id))
+        .first::<HVideo>(&*conn);
+    if vid.is_err() {
+        return Err(Failure(Status::NotFound));
+    }
+    
+    let vid = vid.unwrap();
+
+    if !apikey.belongs_to(vid.owner) {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    let vid_update = updated_values.into_inner();
+    let result = diesel::update(horus_videos.filter(id.eq(vid_id)))
+        .set(&vid_update)
+        .execute(&*conn);
+
+    match result {
+        Ok(_) => Ok(status::Accepted(None)),
+        Err(_) => Err(Failure(Status::InternalServerError))
+    }
 }
 
 #[get("/<_vid_id>")]
