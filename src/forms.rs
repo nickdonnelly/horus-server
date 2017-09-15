@@ -3,7 +3,7 @@ extern crate chrono;
 use super::schema::*;
 use self::chrono::NaiveDateTime;
 
-#[derive(AsChangeset, Deserialize)]
+#[derive(AsChangeset, Deserialize, Serialize)]
 #[table_name="horus_images"]
 pub struct HImageChangesetForm {
     pub title: Option<String>,

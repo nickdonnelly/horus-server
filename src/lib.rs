@@ -16,9 +16,10 @@ extern crate r2d2;
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 
-pub mod schema;
-pub mod forms;
+pub mod schema; // Needed for diesel
+pub mod forms; // Modification forms for models
 pub mod models;
+pub mod contexts; // Contexts for handlebar templates
 pub mod routes;
 pub mod fields;
 pub mod conv;

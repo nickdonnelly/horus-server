@@ -28,6 +28,8 @@ fn main() {
         .mount("/video", routes![self::routes::video::show])
         .mount("/video", routes![self::routes::video::delete])
         .mount("/video", routes![self::routes::video::list])
+
+        .mount("/manage", routes![self::routes::manage::my_images])
         .manage(self::dbtools::init_pool())
         .launch();
 }

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style/main.css">
+    <title>{{ img_title }}</title>
+</head>
+<body>
+   <header class="navbar">
+        <ul>
+            <li class="navitem"><a href="#">Images</a></li>
+            <li class="navitem"><a href="#">Videos</a></li>
+            <li class="navitem"><a href="#">Pastes</a></li>
+            <li class="navitem"><a href="#">Files</a></li>
+            <li class="navitem"><a href="#">My Account</a></li>
+        </ul>
+    </header> 
+
+    <div class="wrapper">
+        <h1 contenteditable="true" class="page-header">{{ img_title }}</h1>
+        
+        <main>
+            <div class="img-cont">
+                <figure>
+                    <span class="helper"></span>
+                    <img class="wide-img" alt="" src="http://via.placeholder.com/500x300">
+                </figure>
+                <figcaption>
+                    <span>Uploaded on 23 May 2017</span>
+                    <br/>
+                    <span>Expires never</span>
+                    <br/>
+                    <ul class="img-options">
+                        <li><a href="#">Delete Image</a></li>
+                        <li><a href="#">Password Protect</a></li>
+                        <li><a href="#">Change Expire Date</a></li>
+                        <li><a href="#">View Full Image</a></li>
+                    </ul>
+                </figcaption>
+
+            </div>
+
+        </main>
+
+    </div>
+</body>
+</html>
