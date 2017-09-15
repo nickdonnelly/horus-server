@@ -14,11 +14,22 @@ pub struct User {
 }
 
 #[derive(Identifiable, Insertable, Queryable, AsChangeset)]
+#[primary_key(uid)]
 #[table_name="auth_tokens"]
 pub struct AuthToken {
-    pub id: i32,
+    pub uid: i32,
+    pub token: String,
+    pub expires: Option<NaiveDateTime>,
+}
+
+#[derive(Identifiable, Insertable, Queryable)]
+#[primary_key(uid)]
+#[table_name="session_tokens"]
+pub struct SessionToken {
+    pub uid: i32,
     pub token: String,
     pub use_count: Option<i32>,
+    pub expires: Option<NaiveDateTime>,
 }
 
 #[derive(Insertable, Queryable, Serialize)]

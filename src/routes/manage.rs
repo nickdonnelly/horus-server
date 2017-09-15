@@ -5,6 +5,7 @@ use super::super::DbConn;
 use super::super::models::{LicenseKey, User, HImage, AuthToken};
 use super::super::contexts::ImageList;
 use super::super::schema;
+use super::super::errors::AuthTokenError;
 use rocket::response::{status, Failure, Redirect};
 use rocket::http::Status;
 use rocket_contrib::{Template};
@@ -12,7 +13,7 @@ use rocket_contrib::{Template};
 #[derive(FromForm)]
 pub struct AuthRequest{
     redirect_path: String,
-    auth_secret: String
+    pub auth_secret: String
 }
 
 
@@ -28,11 +29,12 @@ pub fn request_auth_url(
 {
     use schema::auth_tokens::dsl::*;
 
-    let uid = apikey.get_owner();
-    let usertoken = auth_tokens.find(uid)
+    let _uid = apikey.get_owner();
+    let usertoken = auth_tokens.find(_uid)
         .get_result::<AuthToken>(&*conn);
-    if usertoken.is_err() {
-        let usertoken = AuthToken::new(uid);
+
+    if usertoken.is_err() { // They don't have a token yet
+        let usertoken = AuthToken::new(_uid);
 
         let insert_result = diesel::insert(&usertoken)
             .into(schema::auth_tokens::table)
@@ -46,7 +48,7 @@ pub fn request_auth_url(
         return Ok(status::Custom(Status::Accepted, insert_result.token));
 
     }else {
-        // update token
+        // update existing token
         let usertoken = usertoken.unwrap().refresh(); // new token
         // Need identifiable to be implemented
         let update_result = usertoken.save_changes::<AuthToken>(&*conn);
@@ -65,18 +67,37 @@ pub fn request_auth_url(
 #[post("/request_auth?<auth_req>")]
 pub fn request_auth_cookie(
     auth_req: AuthRequest,
-    apikey: LicenseKey,
     conn: DbConn
     )
     -> Result<Redirect, Failure>
 {
-    let valid_result = !auth_req.is_valid(&conn);
-    if valid_result.is_err() {
-        return Err(Failure(Status::Unauthorized));
-    }
-    let valid_result = valid_result.unwrap();
+    use schema::session_tokens;
+    let redirect_url = auth_req.redirect_path.clone();
+    
+    let token_result = auth_req.into_token();
+    if token_result.is_err() {
+        return match token_result {
+            Err(AuthTokenError::ConsumeFailure) =>
+                Err(Failure(Status::InternalServerError)),
+            Err(AuthTokenError::Invalid) => Err(Failure(Status::InternalServerError)),
+            Err(AuthTokenError::Expired) => Err(Failure(Status::BadRequest)),
+            Err(AuthTokenError::NotFound) => Err(Failure(Status::NotFound)),
 
-    Err(Failure(Status::InternalServerError))
+            // never fires, but has to be here for exhaustiveness..
+            Ok(_) => Err(Failure(Status::InternalServerError)), 
+        };
+    } 
+    let token_result = token_result.unwrap();
+
+    let insert_result = diesel::insert(&token_result)
+        .into(session_tokens::table)
+        .execute(&*conn);
+
+    if insert_result.is_err() {
+        return Err(Failure(Status::InternalServerError));
+    }
+
+    Ok(Redirect::to(&redirect_url))
 }
 
 #[get("/")]

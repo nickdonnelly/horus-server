@@ -1,12 +1,15 @@
+extern crate chrono;
 extern crate regex;
+extern crate diesel;
 
 use diesel::prelude::*;
 use self::regex::Regex;
 use super::models::{License, LicenseKey, AuthToken, SessionToken};
 use super::routes::manage::AuthRequest;
-use super::errors;
+use super::errors::AuthTokenError;
 use super::forms::UserForm;
 use super::dbtools;
+use self::chrono::Local;
 // This file contains the implementations of fields like "email" and other fields that require thorough validation. Only definitions should go here, actual usage should be within new/update methods for any given controller.
 
 // Basically: it's magic.
@@ -114,9 +117,9 @@ impl AuthToken
     pub fn new(uid: i32) -> Self 
     {
         AuthToken {
-            id: uid,
+            uid: uid,
             token: dbtools::get_random_char_id(128),
-            use_count: Some(0),
+            expires: None, // use db default
         }
     }
 
@@ -126,17 +129,73 @@ impl AuthToken
         let new_token = dbtools::get_random_char_id(128);
 
         AuthToken {
-            id: self.id,
+            uid: self.uid,
             token: new_token,
-            use_count: Some(0),
+            expires: None,
         }
     }
 }
 
 impl AuthRequest {
-    pub fn is_valid(&self, conn: DbConn) -> Result<SessionToken, errors::AuthTokenError>
+    pub fn into_token(self) -> Result<SessionToken, AuthTokenError>
     {
         use schema::auth_tokens::dsl::*;
-        let auth_token = auth_tokens.find(
+        let conn = dbtools::get_db_conn_requestless();
+        if conn.is_err() {
+            return Err(AuthTokenError::ConsumeFailure);
+        }
+        let conn = conn.unwrap();
+        let auth_token = auth_tokens.filter(token.eq(&self.auth_secret))
+            .get_result::<AuthToken>(&conn);
+
+        if auth_token.is_err() {
+            return Err(AuthTokenError::NotFound);
+        }
+
+        let auth_token = auth_token.unwrap();
+
+        if auth_token.expires.is_none() {
+            return Err(AuthTokenError::Invalid);
+        }
+
+        let moment = Local::now().naive_utc();
+        let etime = auth_token.expires.unwrap();
+
+        if moment > etime {
+            return Err(AuthTokenError::Expired);
+        }
+        
+        let st = SessionToken::consume_auth_token(auth_token);
+        if st.is_none() {
+            return Err(AuthTokenError::ConsumeFailure);
+        }
+        Ok(st.unwrap())
+    }
+}
+
+impl SessionToken {
+
+    pub fn consume_auth_token(
+        at: AuthToken)
+        -> Option<SessionToken>
+    {
+        let stoken = SessionToken {
+            uid: at.uid.clone(),
+            token: dbtools::get_random_char_id(128),
+            use_count: None,
+            expires: None,
+        };
+        let conn = dbtools::get_db_conn_requestless();
+        if conn.is_err() {
+            return None;
+        }
+        let conn = conn.unwrap();
+        let delete_result = diesel::delete(&at).execute(&conn);
+
+        if delete_result.is_err() {
+            return None;
+        }
+
+        Some(stoken)
     }
 }
