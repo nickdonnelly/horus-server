@@ -1,3 +1,4 @@
+#![feature(custom_derive)]
 #![feature(plugin)]
 #![plugin(rocket_codegen)]
 #![recursion_limit="128"] // For diesel schema inference.
@@ -19,11 +20,12 @@ use r2d2_diesel::ConnectionManager;
 pub mod schema; // Needed for diesel
 pub mod forms; // Modification forms for models
 pub mod models;
+pub mod dbtools;
 pub mod contexts; // Contexts for handlebar templates
 pub mod routes;
 pub mod fields;
 pub mod conv;
-pub mod dbtools;
+pub mod errors;
 
 static DATABASE_URL: &'static str = env!("DATABASE_URL");
 

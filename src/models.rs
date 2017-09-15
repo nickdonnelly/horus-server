@@ -13,6 +13,14 @@ pub struct User {
     pub email: String,
 }
 
+#[derive(Identifiable, Insertable, Queryable, AsChangeset)]
+#[table_name="auth_tokens"]
+pub struct AuthToken {
+    pub id: i32,
+    pub token: String,
+    pub use_count: Option<i32>,
+}
+
 #[derive(Insertable, Queryable, Serialize)]
 #[table_name="horus_license_keys"]
 pub struct LicenseKey {

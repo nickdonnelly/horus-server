@@ -29,7 +29,7 @@ fn main() {
         .mount("/video", routes![self::routes::video::delete])
         .mount("/video", routes![self::routes::video::list])
 
-        .mount("/manage", routes![self::routes::manage::my_images])
+        .mount("/manage", routes![self::routes::manage::my_images, self::routes::manage::request_auth_cookie])
         .manage(self::dbtools::init_pool())
         .launch();
 }

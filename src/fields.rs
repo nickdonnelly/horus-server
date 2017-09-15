@@ -2,7 +2,9 @@ extern crate regex;
 
 use diesel::prelude::*;
 use self::regex::Regex;
-use super::models::{License, LicenseKey};
+use super::models::{License, LicenseKey, AuthToken, SessionToken};
+use super::routes::manage::AuthRequest;
+use super::errors;
 use super::forms::UserForm;
 use super::dbtools;
 // This file contains the implementations of fields like "email" and other fields that require thorough validation. Only definitions should go here, actual usage should be within new/update methods for any given controller.
@@ -10,12 +12,15 @@ use super::dbtools;
 // Basically: it's magic.
 const EMAIL_REGEX: &str = r"^[^@]+@[^@]+\.[^@]+$";
 
-pub trait Validatable {
+pub trait Validatable 
+{
     fn validate_fields(&self) -> Result<(), Vec<String>>;
 }
 
-impl Validatable for UserForm {
-    fn validate_fields(&self) -> Result<(), Vec<String>>{
+impl Validatable for UserForm 
+{
+    fn validate_fields(&self) -> Result<(), Vec<String>>
+    {
         // We handle all errors as a list, this allows us
         // to serialize them to JSON and output them all
         // at once, rather than having only single error
@@ -52,20 +57,23 @@ impl Validatable for UserForm {
     }
 }
 
-pub fn is_valid_email(email: &str) -> bool {
+pub fn is_valid_email(email: &str) -> bool 
+{
     let re = Regex::new(EMAIL_REGEX).unwrap();
     return re.is_match(email);
 }
 
 // TODO
-pub fn is_valid_name_str(name: &str) -> bool {
+pub fn is_valid_name_str(name: &str) -> bool 
+{
     !(name.contains(" ") || name.contains(";") || name.contains("_"))
 }
 
 
 /// NOTE: This does not check validity within the database, only checks
 /// that the format of the API key is valid!
-pub fn is_valid_api_key(key: &str) -> bool {
+pub fn is_valid_api_key(key: &str) -> bool 
+{
     if key.len() != 32 || key.contains(" "){
         return false;
     }
@@ -73,7 +81,8 @@ pub fn is_valid_api_key(key: &str) -> bool {
 }
 
 impl LicenseKey {
-    pub fn belongs_to(&self, uid: i32) -> bool {
+    pub fn belongs_to(&self, uid: i32) -> bool 
+    {
         use super::schema::horus_licenses::dsl::*;
 
         let conn = dbtools::get_db_conn_requestless().unwrap();
@@ -90,11 +99,44 @@ impl LicenseKey {
     }
 
     /// This function assumes the LicenseKey object is valid and in the db.
-    pub fn get_owner(&self) -> i32 {
+    pub fn get_owner(&self) -> i32 
+    {
         use super::schema::horus_licenses::dsl::*;
         let conn = dbtools::get_db_conn_requestless().unwrap();
         let license = horus_licenses.filter(key.eq(&self.key))
             .first::<License>(&conn).unwrap();
         license.owner
+    }
+}
+
+impl AuthToken 
+{
+    pub fn new(uid: i32) -> Self 
+    {
+        AuthToken {
+            id: uid,
+            token: dbtools::get_random_char_id(128),
+            use_count: Some(0),
+        }
+    }
+
+    
+    pub fn refresh(self) -> Self 
+    {
+        let new_token = dbtools::get_random_char_id(128);
+
+        AuthToken {
+            id: self.id,
+            token: new_token,
+            use_count: Some(0),
+        }
+    }
+}
+
+impl AuthRequest {
+    pub fn is_valid(&self, conn: DbConn) -> Result<SessionToken, errors::AuthTokenError>
+    {
+        use schema::auth_tokens::dsl::*;
+        let auth_token = auth_tokens.find(
     }
 }

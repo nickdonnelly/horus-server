@@ -2,11 +2,82 @@ extern crate diesel;
 
 use self::diesel::prelude::*;
 use super::super::DbConn;
-use super::super::models::{LicenseKey, User, HImage, HVideo};
+use super::super::models::{LicenseKey, User, HImage, AuthToken};
 use super::super::contexts::ImageList;
+use super::super::schema;
 use rocket::response::{status, Failure, Redirect};
 use rocket::http::Status;
-use rocket_contrib::{Template, Json};
+use rocket_contrib::{Template};
+
+#[derive(FromForm)]
+pub struct AuthRequest{
+    redirect_path: String,
+    auth_secret: String
+}
+
+
+/// Gives dtapp a URL to open in the users browser that will auth
+/// them with a cookie then redirect them. Consider adding additional
+/// request guards to this...
+/// Overwrites any current auth tokens for the user making the request.
+#[post("/request_auth_url")]
+pub fn request_auth_url(
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Custom<String>, Failure> 
+{
+    use schema::auth_tokens::dsl::*;
+
+    let uid = apikey.get_owner();
+    let usertoken = auth_tokens.find(uid)
+        .get_result::<AuthToken>(&*conn);
+    if usertoken.is_err() {
+        let usertoken = AuthToken::new(uid);
+
+        let insert_result = diesel::insert(&usertoken)
+            .into(schema::auth_tokens::table)
+            .get_result::<AuthToken>(&*conn);
+
+        if insert_result.is_err() {
+            return Err(Failure(Status::InternalServerError));
+        }
+
+        let insert_result = insert_result.unwrap();
+        return Ok(status::Custom(Status::Accepted, insert_result.token));
+
+    }else {
+        // update token
+        let usertoken = usertoken.unwrap().refresh(); // new token
+        // Need identifiable to be implemented
+        let update_result = usertoken.save_changes::<AuthToken>(&*conn);
+
+        if update_result.is_err() {
+            return Err(Failure(Status::InternalServerError));
+        }
+        let update_result = update_result.unwrap();
+
+        return Ok(status::Custom(Status::Accepted, update_result.token));
+    }
+}
+
+/// Stores auth cookie + redirects user to redirect_path
+/// This should be a SESSION token not an AUTH
+#[post("/request_auth?<auth_req>")]
+pub fn request_auth_cookie(
+    auth_req: AuthRequest,
+    apikey: LicenseKey,
+    conn: DbConn
+    )
+    -> Result<Redirect, Failure>
+{
+    let valid_result = !auth_req.is_valid(&conn);
+    if valid_result.is_err() {
+        return Err(Failure(Status::Unauthorized));
+    }
+    let valid_result = valid_result.unwrap();
+
+    Err(Failure(Status::InternalServerError))
+}
 
 #[get("/")]
 pub fn my_account(
