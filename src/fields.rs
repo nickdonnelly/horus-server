@@ -173,7 +173,10 @@ impl AuthRequest {
     }
 }
 
-impl SessionToken {
+
+
+impl SessionToken 
+{
 
     pub fn consume_auth_token(
         at: AuthToken)

@@ -9,27 +9,28 @@ use horus_server::*;
 use rocket_contrib::Template;
 
 fn main() {
+    use self::routes::{user, key, paste, image, video, manage};
     check_dirs();
     rocket::ignite()
         .attach(Template::fairing())
-        .mount("/user", routes![self::routes::user::show])
-        .mount("/user", routes![self::routes::user::update])
-        .mount("/license", routes![self::routes::key::validity_check])
-        .mount("/key", routes![self::routes::key::issue])
-        .mount("/paste", routes![self::routes::paste::new])
-        .mount("/paste", routes![self::routes::paste::show])
-        .mount("/paste", routes![self::routes::paste::delete])
-        .mount("/paste", routes![self::routes::paste::list])
-        .mount("/image", routes![self::routes::image::new])
-        .mount("/image", routes![self::routes::image::show])
-        .mount("/image", routes![self::routes::image::delete])
-        .mount("/image", routes![self::routes::image::list])
-        .mount("/video", routes![self::routes::video::new])
-        .mount("/video", routes![self::routes::video::show])
-        .mount("/video", routes![self::routes::video::delete])
-        .mount("/video", routes![self::routes::video::list])
-
-        .mount("/manage", routes![self::routes::manage::my_images, self::routes::manage::request_auth_cookie])
+        .mount("/user", routes![user::show, user::update])
+        .mount("/key", routes![key::validity_check, key::issue])
+        .mount("/paste", routes![paste::new, 
+                                 paste::show, 
+                                 paste::delete, 
+                                 paste::list])
+        .mount("/image", routes![image::new, 
+                                 image::show, 
+                                 image::delete, 
+                                 image::list])
+        .mount("/video", routes![video::new, 
+                                 video::show, 
+                                 video::delete, 
+                                 video::list])
+        .mount("/manage", routes![manage::my_images, 
+                                  manage::request_auth_cookie,
+                                  manage::request_auth_url,
+                                  manage::test])
         .manage(self::dbtools::init_pool())
         .launch();
 }

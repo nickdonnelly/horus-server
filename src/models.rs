@@ -22,7 +22,8 @@ pub struct AuthToken {
     pub expires: Option<NaiveDateTime>,
 }
 
-#[derive(Identifiable, Insertable, Queryable)]
+#[derive(Debug)]
+#[derive(Identifiable, Insertable, Queryable, AsChangeset)]
 #[primary_key(uid)]
 #[table_name="session_tokens"]
 pub struct SessionToken {

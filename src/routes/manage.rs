@@ -2,12 +2,12 @@ extern crate diesel;
 
 use self::diesel::prelude::*;
 use super::super::DbConn;
-use super::super::models::{LicenseKey, User, HImage, AuthToken};
+use super::super::models::{LicenseKey, User, HImage, AuthToken, SessionToken};
 use super::super::contexts::ImageList;
 use super::super::schema;
 use super::super::errors::AuthTokenError;
 use rocket::response::{status, Failure, Redirect};
-use rocket::http::Status;
+use rocket::http::{Cookie, Cookies, Status};
 use rocket_contrib::{Template};
 
 #[derive(FromForm)]
@@ -64,8 +64,9 @@ pub fn request_auth_url(
 
 /// Stores auth cookie + redirects user to redirect_path
 /// This should be a SESSION token not an AUTH
-#[post("/request_auth?<auth_req>")]
+#[get("/request_auth?<auth_req>")]
 pub fn request_auth_cookie(
+    mut cookies: Cookies,
     auth_req: AuthRequest,
     conn: DbConn
     )
@@ -88,15 +89,27 @@ pub fn request_auth_cookie(
         };
     } 
     let token_result = token_result.unwrap();
+    let insert_result = token_result.save_changes::<SessionToken>(&*conn);
 
-    let insert_result = diesel::insert(&token_result)
-        .into(session_tokens::table)
-        .execute(&*conn);
+    //let insert_result = diesel::insert(&token_result)
+        //.into(session_tokens::table)
+        //.execute(&*conn);
 
     if insert_result.is_err() {
+        println!("ERROR 2! {} ", insert_result.err().unwrap());
         return Err(Failure(Status::InternalServerError));
     }
+    //let scookie = Cookie::build("horus_session", token_result.token.clone())
+    //    .path("/")
+    //    .secure(true)
+    //    .finish();
 
+    let mut scookie = Cookie::new("horus_session", token_result.token.clone());
+    scookie.set_path("/");
+
+    cookies.remove_private(Cookie::named("horus_session"));
+    cookies.add_private(scookie);
+    //cookies.add(Cookie::new("horus_session", token_result.token.clone()));
     Ok(Redirect::to(&redirect_url))
 }
 
@@ -144,6 +157,7 @@ pub fn my_images(
 
     Some(Template::render("images", &context))
 }
+
 
 // REDIRECTS
 

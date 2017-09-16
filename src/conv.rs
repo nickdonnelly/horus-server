@@ -6,7 +6,7 @@ use rocket::{State, Outcome};
 use rocket::http::Status;
 use rocket::request::{self, Request, FromRequest};
 use self::chrono::{Local, DateTime};
-use super::models::{LicenseKey, HPaste};
+use super::models::{LicenseKey, HPaste, SessionToken};
 use super::forms::HNewPasteForm;
 use super::Pool;
 use super::dbtools;
@@ -14,6 +14,32 @@ use super::{DbConn, fields};
 use diesel::prelude::*;
 use std::ops::Deref;
 
+impl<'a, 'r> FromRequest<'a, 'r> for SessionToken 
+{
+    type Error = String;
+
+    fn from_request(request: &'a Request<'r>) 
+        -> request::Outcome<SessionToken, Self::Error> 
+    {
+        use schema::session_tokens::dsl::*;
+
+        let val = String::from(request.cookies()
+            .get_private("horus_session")
+            .unwrap()
+            .value());
+        let conn = dbtools::get_db_conn_requestless().unwrap();
+
+        let stoken = session_tokens.filter(token.eq(val))
+            .get_result::<SessionToken>(&conn);
+
+        if stoken.is_err() {
+            println!("ERROR {:?}", stoken.unwrap());
+            return Outcome::Failure((Status::Unauthorized, 
+                                    String::from("Session token invalid.")));
+        }
+        return Outcome::Success(stoken.unwrap()); 
+    }
+}
 
 // LicenseKey
 impl<'a, 'r> FromRequest<'a, 'r> for LicenseKey {
