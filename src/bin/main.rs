@@ -7,6 +7,8 @@ extern crate rocket_contrib;
 
 use horus_server::*;
 use rocket_contrib::Template;
+use rocket::response::NamedFile;
+use std::path::Path;
 
 fn main() {
     use self::routes::*;
@@ -36,8 +38,14 @@ fn main() {
                                   manage::request_auth_cookie,
                                   manage::request_auth_url,])
         .mount("/static", routes![files::static_asset])
+        .mount("/", routes![favicon])
         .manage(self::dbtools::init_pool())
         .launch();
+}
+
+#[get("/favicon.ico")]
+fn favicon() -> Option<NamedFile> {
+    NamedFile::open(Path::new("favicon.ico")).ok()
 }
 
 fn check_dirs() {
