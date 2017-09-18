@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="/static/style/main.css">
-    <title>{{ first_name }}&rsquo;s Images</title>
+    <title>{{ video_title }}</title>
 </head>
 <body>
    <header class="navbar">
@@ -19,22 +19,30 @@
     </header> 
 
     <div class="wrapper">
-        <h1 class="page-header">{{ first_name }}&rsquo;s Images</h1>
-        <main class="image-box">
-          {{#each images }}
-            <a class="image" href="/manage/image/{{ id }}">
+        <h1 contenteditable="true" class="page-header">{{ video_title }}</h1>
+        
+        <main>
+            <div class="img-cont">
                 <figure>
                     <span class="helper"></span>
-                    <img src="/image/thumb/{{ id }}" alt="img" />
+                    <!-- embed here -->
+                    <!--<img class="wide-img" alt="" src="/video/full/{{ id }}">-->
                 </figure>
                 <figcaption>
-                    <strong>{{ title }}</strong><br/>
-                    Uploaded {{ date_added }} 
+                    <span>Uploaded on 23 May 2017</span>
+                    <br/>
+                    <span>Expires never</span>
+                    <br/>
+                    <ul class="img-options">
+                        <li><a href="#">Delete Image</a></li>
+                        <li><a href="#">Password Protect</a></li>
+                        <li><a href="#">Change Expire Date</a></li>
+                        <li><a href="#">View Full Image</a></li>
+                    </ul>
                 </figcaption>
-            </a>
-          {{/ each }}
-            
-       </main>
+            </div>
+        </main>
+
     </div>
 </body>
 </html>

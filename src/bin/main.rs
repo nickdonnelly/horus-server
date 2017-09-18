@@ -9,7 +9,7 @@ use horus_server::*;
 use rocket_contrib::Template;
 
 fn main() {
-    use self::routes::{user, key, paste, image, video, manage};
+    use self::routes::*;
     check_dirs();
     rocket::ignite()
         .attach(Template::fairing())
@@ -22,15 +22,20 @@ fn main() {
         .mount("/image", routes![image::new, 
                                  image::show, 
                                  image::delete, 
-                                 image::list])
+                                 image::list,
+                                 image::full,
+                                 image::thumb])
         .mount("/video", routes![video::new, 
                                  video::show, 
                                  video::delete, 
                                  video::list])
-        .mount("/manage", routes![manage::my_images, 
+        .mount("/manage", routes![manage::my_images, manage::my_images_pageless, 
+                                  manage::image,
+                                  manage::my_videos, manage::my_videos_pageless,
+                                  manage::video,
                                   manage::request_auth_cookie,
-                                  manage::request_auth_url,
-                                  manage::test])
+                                  manage::request_auth_url,])
+        .mount("/static", routes![files::static_asset])
         .manage(self::dbtools::init_pool())
         .launch();
 }

@@ -2,8 +2,8 @@ extern crate diesel;
 
 use self::diesel::prelude::*;
 use super::super::DbConn;
-use super::super::models::{LicenseKey, User, HImage, AuthToken, SessionToken};
-use super::super::contexts::ImageList;
+use super::super::models::{LicenseKey, User, HImage, HVideo, AuthToken, SessionToken};
+use super::super::contexts::{ImageList, VideoList, ManageImage, ManagePaste, ManageVideo};
 use super::super::schema;
 use super::super::errors::AuthTokenError;
 use rocket::response::{status, Failure, Redirect};
@@ -32,6 +32,7 @@ pub fn request_auth_url(
     let _uid = apikey.get_owner();
     let usertoken = auth_tokens.find(_uid)
         .get_result::<AuthToken>(&*conn);
+    let mut url = String::from("/request_auth?redirect_path=images/0&auth_secret=");
 
     if usertoken.is_err() { // They don't have a token yet
         let usertoken = AuthToken::new(_uid);
@@ -45,8 +46,7 @@ pub fn request_auth_url(
         }
 
         let insert_result = insert_result.unwrap();
-        return Ok(status::Custom(Status::Accepted, insert_result.token));
-
+        url += insert_result.token.as_str();
     }else {
         // update existing token
         let usertoken = usertoken.unwrap().refresh(); // new token
@@ -58,8 +58,9 @@ pub fn request_auth_url(
         }
         let update_result = update_result.unwrap();
 
-        return Ok(status::Custom(Status::Accepted, update_result.token));
+        url += update_result.token.as_str();
     }
+    return Ok(status::Custom(Status::Accepted, url));
 }
 
 /// Stores auth cookie + redirects user to redirect_path
@@ -72,7 +73,6 @@ pub fn request_auth_cookie(
     )
     -> Result<Redirect, Failure>
 {
-    use schema::session_tokens;
     let redirect_url = auth_req.redirect_path.clone();
     
     let token_result = auth_req.into_token();
@@ -132,30 +132,131 @@ pub fn my_account(
 }
 
 
-// TODO
 #[get("/images/<page>")]
 pub fn my_images(
     page: u32,
-    apikey: LicenseKey,
+    session: SessionToken,
     conn: DbConn)
     -> Option<Template>
 {
     use schema::horus_images::dsl::*;
+    use schema::horus_users::dsl::*;
     let images = horus_images
-        .filter(owner.eq(apikey.get_owner()))
+        .filter(owner.eq(&session.uid))
         .order(date_added.desc())
         .limit(24)
         .offset((page * 24) as i64)
         .get_results::<HImage>(&*conn);
     
     let images = images.unwrap();
+    let name = horus_users.find(&session.uid)
+        .get_result::<User>(&*conn)
+        .unwrap().first_name;
 
     let context = ImageList {
-        first_name: String::from("TODO"),
+        first_name: name,
         images: images,
     };
 
     Some(Template::render("images", &context))
+}
+
+#[get("/videos/<page>")]
+pub fn my_videos(
+    page: u32,
+    session: SessionToken,
+    conn: DbConn)
+    -> Option<Template>
+{
+    use schema::horus_videos::dsl::*;
+    use schema::horus_users::dsl::*;
+
+    let videos  = horus_videos
+        .filter(owner.eq(&session.uid))
+        .order(date_added.desc())
+        .limit(24)
+        .offset((page * 24) as i64)
+        .get_results::<HVideo>(&*conn);
+
+    let videos = videos.unwrap();
+    let name = horus_users.find(&session.uid)
+        .get_result::<User>(&*conn)
+        .unwrap().first_name;
+
+    let context = VideoList {
+        first_name: name,
+        videos: videos,
+    };
+
+    Some(Template::render("videos", &context))
+}
+
+#[get("/video/<video_id>")]
+pub fn video(
+    video_id: String,
+    conn: DbConn,
+    session: SessionToken)
+    -> Option<Template>
+{
+    use schema::horus_videos::dsl::*;
+    let video = horus_videos.find(video_id)
+        .get_result::<HVideo>(&*conn);
+
+    if video.is_err() {
+        return None;
+    }
+    let video = video.unwrap();
+
+    if session.uid != video.owner {
+        return None;
+    }
+
+    let mut ititle = String::new();
+    if video.title.is_none() {
+        ititle += "Horus Video";
+    }else{
+        ititle += video.title.unwrap().as_str()
+    }
+    let context = ManageVideo {
+        id: video.id,
+        video_title: ititle,
+    };
+
+    Some(Template::render("video", &context))
+}
+
+#[get("/image/<image_id>")]
+pub fn image(
+    image_id: String,
+    conn: DbConn,
+    session: SessionToken)
+    -> Option<Template>
+{
+    use schema::horus_images::dsl::*;
+    let image = horus_images.find(image_id)
+        .get_result::<HImage>(&*conn);
+
+    if image.is_err() {
+        return None;
+    }
+    let image = image.unwrap();
+
+    if session.uid != image.owner {
+        return None;
+    }
+
+    let mut ititle = String::new();
+    if image.title.is_none() {
+        ititle += "Horus Image";
+    }else{
+        ititle += image.title.unwrap().as_str()
+    }
+    let context = ManageImage {
+        id: image.id,
+        img_title: ititle,
+    };
+
+    Some(Template::render("image", &context))
 }
 
 
@@ -164,16 +265,17 @@ pub fn my_images(
 #[get("/images")]
 pub fn my_images_pageless() -> Redirect {
     // Get them to a paged version
-    Redirect::to("/images/1")
+    Redirect::to("0")
 }
+
 #[get("/videos")]
 pub fn my_videos_pageless() -> Redirect {
     // Get them to a paged version
-    Redirect::to("/videos/1")
+    Redirect::to("0")
 }
 
 #[get("/pastes")]
 pub fn my_pastes_pageless() -> Redirect {
     // Get them to a paged version
-    Redirect::to("/pastes/1")
+    Redirect::to("0")
 }

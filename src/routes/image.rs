@@ -7,7 +7,7 @@ use super::super::DbConn;
 use super::super::dbtools;
 use super::super::models::{LicenseKey,HImage};
 use super::super::forms::HImageChangesetForm;
-use rocket::response::Failure;
+use rocket::response::{Failure, NamedFile};
 use rocket::response::status;
 use rocket::data::Data;
 use rocket::http::Status;
@@ -29,6 +29,34 @@ pub fn show(
     let mut context = HashMap::new();
     context.insert("image_url", "test");
     Some(Template::render("image", &context))
+}
+
+#[get("/full/<image_id>")]
+pub fn full(
+    image_id: String,
+    conn: DbConn)
+    -> Option<NamedFile>
+{
+    use schema::horus_images::dsl::*;
+    let image = horus_images.find(image_id)
+        .get_result::<HImage>(&*conn);
+
+    if image.is_err() {
+        return None;
+    }
+    let image = image.unwrap();
+
+    let image_path = Path::new(&image.filepath);
+    NamedFile::open(image_path).ok()
+}
+
+#[get("/thumb/<image_id>")]
+pub fn thumb(
+    image_id: String,
+    conn: DbConn)
+    -> Option<NamedFile>
+{
+    full(image_id, conn)
 }
 
 /// `list` returns a paginated JSON array of HImage objects.
