@@ -34,7 +34,7 @@ pub fn show(
         context.insert("title", "Horus Paste".to_string());
     }
 
-    Some(Template::render("paste", &context))
+    Some(Template::render("show_paste", &context))
 }
 
 #[get("/<uid>/list/<page>")]

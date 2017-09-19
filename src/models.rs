@@ -88,4 +88,13 @@ pub struct HPaste {
     pub expiration_time: Option<NaiveDateTime>
 }
 
+#[derive(Identifiable, Queryable)]
+#[table_name="horus_jobs"]
+pub struct HJob {
+    pub id: i32,
+    pub owner: i32,
+    pub job_status: super::routes::jobs::JobStatus,
+    pub job_data: String,
+    time_queued: Option<NaiveDateTime>,
+}
 

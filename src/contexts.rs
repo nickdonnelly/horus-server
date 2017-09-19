@@ -12,6 +12,7 @@ pub struct VideoList {
     pub videos: Vec<HVideo>,
 }
 
+#[derive(Serialize)]
 pub struct PasteList {
     pub first_name: String,
     pub pastes: Vec<HPaste>
@@ -20,19 +21,22 @@ pub struct PasteList {
 #[derive(Serialize)]
 pub struct ManageImage {
     pub id: String,
-    pub img_title: String,
+    pub title: String,
+    pub page_title: String,
 }
 
 #[derive(Serialize)]
 pub struct ManageVideo {
     pub id: String,
-    pub video_title: String,
+    pub title: String,
+    pub page_title: String,
 }
 
 #[derive(Serialize)]
 pub struct ManagePaste {
     pub id: String,
-    pub paste_title: String,
+    pub title: String,
+    pub page_title: String,
     pub paste_content: String,
 }
 

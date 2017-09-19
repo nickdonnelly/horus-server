@@ -180,5 +180,5 @@ pub fn show(
     let mut context = HashMap::new();
 
     context.insert("video_url", "TODO");
-    Some(Template::render("video", &context))
+    Some(Template::render("show_video", &context))
 }

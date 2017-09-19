@@ -1,0 +1,19 @@
+{{> header }} 
+
+<main class="image-box">
+  {{#each images }}
+    <a class="image" href="/manage/image/{{ id }}">
+        <figure>
+            <span class="helper"></span>
+            <img src="/image/thumb/{{ id }}" alt="img" />
+        </figure>
+        <figcaption>
+            <strong>{{ title }}</strong><br/>
+            Uploaded {{ date_added }} 
+        </figcaption>
+    </a>
+  {{/ each }}
+</main>
+
+{{> footer }}
+ 

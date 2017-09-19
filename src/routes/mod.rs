@@ -2,6 +2,7 @@
 // CRUD models are present.
 
 pub mod user;
+pub mod jobs;
 pub mod files;
 pub mod manage;
 pub mod image;

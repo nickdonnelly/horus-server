@@ -13,6 +13,9 @@ use std::path::Path;
 fn main() {
     use self::routes::*;
     check_dirs();
+    let empty: std::collections::HashMap<String, String> = std::collections::HashMap::with_capacity(0);
+    Template::render("header", &empty);
+    Template::render("footer", &empty);
     rocket::ignite()
         .attach(Template::fairing())
         .mount("/user", routes![user::show, user::update])
@@ -31,13 +34,14 @@ fn main() {
                                  video::show, 
                                  video::delete, 
                                  video::list])
-        .mount("/manage", routes![manage::my_images, manage::my_images_pageless, 
-                                  manage::image,
+        .mount("/manage", routes![manage::image, manage::video, manage::paste,
+                                  manage::my_images, manage::my_images_pageless, 
                                   manage::my_videos, manage::my_videos_pageless,
-                                  manage::video,
+                                  manage::my_pastes, manage::my_pastes_pageless,
                                   manage::request_auth_cookie,
                                   manage::request_auth_url,])
         .mount("/static", routes![files::static_asset])
+        //.mount("/admin", routes![jobs::list_jobs, jobs::job_status])
         .mount("/", routes![favicon])
         .manage(self::dbtools::init_pool())
         .launch();

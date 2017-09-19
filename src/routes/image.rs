@@ -20,6 +20,7 @@ use std::io::Read;
 use std::io::prelude::*;
 use std::fs::File;
 
+// TODO
 #[get("/<_image_id>")]
 pub fn show(
     _image_id: String,
@@ -28,7 +29,7 @@ pub fn show(
 {
     let mut context = HashMap::new();
     context.insert("image_url", "test");
-    Some(Template::render("image", &context))
+    Some(Template::render("show_image", &context))
 }
 
 #[get("/full/<image_id>")]

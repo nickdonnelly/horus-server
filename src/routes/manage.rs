@@ -2,8 +2,9 @@ extern crate diesel;
 
 use self::diesel::prelude::*;
 use super::super::DbConn;
-use super::super::models::{LicenseKey, User, HImage, HVideo, AuthToken, SessionToken};
-use super::super::contexts::{ImageList, VideoList, ManageImage, ManagePaste, ManageVideo};
+use super::super::models::*;
+use super::super::contexts::{ImageList, PasteList, VideoList};
+use super::super::contexts::{ManageImage, ManagePaste, ManageVideo};
 use super::super::schema;
 use super::super::errors::AuthTokenError;
 use rocket::response::{status, Failure, Redirect};
@@ -15,7 +16,6 @@ pub struct AuthRequest{
     redirect_path: String,
     pub auth_secret: String
 }
-
 
 /// Gives dtapp a URL to open in the users browser that will auth
 /// them with a cookie then redirect them. Consider adding additional
@@ -113,7 +113,7 @@ pub fn request_auth_cookie(
     Ok(Redirect::to(&redirect_url))
 }
 
-#[get("/")]
+#[get("/account")]
 pub fn my_account(
     apikey: LicenseKey,
     conn: DbConn)
@@ -127,7 +127,7 @@ pub fn my_account(
 
     match user {
         Err(_) => None,
-        Ok(u) => Some(Template::render("myaccount", &u))
+        Ok(u) => Some(Template::render("manage_account", &u))
     }
 }
 
@@ -158,7 +158,41 @@ pub fn my_images(
         images: images,
     };
 
-    Some(Template::render("images", &context))
+    Some(Template::render("manage_images", &context))
+}
+
+#[get("/pastes/<page>")]
+pub fn my_pastes(
+    page: u32,
+    session: SessionToken,
+    conn: DbConn)
+    -> Option<Template>
+{
+    use schema::horus_pastes::dsl::*;
+    use schema::horus_users::dsl::*;
+
+    let pastes = horus_pastes   
+        .filter(owner.eq(&session.uid))
+        .limit(24)
+        .offset((page * 24) as i64)
+        .get_results::<HPaste>(&*conn);
+
+    if pastes.is_err() {
+        return None;
+    }
+
+    let pastes = pastes.unwrap();
+
+    let name = horus_users.find(&session.uid)
+        .get_result::<User>(&*conn)
+        .unwrap().first_name;
+    
+    let context = PasteList {
+        first_name: name,
+        pastes: pastes,
+    };
+
+    Some(Template::render("manage_pastes", &context))
 }
 
 #[get("/videos/<page>")]
@@ -188,7 +222,7 @@ pub fn my_videos(
         videos: videos,
     };
 
-    Some(Template::render("videos", &context))
+    Some(Template::render("manage_videos", &context))
 }
 
 #[get("/video/<video_id>")]
@@ -219,10 +253,11 @@ pub fn video(
     }
     let context = ManageVideo {
         id: video.id,
-        video_title: ititle,
+        title: ititle.clone(),
+        page_title: ititle,
     };
 
-    Some(Template::render("video", &context))
+    Some(Template::render("manage_video", &context))
 }
 
 #[get("/image/<image_id>")]
@@ -253,12 +288,47 @@ pub fn image(
     }
     let context = ManageImage {
         id: image.id,
-        img_title: ititle,
+        title: ititle.clone(),
+        page_title: ititle.clone(),
     };
 
-    Some(Template::render("image", &context))
+    Some(Template::render("manage_image", &context))
 }
 
+#[get("/paste/<paste_id>")]
+pub fn paste(
+    paste_id: String,
+    conn: DbConn,
+    session: SessionToken)
+    -> Option<Template>
+{
+    use schema::horus_pastes::dsl::*;
+    let paste = horus_pastes.find(paste_id)
+        .get_result::<HPaste>(&*conn);
+
+    if paste.is_err() {
+        return None;
+    }
+    let paste = paste.unwrap();
+
+    if paste.owner != session.uid {
+        return None
+    }
+
+    let mut paste_title = String::from("Horus Paste");
+    if paste.title.is_some() {
+        paste_title = paste.title.unwrap().clone();
+    }
+
+    let context = ManagePaste {
+        id: paste.id.clone(),
+        title: paste_title.clone(),
+        page_title: paste_title,
+        paste_content: paste.paste_data,
+    };
+
+    Some(Template::render("manage_paste", &context))
+}
 
 // REDIRECTS
 
