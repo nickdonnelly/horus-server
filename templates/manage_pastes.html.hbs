@@ -1,3 +1,24 @@
 {{> header }}
 
+<table class="table-full">
+  <tr class="table-head">
+    <th>Paste Title</th>
+    <th class="col-double-wide">Content</th>
+    <th>Date Posted</th>
+    <th>Expires</th>
+  </tr>
+  {{#each pastes }}
+  <tr class="paste-row" data-href="/manage/paste/abcdefg">
+
+    <td>{{ title }}</td>
+    <td class="paste-row-content"><div>
+      {{ paste_data }}
+    </div></td>
+    <td>{{ date_added }}</td>
+    <td>{{ expiration_time }}</td> 
+  </tr>
+  {{/ each}}
+</table>
+
+
 {{> footer }}

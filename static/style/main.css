@@ -8,6 +8,9 @@ html {
 ul {
   list-style-type: none; }
 
+table, th, td {
+  border-collapse: collapse; }
+
 .wrapper {
   width: 960px;
   margin: 0 auto;
@@ -57,7 +60,6 @@ ul {
 .image {
   width: 225px;
   box-shadow: 0px 0px 8px 1px rgba(0, 0, 0, 0.75);
-  margin-bottom: 20px;
   margin-left: 5px;
   margin-right: 5px;
   transition: all 0.2s ease-in-out;
@@ -102,6 +104,50 @@ figcaption {
 
 .wide-img {
   box-shadow: 0px 0px 8px 1px rgba(0, 0, 0, 0.75); }
+
+.table-full {
+  table-layout: fixed;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid gray;
+  text-align: center; }
+  .table-full a {
+    transition: all 0.2s ease-in-out;
+    color: black !important; }
+    .table-full a:hover {
+      color: #8080ff; }
+  .table-full tr {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    transition: all 0.2s ease-in-out; }
+    .table-full tr:hover {
+      cursor: pointer;
+      background: #bfbfbf; }
+  .table-full td {
+    border-top: 1px solid lightgray;
+    border-bottom: 1px solid lightgray;
+    height: 1em !important;
+    padding: 0.5em; }
+    .table-full td div {
+      height: 1em;
+      min-height: 1em;
+      max-height: 1em;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; }
+
+.table-head {
+  font-weight: bold; }
+
+th {
+  padding: 0.5em; }
+
+.paste-row-content {
+  height: 1em;
+  max-height: 1em;
+  overflow: hidden; }
 
 main {
   padding-top: 1em; }
