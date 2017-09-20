@@ -14,8 +14,6 @@ fn main() {
     use self::routes::*;
     check_dirs();
     let empty: std::collections::HashMap<String, String> = std::collections::HashMap::with_capacity(0);
-    Template::render("header", &empty);
-    Template::render("footer", &empty);
     rocket::ignite()
         .attach(Template::fairing())
         .mount("/user", routes![user::show, user::update])

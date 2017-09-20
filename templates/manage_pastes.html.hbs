@@ -8,14 +8,14 @@
     <th>Expires</th>
   </tr>
   {{#each pastes }}
-  <tr class="paste-row" data-href="/manage/paste/abcdefg">
+  <tr class="paste-row" data-href="/manage/paste/{{ id }}">
 
     <td>{{ title }}</td>
     <td class="paste-row-content"><div>
       {{ paste_data }}
     </div></td>
     <td>{{ date_added }}</td>
-    <td>{{ expiration_time }}</td> 
+    <td>{{#if expiration_time }} {{ expiration_time }} {{ else }} Never {{/if }}</td> 
   </tr>
   {{/ each}}
 </table>

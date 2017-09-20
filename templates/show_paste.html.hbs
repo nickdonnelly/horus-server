@@ -1,55 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>{{ title }}</title>
-  <style>
-    *{ user-select: none; }
-    body {
-      font-family: Lucida, sans-serif;
-    }
-
-    h1 {
-      text-align: center;
-      font-weight: bold;
-      color: white;
-    }
-
-    #paste_container {
-      border: 1px outset;
-      width: 95%;
-      height: 95%;
-      bottom: 0;
-      margin: 0 auto;
-      border-radius: 8px;
-      padding: 1em;
-      user-select: text !important;
-    }
-  </style>
-</head>
-<body>
-<h1>{{ title }}</h1>
-<div id="paste_container">
+{{> show_header }}
+<div class="paste_container">
   {{ paste_data }} 
 </div>
-  
-<script>
-document.addEventListener("DOMContentLoaded", function(event){
-  var colors = [
-    ["#3949ab", "#ffffff"], // blue
-    ["#43a047", "#000000"], // green
-    ["#b71c1c", "#ffffff"], // red
-    ["#fb8c00", "#000000"] // orange
-  ];
-
-  var color = colors[Math.floor(Math.random()*colors.length)];
-
-  var body = document.getElementsByTagName("body")[0];
-
-  body.style.background = color[0];
-  body.style.color = color[1];
-
-});
-</script>
-</body>
-</html>
+{{> show_footer }}

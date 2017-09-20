@@ -39,4 +39,3 @@ pub struct ManagePaste {
     pub page_title: String,
     pub paste_content: String,
 }
-

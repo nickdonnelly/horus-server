@@ -20,16 +20,22 @@ use std::io::Read;
 use std::io::prelude::*;
 use std::fs::File;
 
-// TODO
-#[get("/<_image_id>")]
+#[get("/<image_id>")]
 pub fn show(
-    _image_id: String,
-    _conn: DbConn)
+    image_id: String,
+    conn: DbConn)
     -> Option<Template>
 {
-    let mut context = HashMap::new();
-    context.insert("image_url", "test");
-    Some(Template::render("show_image", &context))
+    use schema::horus_images::dsl::*;
+
+    let image = horus_images.find(&image_id)
+        .get_result::<HImage>(&*conn);
+
+    if image.is_err() {
+        return None;
+    }
+    let image = image.unwrap();
+    Some(Template::render("show_image", &image))
 }
 
 #[get("/full/<image_id>")]

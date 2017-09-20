@@ -33,7 +33,7 @@ pub fn request_auth_url(
     let _uid = apikey.get_owner();
     let usertoken = auth_tokens.find(_uid)
         .get_result::<AuthToken>(&*conn);
-    let mut url = String::from("/request_auth?redirect_path=images/0&auth_secret=");
+    let mut url = String::from("/manage/request_auth?redirect_path=images/0&auth_secret=");
 
     if usertoken.is_err() { // They don't have a token yet
         let usertoken = AuthToken::new(_uid);
