@@ -18,6 +18,7 @@ regex = "0.2"
 chrono = { version = "0.4", features = ["serde"] }
 rand = "0.3"
 base64 = "0.6.0"
+time = "0.1"
 
 [dependencies.rocket_contrib]
 version = "*"

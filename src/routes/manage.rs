@@ -1,4 +1,5 @@
 extern crate diesel;
+extern crate time;
 
 use self::diesel::prelude::*;
 use super::super::DbConn;
@@ -106,6 +107,7 @@ pub fn request_auth_cookie(
 
     let mut scookie = Cookie::new("horus_session", token_result.token.clone());
     scookie.set_path("/");
+    scookie.set_max_age(time::Duration::days(3));
 
     cookies.remove_private(Cookie::named("horus_session"));
     cookies.add_private(scookie);
