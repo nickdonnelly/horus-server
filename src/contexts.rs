@@ -2,20 +2,26 @@ use super::models::{HImage, HVideo, HPaste};
 
 #[derive(Serialize)]
 pub struct ImageList {
-    pub first_name: String,
+    pub title: String,
+    pub page_title: String,
+    pub editable: bool,
     pub images: Vec<HImage>
 }
 
 #[derive(Serialize)]
 pub struct VideoList {
-    pub first_name: String,
+    pub title: String,
+    pub page_title: String,
+    pub editable: bool,
     pub videos: Vec<HVideo>,
 }
 
 #[derive(Serialize)]
 pub struct PasteList {
-    pub first_name: String,
-    pub pastes: Vec<HPaste>
+    pub title: String,
+    pub page_title: String,
+    pub pastes: Vec<HPaste>,
+    pub editable: bool,
 }
 
 #[derive(Serialize)]
@@ -39,6 +45,6 @@ pub struct ManagePaste {
     pub id: String,
     pub title: String,
     pub page_title: String,
-    pub paste_content: String,
+    pub paste: HPaste,
     pub editable: bool,
 }

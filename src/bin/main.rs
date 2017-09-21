@@ -18,12 +18,10 @@ fn main() {
         .attach(Template::fairing())
         .mount("/user", routes![user::show, user::update])
         .mount("/key", routes![key::validity_check, key::issue])
-        .mount("/paste", routes![paste::new, 
-                                 paste::show, 
-                                 paste::delete, 
-                                 paste::list])
-        .mount("/image", routes![image::new, 
-                                 image::show, 
+        .mount("/paste", routes![paste::new, paste::update, paste::list, 
+                                 paste::delete_sessionless, paste::delete,
+                                 paste::show])
+        .mount("/image", routes![image::new, image::show,
                                  image::delete, image::delete_sessionless,
                                  image::list,
                                  image::full,

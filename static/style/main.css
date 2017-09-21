@@ -151,6 +151,15 @@ th {
 main {
   padding-top: 1em; }
 
+.paste-data {
+  white-space: pre;
+  text-align: left;
+  display: block;
+  font-family: monospace;
+  border-radius: 15px;
+  padding: 0.5em 1.25em 0.5em 1.25em;
+  background: #f2f2f2; }
+
 .img-options a {
   display: block;
   width: 100%;

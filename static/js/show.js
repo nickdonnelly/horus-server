@@ -1,3 +1,5 @@
+hljs.configure({tabReplace: '    ',});
+hljs.initHighlightingOnLoad();
 document.addEventListener("DOMContentLoaded", function(event){
   var colors = [
     ["#3949ab", "#39ab9c"], // blue

@@ -5,14 +5,14 @@
         <img class="wide-img" alt="" data-href="/image/{{ id }}" src="/image/full/{{ id }}">
     </figure>
     <figcaption>
-        <span>Uploaded on 23 May 2017</span>
+        <span>Uploaded on {{ date_added }}</span>
         <br/>
-        <span>Expires never</span>
+        <span>Expires {{#if is_expiry }} Never {{ else }} {{ expiration_time }} {{/if }}</span>
         <br/>
         <ul class="img-options">
-            <li id="img-delete"><a href="#">Delete Image</a></li>
-            <li id="img-pw"><a href="#">Password Protect</a></li>
-            <li id="img-expire"><a href="#">Change Expire Date</a></li>
+            <li id="img-delete" data-loc="images" data-method="delete" data-href="/image/{{ id }}"><a href="#">Delete Image</a></li>
+            <li id="img-pw" data-method="post" data-href="/image/{{ id }}"><a href="#">Password Protect</a></li>
+            <li id="img-expire" data-method="post" data-href="/image/{{ id }}"><a href="#">Change Expire Date</a></li>
             <li id="img-full"><a href="/image/{{ id }}">View Full Image</a></li>
         </ul>
     </figcaption>

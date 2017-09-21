@@ -155,8 +155,13 @@ pub fn my_images(
         .get_result::<User>(&*conn)
         .unwrap().first_name;
 
+    let mut ititle = String::from(name);
+    ititle += "'s Images";
+
     let context = ImageList {
-        first_name: name,
+        title: ititle.clone(),
+        page_title: ititle,
+        editable: false,
         images: images,
     };
 
@@ -189,9 +194,14 @@ pub fn my_pastes(
         .get_result::<User>(&*conn)
         .unwrap().first_name;
     
+    let mut ititle = String::from(name);
+    ititle += "'s Pastes";
+
     let context = PasteList {
-        first_name: name,
+        title: ititle.clone(),
+        page_title: ititle,
         pastes: pastes,
+        editable: false,
     };
 
     Some(Template::render("manage_pastes", &context))
@@ -219,8 +229,12 @@ pub fn my_videos(
         .get_result::<User>(&*conn)
         .unwrap().first_name;
 
+    let mut ititle = String::from(name);
+    ititle += "'s Videos";
     let context = VideoList {
-        first_name: name,
+        title: ititle.clone(),
+        page_title: ititle,
+        editable: false,
         videos: videos,
     };
 
@@ -316,19 +330,19 @@ pub fn paste(
     let paste = paste.unwrap();
 
     if paste.owner != session.uid {
-        return None
+        return None;
     }
 
     let mut paste_title = String::from("Horus Paste");
     if paste.title.is_some() {
-        paste_title = paste.title.unwrap().clone();
+        paste_title = paste.title.clone().unwrap();
     }
 
     let context = ManagePaste {
         id: paste.id.clone(),
         title: paste_title.clone(),
         page_title: paste_title,
-        paste_content: paste.paste_data,
+        paste: paste,
         editable: true,
     };
 

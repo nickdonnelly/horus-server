@@ -7,7 +7,7 @@ use rocket::response::status;
 use rocket::http::Status;
 use rocket_contrib::Json;
 use schema::horus_pastes::dsl::*;
-use super::super::models::{HPaste, LicenseKey};
+use super::super::models::{HPaste, LicenseKey, SessionToken};
 use super::super::forms::{HNewPasteForm, HPasteChangesetForm};
 use rocket_contrib::Template;
 use std::collections::HashMap;
@@ -90,8 +90,47 @@ pub fn new(
     Ok(status::Created(String::from("/paste/") + result.id.as_str(), None))
 }
 
+fn delete_internal(
+    paste: HPaste,
+    conn: DbConn)
+    -> Result<status::Custom<()>, Failure>
+{
+    let result = diesel::delete(&paste).execute(&*conn);
+
+    if result.is_err() {
+        println!("Databse error while deleting paste: {}", result.err().unwrap());
+        return Err(Failure(Status::InternalServerError));
+    }
+    
+    Ok(status::Custom(Status::Ok, ()))
+}
+
 #[delete("/<paste_id>")]
 pub fn delete(
+    paste_id: String,
+    session: SessionToken,
+    conn: DbConn)
+    -> Result<status::Custom<()>, Failure>
+{
+    let paste = horus_pastes
+        .filter(id.eq(paste_id))
+        .first::<HPaste>(&*conn);
+
+    if paste.is_err() {
+        return Err(Failure(Status::NotFound))
+    }
+
+    let paste = paste.unwrap();
+
+    if session.uid != paste.owner {
+        return Err(Failure(Status::Unauthorized))
+    }
+    
+    delete_internal(paste, conn)
+}
+
+#[delete("/<paste_id>", rank = 2 )]
+pub fn delete_sessionless(
     paste_id: String,
     apikey: LicenseKey,
     conn: DbConn)
@@ -107,26 +146,18 @@ pub fn delete(
 
     let paste = paste.unwrap();
 
-    // Don't delete other people's pastes!
     if !apikey.belongs_to(paste.owner) {
         return Err(Failure(Status::Unauthorized))
     }
 
-    let result = diesel::delete(&paste).execute(&*conn);
-
-    if result.is_err() {
-        println!("Databse error while deleting paste: {}", result.err().unwrap());
-        return Err(Failure(Status::InternalServerError));
-    }
-    
-    Ok(status::Custom(Status::Ok, ()))
+    delete_internal(paste, conn)
 }
 
 #[put("/<paste_id>", format = "application/json", data = "<updated_values>")]
 pub fn update(
     paste_id: String,
     updated_values: Json<HPasteChangesetForm>,
-    apikey: LicenseKey,
+    session: SessionToken,
     conn: DbConn)
     -> Result<status::Accepted<()>, Failure>
 {
@@ -138,7 +169,7 @@ pub fn update(
     }
     let paste = paste.unwrap();
 
-    if !apikey.belongs_to(paste.owner) {
+    if session.uid != paste.owner {
         return Err(Failure(Status::Unauthorized));
     }
 

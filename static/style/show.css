@@ -11,7 +11,10 @@ h1 {
   text-align: center;
   font-weight: bold;
   color: white;
+  user-select: none;
 }
+
+pre { margin: 0; }
 
 #container {
   display: inline-block;
@@ -25,14 +28,11 @@ h1 {
 }
 
 .paste_container {
-  color: white !important;
-  width: 95%;
-  height: 95%;
   bottom: 0;
-  margin: 0 auto;
   border-radius: 8px;
   padding: 1em;
   user-select: text !important;
+  display: block;
 }
 
 .image_container {

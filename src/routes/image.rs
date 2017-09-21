@@ -119,7 +119,7 @@ pub fn delete(
         return Err(Failure(Status::Unauthorized));
     }
 
-    do_delete(image, conn)
+    delete_internal(image, conn)
 }
 
 #[delete("/<image_id>", rank=2)]
@@ -146,10 +146,10 @@ pub fn delete_sessionless(
     }
 
 
-    do_delete(image, conn)
+    delete_internal(image, conn)
 }
 
-fn do_delete(
+fn delete_internal(
     image: HImage,
     conn: DbConn) 
     -> Result<status::Custom<()>, Failure>
