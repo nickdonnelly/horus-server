@@ -19,10 +19,5 @@
     </header> 
 
     <div class="wrapper">
-        {{#if editable }}
-          <h1 contenteditable="true" class="page-header">{{ page_header }}</h1>
-        {{else}}
-          <h1 contenteditable="false" class="page-header">{{ page_header }}</h1>
-        {{/if}}
-        
+        <h1 contenteditable="{{ editable }}" id="page-title" class="page-header">{{ page_header }}</h1>
         <main>

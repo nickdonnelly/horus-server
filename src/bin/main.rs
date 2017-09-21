@@ -24,7 +24,7 @@ fn main() {
                                  paste::list])
         .mount("/image", routes![image::new, 
                                  image::show, 
-                                 image::delete, 
+                                 image::delete, image::delete_sessionless,
                                  image::list,
                                  image::full,
                                  image::thumb])

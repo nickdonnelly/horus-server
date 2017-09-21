@@ -5,7 +5,7 @@ extern crate diesel;
 use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
-use super::super::models::{LicenseKey,HImage};
+use super::super::models::{LicenseKey,HImage,SessionToken};
 use super::super::forms::HImageChangesetForm;
 use rocket::response::{Failure, NamedFile};
 use rocket::response::status;
@@ -99,6 +99,32 @@ pub fn list(
 #[delete("/<image_id>")]
 pub fn delete(
     image_id: String,
+    session: SessionToken,
+    conn: DbConn)
+    -> Result<status::Custom<()>, Failure>
+{
+    use schema::horus_images::dsl::*;
+
+    let image = horus_images
+        .filter(id.eq(&image_id))
+        .first::<HImage>(&*conn);
+
+    if image.is_err() {
+        return Err(Failure(Status::NotFound));
+    }
+
+    let image = image.unwrap();
+    
+    if session.uid != image.owner {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    do_delete(image, conn)
+}
+
+#[delete("/<image_id>", rank=2)]
+pub fn delete_sessionless(
+    image_id: String,
     apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Custom<()>, Failure>
@@ -119,7 +145,16 @@ pub fn delete(
         return Err(Failure(Status::Unauthorized));
     }
 
-    let result = diesel::delete(&image).execute(&*conn);
+
+    do_delete(image, conn)
+}
+
+fn do_delete(
+    image: HImage,
+    conn: DbConn) 
+    -> Result<status::Custom<()>, Failure>
+{
+        let result = diesel::delete(&image).execute(&*conn);
 
     if result.is_err() {
         println!("Database error while deleting image: {}", result.err().unwrap());

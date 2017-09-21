@@ -2,7 +2,7 @@
 <div class="img-cont">
     <figure>
         <span class="helper"></span>
-        <img class="wide-img" alt="" src="http://via.placeholder.com/500x300">
+        <img class="wide-img" alt="" data-href="/image/{{ id }}" src="/image/full/{{ id }}">
     </figure>
     <figcaption>
         <span>Uploaded on 23 May 2017</span>
@@ -10,10 +10,10 @@
         <span>Expires never</span>
         <br/>
         <ul class="img-options">
-            <li><a href="#">Delete Image</a></li>
-            <li><a href="#">Password Protect</a></li>
-            <li><a href="#">Change Expire Date</a></li>
-            <li><a href="#">View Full Image</a></li>
+            <li id="img-delete"><a href="#">Delete Image</a></li>
+            <li id="img-pw"><a href="#">Password Protect</a></li>
+            <li id="img-expire"><a href="#">Change Expire Date</a></li>
+            <li id="img-full"><a href="/image/{{ id }}">View Full Image</a></li>
         </ul>
     </figcaption>
 </div>

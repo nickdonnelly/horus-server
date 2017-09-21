@@ -257,6 +257,7 @@ pub fn video(
         id: video.id,
         title: ititle.clone(),
         page_title: ititle,
+        editable: true,
     };
 
     Some(Template::render("manage_video", &context))
@@ -292,6 +293,7 @@ pub fn image(
         id: image.id,
         title: ititle.clone(),
         page_title: ititle.clone(),
+        editable: true,
     };
 
     Some(Template::render("manage_image", &context))
@@ -327,6 +329,7 @@ pub fn paste(
         title: paste_title.clone(),
         page_title: paste_title,
         paste_content: paste.paste_data,
+        editable: true,
     };
 
     Some(Template::render("manage_paste", &context))

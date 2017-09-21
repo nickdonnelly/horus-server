@@ -23,6 +23,7 @@ pub struct ManageImage {
     pub id: String,
     pub title: String,
     pub page_title: String,
+    pub editable: bool,
 }
 
 #[derive(Serialize)]
@@ -30,6 +31,7 @@ pub struct ManageVideo {
     pub id: String,
     pub title: String,
     pub page_title: String,
+    pub editable: bool,
 }
 
 #[derive(Serialize)]
@@ -38,4 +40,5 @@ pub struct ManagePaste {
     pub title: String,
     pub page_title: String,
     pub paste_content: String,
+    pub editable: bool,
 }
