@@ -29,6 +29,7 @@ pre { margin: 0; }
   border-radius: 15px;
   padding: 1em;
   user-select: text !important;
+  box-shadow: 0px 0px 8px 1px rgba(0,0,0,0.75)
   display: block;
 }
 
@@ -37,5 +38,6 @@ pre { margin: 0; }
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  box-shadow: 0px 0px 8px 1px rgba(0,0,0,0.75)
   padding: 0;
 }

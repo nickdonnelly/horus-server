@@ -220,7 +220,7 @@ pub fn my_videos(
     let videos  = horus_videos
         .filter(owner.eq(&session.uid))
         .order(date_added.desc())
-        .limit(24)
+        .limit(8)
         .offset((page * 24) as i64)
         .get_results::<HVideo>(&*conn);
 

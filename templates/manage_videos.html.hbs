@@ -1,10 +1,11 @@
 {{> header }}
 
 <main class="image-box">
-{{#each images }}
+{{#each videos }}
   <a class="image" href="/manage/video/{{ id }}">
       <figure>
           <span class="helper"></span>
+          <video controls src="/video/full/{{ id }}" />
           <img src="/video/thumb/{{ id }}" alt="img" />
       </figure>
       <figcaption>
