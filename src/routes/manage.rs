@@ -22,7 +22,7 @@ pub struct AuthRequest{
 /// them with a cookie then redirect them. Consider adding additional
 /// request guards to this...
 /// Overwrites any current auth tokens for the user making the request.
-#[post("/request_auth_url")]
+#[get("/request_auth_url")]
 pub fn request_auth_url(
     apikey: LicenseKey,
     conn: DbConn)

@@ -53,9 +53,9 @@ impl<'a, 'r> FromRequest<'a, 'r> for LicenseKey {
         // Get keys from headers
         let keys: Vec<_> = request.headers().get("x-api-key").collect();
         if keys.len() < 1 {
-            return Outcome::Failure((Status::BadRequest, String::from("Please provide an API key.")));
+            return Outcome::Failure((Status::Unauthorized, String::from("Please provide an API key.")));
         }else if keys.len() > 1{
-            return Outcome::Failure((Status::BadRequest, String::from("Please provide only 1 API key.")));
+            return Outcome::Failure((Status::Unauthorized, String::from("Please provide only 1 API key.")));
         }
 
         // Get database handle
