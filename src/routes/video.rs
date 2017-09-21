@@ -7,7 +7,7 @@ use super::super::DbConn;
 use super::super::dbtools;
 use super::super::models::{LicenseKey, HVideo};
 use super::super::forms::HVideoChangesetForm;
-use rocket::response::{status, Failure};
+use rocket::response::{status, Failure, NamedFile};
 use rocket::data::Data;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
@@ -18,7 +18,7 @@ use std::fs::File;
 use std::path::Path;
 use std::collections::HashMap;
 
-#[post("/", format = "video/webm", data = "<vid_data>")]
+#[post("/new", format = "video/webm", data = "<vid_data>")]
 pub fn new(
     vid_data: Data,
     apikey: LicenseKey,
@@ -45,7 +45,7 @@ pub fn new(
         .collect();
 
     // 1 more character due too "webm" vs "png"
-    let vid_data_decoded = base64::decode(&vid_data[21..]);
+    let vid_data_decoded = base64::decode(&vid_data[23..]);
 
     if vid_data_decoded.is_err() {
         return Err(Failure(Status::BadRequest));
@@ -171,14 +171,38 @@ pub fn update(
     }
 }
 
-#[get("/<_vid_id>")]
+#[get("/full/<vid_id>")]
+pub fn full(
+    vid_id: String,
+    conn: DbConn)
+    -> Option<NamedFile>
+{
+    use schema::horus_videos::dsl::*;
+    let video = horus_videos.find(vid_id)
+        .get_result::<HVideo>(&*conn);
+    
+    if video.is_err() {
+        return None;
+    }
+    let video = video.unwrap();
+    let video_path = Path::new(&video.filepath);
+    NamedFile::open(video_path).ok()
+}
+
+#[get("/<vid_id>")]
 pub fn show(
-    _vid_id: String,
-    _conn: DbConn)
+    vid_id: String,
+    conn: DbConn)
     -> Option<Template>
 {
-    let mut context = HashMap::new();
+    use schema::horus_videos::dsl::*;
+    let video = horus_videos.find(&vid_id)
+        .get_result::<HVideo>(&*conn);
 
-    context.insert("video_url", "TODO");
-    Some(Template::render("show_video", &context))
+    if video.is_err() {
+        return None;
+    }
+    let video = video.unwrap();
+
+    Some(Template::render("show_video", &video))
 }

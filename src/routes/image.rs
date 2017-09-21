@@ -167,7 +167,7 @@ fn delete_internal(
 
 /// Note: This doesn't support custom titles yet.
 /// Also TODO: Abstract the fuck out of this
-#[post("/", format="image/png", data = "<img_data>")]
+#[post("/new", format="image/png", data = "<img_data>")]
 pub fn new(
     img_data: Data,
     apikey: LicenseKey,
@@ -195,9 +195,10 @@ pub fn new(
         .collect();
 
     // Removes the prefix
-    let raw_img_data = base64::decode(&img_data[20..]);
+    let raw_img_data = base64::decode(&img_data[22..]);
 
     if raw_img_data.is_err() {
+        println!("decode error");
         return Err(Failure(Status::BadRequest));
     }
 

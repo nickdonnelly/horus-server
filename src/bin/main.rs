@@ -26,10 +26,8 @@ fn main() {
                                  image::list,
                                  image::full,
                                  image::thumb])
-        .mount("/video", routes![video::new, 
-                                 video::show, 
-                                 video::delete, 
-                                 video::list])
+        .mount("/video", routes![video::new, video::show, video::delete,
+                                 video::full, video::list])
         .mount("/manage", routes![manage::image, manage::video, manage::paste,
                                   manage::my_images, manage::my_images_pageless, 
                                   manage::my_videos, manage::my_videos_pageless,

@@ -20,16 +20,13 @@ pre { margin: 0; }
   display: inline-block;
   margin: 0 auto;
   max-width: 900px;
-  border-radius: 15px;
+  background: rgba(0,0,0,0);
   padding: 0;
-  -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);
-  -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);
-  box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);
 }
 
 .paste_container {
   bottom: 0;
-  border-radius: 8px;
+  border-radius: 15px;
   padding: 1em;
   user-select: text !important;
   display: block;
