@@ -4,7 +4,7 @@ extern crate time;
 use self::diesel::prelude::*;
 use super::super::DbConn;
 use super::super::models::*;
-use super::super::contexts::{ImageList, PasteList, VideoList};
+use super::super::contexts::{ImageList, PasteList, VideoList, FileList};
 use super::super::contexts::{ManageImage, ManagePaste, ManageVideo};
 use super::super::schema;
 use super::super::errors::AuthTokenError;
@@ -166,6 +166,48 @@ pub fn my_images(
     };
 
     Some(Template::render("manage_images", &context))
+}
+
+#[get("/files/<page>")]
+pub fn my_files(
+    page: u32,
+    session: SessionToken,
+    conn: DbConn)
+    -> Option<Template>
+{
+    use schema::horus_files::dsl::*;
+    use schema::horus_users::dsl::*;
+
+    let files = horus_files
+        .filter(owner.eq(&session.uid))
+        .limit(24)
+        .order(date_added.desc())
+        .offset((page * 24) as i64)
+        .get_results::<HFile>(&*conn);
+
+    if files.is_err() {
+        return None;
+    }
+
+    let files = files.unwrap();
+
+    let name = horus_users
+        .find(&session.uid)
+        .get_result::<User>(&*conn)
+        .unwrap()
+        .first_name;
+
+    let mut ititle = String::from(name);
+    ititle += "'s Files";
+
+    let context = FileList {
+        title: ititle.clone(),
+        page_title: ititle,
+        files: files,
+        editable: false,
+    };
+
+    Some(Template::render("manage_files", &context))
 }
 
 #[get("/pastes/<page>")]
@@ -360,6 +402,12 @@ pub fn my_images_pageless() -> Redirect {
 
 #[get("/videos")]
 pub fn my_videos_pageless() -> Redirect {
+    // Get them to a paged version
+    Redirect::to("0")
+}
+
+#[get("/files")]
+pub fn my_files_pageless() -> Redirect {
     // Get them to a paged version
     Redirect::to("0")
 }

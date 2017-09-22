@@ -30,6 +30,7 @@ fn main() {
         .mount("/manage", routes![manage::image, manage::video, manage::paste,
                                   manage::my_images, manage::my_images_pageless, 
                                   manage::my_videos, manage::my_videos_pageless,
+                                  manage::my_files, manage::my_files_pageless,
                                   manage::my_pastes, manage::my_pastes_pageless,
                                   manage::request_auth_cookie,
                                   manage::request_auth_url,])

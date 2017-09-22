@@ -1,0 +1,23 @@
+{{> header }}
+
+<table class="table-full">
+  <tr class="table-head">
+    <th>File Name</th>
+    <th>Download Count</th>
+    <th>Date Posted</th>
+    <th>Expires</th>
+  </tr>
+  {{#each files }}
+  <tr class="paste-row" data-href="/manage/file/{{ id }}">
+
+    <td>{{ filename }}</td>
+    <td class="paste-row-content"><div>
+      {{ download_counter }}
+    </div></td>
+    <td>{{ date_added }}</td>
+    <td>{{#if expiration_time }} {{ expiration_time }} {{ else }} Never {{/if }}</td> 
+  </tr>
+  {{/ each}}
+</table>
+
+{{> footer }}
