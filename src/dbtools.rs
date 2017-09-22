@@ -47,11 +47,9 @@ pub fn get_path_image(filename: &str) -> String{
     path_str
 }
 
-pub fn get_path_file(filename: &str, ext: &str) -> String {
+pub fn get_path_file(filename: &str) -> String {
     let mut path_str = String::from("live/files/");
     path_str += filename;
-    path_str += ".";
-    path_str += ext;
     path_str
 }
 

@@ -7,14 +7,12 @@ use super::super::DbConn;
 use super::super::dbtools;
 use super::super::models::{LicenseKey,HImage,SessionToken};
 use super::super::forms::HImageChangesetForm;
-use rocket::response::{Failure, NamedFile};
-use rocket::response::status;
+use rocket::response::{Failure, NamedFile, status};
 use rocket::data::Data;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
 use self::chrono::Local;
 
-use std::collections::HashMap;
 use std::path::Path;
 use std::io::Read;
 use std::io::prelude::*;
@@ -106,8 +104,8 @@ pub fn delete(
     use schema::horus_images::dsl::*;
 
     let image = horus_images
-        .filter(id.eq(&image_id))
-        .first::<HImage>(&*conn);
+        .find(&image_id)
+        .get_result::<HImage>(&*conn);
 
     if image.is_err() {
         return Err(Failure(Status::NotFound));
@@ -132,8 +130,8 @@ pub fn delete_sessionless(
     use schema::horus_images::dsl::*;
 
     let image = horus_images
-        .filter(id.eq(&image_id))
-        .first::<HImage>(&*conn);
+        .find(&image_id)
+        .get_result::<HImage>(&*conn);
 
     if image.is_err() {
         return Err(Failure(Status::NotFound));
@@ -154,7 +152,7 @@ fn delete_internal(
     conn: DbConn) 
     -> Result<status::Custom<()>, Failure>
 {
-        let result = diesel::delete(&image).execute(&*conn);
+    let result = diesel::delete(&image).execute(&*conn);
 
     if result.is_err() {
         println!("Database error while deleting image: {}", result.err().unwrap());

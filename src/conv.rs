@@ -8,12 +8,46 @@ use rocket::request::{self, Request, FromRequest};
 use self::chrono::{Local, DateTime};
 use super::models::{LicenseKey, HPaste, SessionToken};
 use super::forms::HNewPasteForm;
+use super::fields::FileName;
 use super::Pool;
 use super::dbtools;
 use super::{DbConn, fields};
 use diesel::prelude::*;
 use std::ops::Deref;
 
+impl<'a, 'r> FromRequest<'a ,'r> for FileName 
+{
+    type Error = String;
+
+    fn from_request(request: &'a Request<'r>)
+        -> request::Outcome<FileName, Self::Error>
+    {
+        let headers = request.headers();
+
+        if !headers.contains("Content-Disposition") {
+            return Outcome::Failure(
+            (Status::BadRequest, String::from("Invalid filename")) );
+        }
+
+        let neutered_filename = String::from(headers.get_one("Content-Disposition").unwrap());
+        let neutered_filename = neutered_filename
+            .trim()
+            .to_lowercase()
+            // Yes, I know this is shite. So is working with characters in rust.
+            .replace("!", "").replace("*", "")
+            .replace("@", "").replace("(", "")
+            .replace("#", "").replace(")", "")
+            .replace("$", "").replace("+", "")
+            .replace("%", "").replace("=", "")
+            .replace("^", "").replace("/", "")
+            .replace("&", "").replace(",", "")
+            .replace(";", "").replace("'", "")
+            .replace(":", "").replace("\\", "")
+            .replace("|", "").replace("\"", "");
+        
+        Outcome::Success(FileName(neutered_filename))
+    }
+}
 impl<'a, 'r> FromRequest<'a, 'r> for SessionToken 
 {
     type Error = String;
@@ -110,7 +144,7 @@ impl Into<HPaste> for HNewPasteForm {
             id: _id,
             title: self.title,
             paste_data: self.paste_data,
-            owner: self.owner,
+            owner: -1,
             date_added: _date.naive_utc(),
             is_expiry: self.is_expiry,
             expiration_time: self.expiration_time, // TODO Dont do it this way.

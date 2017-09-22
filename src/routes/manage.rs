@@ -181,6 +181,7 @@ pub fn my_pastes(
     let pastes = horus_pastes   
         .filter(owner.eq(&session.uid))
         .limit(24)
+        .order(date_added.desc())
         .offset((page * 24) as i64)
         .get_results::<HPaste>(&*conn);
 

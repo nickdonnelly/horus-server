@@ -40,7 +40,6 @@ pub struct UserForm {
 pub struct HNewPasteForm {
     pub title: Option<String>,
     pub paste_data: String,
-    pub owner: i32,
     pub is_expiry: bool,
     pub expiration_time: Option<NaiveDateTime>,
 }

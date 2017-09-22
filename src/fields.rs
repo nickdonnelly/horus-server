@@ -15,6 +15,8 @@ use self::chrono::Local;
 // Basically: it's magic.
 const EMAIL_REGEX: &str = r"^[^@]+@[^@]+\.[^@]+$";
 
+pub struct FileName(pub String);
+
 pub trait Validatable 
 {
     fn validate_fields(&self) -> Result<(), Vec<String>>;

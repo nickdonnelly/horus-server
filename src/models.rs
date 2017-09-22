@@ -64,6 +64,19 @@ pub struct HImage {
     pub expiration_time: Option<NaiveDateTime>
 }
 
+#[derive(Queryable, Serialize, Identifiable, Insertable, AsChangeset)]
+#[table_name="horus_files"]
+pub struct HFile {
+    pub id: String,
+    pub owner: i32,
+    pub filename: String,
+    pub filepath: String,
+    pub date_added: NaiveDateTime,
+    pub is_expiry: bool,
+    pub expiration_time: Option<NaiveDateTime>,
+    pub download_counter: Option<i32>,
+}
+
 #[derive(Queryable, Serialize, Identifiable, Insertable)]
 #[table_name="horus_videos"]
 pub struct HVideo {

@@ -24,21 +24,21 @@ pub trait Job {
 
 
 // NONE OF THESE ARE IMPLEMENTED
-#[get("/jobs/<uid>")]
+#[get("/jobs/<_uid>")]
 pub fn list_jobs(
-    uid: u32,
+    _uid: u32,
     _session: SessionToken,
-    conn: DbConn)
+    _conn: DbConn)
     -> Option<Template>
 {
     None
 }
 
-#[get("/jobs/<job_id>")]
+#[get("/jobs/<_job_id>")]
 pub fn job_status(
-    job_id: u32,
+    _job_id: u32,
     _session: SessionToken,
-    conn: DbConn)
+    _conn: DbConn)
     -> Option<Template>
 {
     None

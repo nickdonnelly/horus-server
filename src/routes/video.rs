@@ -5,7 +5,7 @@ extern crate chrono;
 use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
-use super::super::models::{LicenseKey, HVideo};
+use super::super::models::{LicenseKey, SessionToken, HVideo};
 use super::super::forms::HVideoChangesetForm;
 use rocket::response::{status, Failure, NamedFile};
 use rocket::data::Data;
@@ -16,7 +16,6 @@ use self::chrono::Local;
 use std::io::prelude::*;
 use std::fs::File;
 use std::path::Path;
-use std::collections::HashMap;
 
 #[post("/new", format = "video/webm", data = "<vid_data>")]
 pub fn new(
@@ -105,8 +104,8 @@ pub fn list(
     Ok(Json(videos.unwrap()))
 }
 
-#[delete("/<vid_id>")]
-pub fn delete(
+#[delete("/<vid_id>", rank = 2)]
+pub fn delete_sessionless(
     vid_id: String,
     apikey: LicenseKey,
     conn: DbConn)
@@ -115,8 +114,8 @@ pub fn delete(
     use schema::horus_videos::dsl::*;
 
     let video = horus_videos
-        .filter(id.eq(&vid_id))
-        .first::<HVideo>(&*conn);
+        .find(&vid_id)
+        .get_result::<HVideo>(&*conn);
 
     if video.is_err() {
         return Err(Failure(Status::NotFound));
@@ -128,6 +127,40 @@ pub fn delete(
         return Err(Failure(Status::Unauthorized));
     }
 
+    delete_internal(video, conn)
+}
+
+#[delete("/<vid_id>")]
+pub fn delete(
+    vid_id: String,
+    session: SessionToken,
+    conn: DbConn)
+    -> Result<status::Custom<()>, Failure>
+{
+    use schema::horus_videos::dsl::*;
+
+    let video = horus_videos
+        .find(&vid_id)
+        .get_result::<HVideo>(&*conn);
+
+    if video.is_err() {
+        return Err(Failure(Status::NotFound));
+    }
+
+    let video = video.unwrap();
+    
+    if session.uid != video.owner {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    delete_internal(video, conn)
+}
+
+fn delete_internal(
+    video: HVideo,
+    conn: DbConn)
+    -> Result<status::Custom<()>, Failure>
+{
     let result = diesel::delete(&video).execute(&*conn);
 
     if result.is_err() {

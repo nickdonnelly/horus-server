@@ -68,14 +68,15 @@ pub fn list(
 #[post("/new", format = "application/json", data = "<paste>")]
 pub fn new(
     paste: Json<HNewPasteForm>, 
-    _apikey: LicenseKey,
+    apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>
 {
     use schema::horus_pastes;
 
     let paste_form_data = paste.into_inner();
-    let paste: HPaste = paste_form_data.into();
+    let mut paste: HPaste = paste_form_data.into();
+    paste.owner = apikey.get_owner();
 
     let result = diesel::insert(&paste)
         .into(horus_pastes::table)
@@ -113,8 +114,8 @@ pub fn delete(
     -> Result<status::Custom<()>, Failure>
 {
     let paste = horus_pastes
-        .filter(id.eq(paste_id))
-        .first::<HPaste>(&*conn);
+        .find(paste_id)
+        .get_result::<HPaste>(&*conn);
 
     if paste.is_err() {
         return Err(Failure(Status::NotFound))
@@ -137,8 +138,8 @@ pub fn delete_sessionless(
     -> Result<status::Custom<()>, Failure>
 {
     let paste = horus_pastes
-        .filter(id.eq(paste_id))
-        .first::<HPaste>(&*conn);
+        .find(paste_id)
+        .get_result::<HPaste>(&*conn);
 
     if paste.is_err() {
         return Err(Failure(Status::NotFound))

@@ -13,7 +13,6 @@ use std::path::Path;
 fn main() {
     use self::routes::*;
     check_dirs();
-    let empty: std::collections::HashMap<String, String> = std::collections::HashMap::with_capacity(0);
     rocket::ignite()
         .attach(Template::fairing())
         .mount("/user", routes![user::show, user::update])
@@ -23,11 +22,11 @@ fn main() {
                                  paste::show])
         .mount("/image", routes![image::new, image::show,
                                  image::delete, image::delete_sessionless,
-                                 image::list,
-                                 image::full,
-                                 image::thumb])
+                                 image::list, image::full, image::thumb])
         .mount("/video", routes![video::new, video::show, video::delete,
-                                 video::full, video::list])
+                                 video::delete_sessionless, video::full, video::list])
+        .mount("file", routes![files::get, files::delete, files::delete_sessionless,
+                               files::list, files::new])
         .mount("/manage", routes![manage::image, manage::video, manage::paste,
                                   manage::my_images, manage::my_images_pageless, 
                                   manage::my_videos, manage::my_videos_pageless,
