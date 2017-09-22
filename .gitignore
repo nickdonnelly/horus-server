@@ -4,6 +4,7 @@
 /live/
 /live
 /live/*
+!/live/binaries
 
 swp
 .swp
