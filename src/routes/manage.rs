@@ -395,25 +395,16 @@ pub fn paste(
 // REDIRECTS
 
 #[get("/images")]
-pub fn my_images_pageless() -> Redirect {
-    // Get them to a paged version
-    Redirect::to("0")
-}
+pub fn my_images_pageless() -> Redirect { Redirect::to("images/0") }
 
 #[get("/videos")]
-pub fn my_videos_pageless() -> Redirect {
-    // Get them to a paged version
-    Redirect::to("0")
-}
+pub fn my_videos_pageless() -> Redirect { Redirect::to("images/0") }
 
 #[get("/files")]
-pub fn my_files_pageless() -> Redirect {
-    // Get them to a paged version
-    Redirect::to("0")
-}
+pub fn my_files_pageless() -> Redirect { Redirect::to("images/0") }
 
 #[get("/pastes")]
-pub fn my_pastes_pageless() -> Redirect {
-    // Get them to a paged version
-    Redirect::to("0")
-}
+pub fn my_pastes_pageless() -> Redirect { Redirect::to("images/0") }
+
+#[get("/manage")]
+pub fn base_redirect() -> Redirect { Redirect::to("images/0") }

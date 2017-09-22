@@ -25,15 +25,15 @@ fn main() {
                                  image::list, image::full, image::thumb])
         .mount("/video", routes![video::new, video::show, video::delete,
                                  video::delete_sessionless, video::full, video::list])
-        .mount("file", routes![files::get, files::delete, files::delete_sessionless,
-                               files::list, files::new])
+        .mount("/file", routes![files::get, files::delete, files::delete_sessionless,
+                                files::list, files::new])
         .mount("/manage", routes![manage::image, manage::video, manage::paste,
                                   manage::my_images, manage::my_images_pageless, 
                                   manage::my_videos, manage::my_videos_pageless,
                                   manage::my_files, manage::my_files_pageless,
                                   manage::my_pastes, manage::my_pastes_pageless,
-                                  manage::request_auth_cookie,
-                                  manage::request_auth_url,])
+                                  manage::request_auth_cookie, manage::request_auth_url,
+                                  manage::base_redirect])
         .mount("/meta", routes![meta::get_version, meta::get_latest_session,
                                 meta::get_latest])
         .mount("/static", routes![files::static_asset])
