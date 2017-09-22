@@ -34,6 +34,8 @@ fn main() {
                                   manage::my_pastes, manage::my_pastes_pageless,
                                   manage::request_auth_cookie,
                                   manage::request_auth_url,])
+        .mount("/meta", routes![meta::get_version, meta::get_latest_session,
+                                meta::get_latest])
         .mount("/static", routes![files::static_asset])
         //.mount("/admin", routes![jobs::list_jobs, jobs::job_status])
         .mount("/", routes![favicon])
