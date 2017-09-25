@@ -78,7 +78,6 @@ pub fn request_auth_cookie(
     
     let token_result = auth_req.into_token();
     if token_result.is_err() {
-	println!("is err ");
         return match token_result {
             Err(AuthTokenError::ConsumeFailure) =>
                 Err(Failure(Status::InternalServerError)),
@@ -93,17 +92,15 @@ pub fn request_auth_cookie(
     let token_result = token_result.unwrap();
     let insert_result = token_result.save_changes::<SessionToken>(&*conn);
 
-    //let insert_result = diesel::insert(&token_result).into(schema::session_tokens::table)
-    //    .execute(&*conn);
-
     if insert_result.is_err() {
-        println!("ERROR 2! {} ", insert_result.err().unwrap());
-        return Err(Failure(Status::InternalServerError));
+        let insert_new_result = diesel::insert(&token_result)
+            .into(schema::session_tokens::table)
+            .execute(&*conn);
+
+        if insert_new_result.is_err() {
+            return Err(Failure(Status::InternalServerError));
+        }
     }
-    //let scookie = Cookie::build("horus_session", token_result.token.clone())
-    //    .path("/")
-    //    .secure(true)
-    //    .finish();
 
     let mut scookie = Cookie::new("horus_session", token_result.token.clone());
     scookie.set_path("/");

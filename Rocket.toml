@@ -1,10 +1,5 @@
-[global.tls]
-certs = "/etc/letsencrypt/live/horus.donnelly.cc/fullchain.pem"
-key = "/etc/letsencrypt/live/horus.donnelly.cc/privkey.pem"
-
 [development]
 secret_key = "R7Yj2zCkoyKBPc1IWxQMiV910CEHytkCRRqJQ3sWfnQ=" 
 
 [production]
 secret_key = "jNDogDzODUsCxpYRDxazmZQIBHQdpO4Y5VZMCyVLRqU="
-port = 8000
