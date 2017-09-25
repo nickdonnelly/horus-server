@@ -1,5 +1,4 @@
-#![feature(custom_derive)]
-#![feature(plugin)]
+#![feature(custom_derive, plugin, const_atomic_bool_new, const_atomic_usize_new,const_unsafe_cell_new)]
 #![plugin(rocket_codegen)]
 #![recursion_limit="128"] // For diesel schema inference.
 
