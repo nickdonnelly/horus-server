@@ -164,7 +164,7 @@ impl AuthRequest {
         let etime = auth_token.expires.unwrap();
 
         if moment > etime {
-            return Err(AuthTokenError::Expired);
+            //return Err(AuthTokenError::Expired);
         }
         
         let st = SessionToken::consume_auth_token(auth_token);
