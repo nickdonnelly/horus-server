@@ -38,9 +38,14 @@ fn main() {
                                 meta::get_latest])
         .mount("/static", routes![files::static_asset])
         //.mount("/admin", routes![jobs::list_jobs, jobs::job_status])
-        .mount("/", routes![favicon])
+        .mount("/", routes![favicon, verify_ssl])
         .manage(self::dbtools::init_pool())
         .launch();
+}
+
+#[get("/.well-known/acme-challenge/yG798UxIE5q0BXO6xuf_yVQGx5GkXcURa7q0PKnmhk4")]
+pub fn verify_ssl() -> String {
+    String::from("yG798UxIE5q0BXO6xuf_yVQGx5GkXcURa7q0PKnmhk4.NIKSE7P9moyu47YXlGpDd8NMqKL_JJaev0YL5gWDX7A")
 }
 
 #[get("/favicon.ico")]
