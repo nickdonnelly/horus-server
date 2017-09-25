@@ -38,7 +38,7 @@ fn main() {
                                 meta::get_latest])
         .mount("/static", routes![files::static_asset])
         //.mount("/admin", routes![jobs::list_jobs, jobs::job_status])
-        .mount("/", routes![favicon])
+        .mount("/", routes![favicon, verify_ssl])
         .manage(self::dbtools::init_pool())
         .launch();
 }
@@ -46,6 +46,11 @@ fn main() {
 #[get("/favicon.ico")]
 fn favicon() -> Option<NamedFile> {
     NamedFile::open(Path::new("favicon.ico")).ok()
+}
+
+#[get("/.well-known/acme-challenge/WXSzcEA9xuzNE6G3KEwI2znxFx650SELB0-CIiqittM")]
+fn verify_ssl() -> String {
+    String::from("WXSzcEA9xuzNE6G3KEwI2znxFx650SELB0-CIiqittM.NIKSE7P9moyu47YXlGpDd8NMqKL_JJaev0YL5gWDX7A")
 }
 
 fn check_dirs() {
