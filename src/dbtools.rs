@@ -34,6 +34,30 @@ pub fn get_db_conn_requestless() -> Result<PgConnection, ()> {
     Ok(conn.unwrap())
 }
 
+pub fn resource_to_s3_named(
+    filename: &str,
+    path: &str, 
+    data: &Vec<u8>)
+    -> Result<String, ()>
+{
+    let creds = Credentials::new(&super::AWS_ACCESS, &super::AWS_SECRET, None);
+    let region = REGION.parse::<self::s3::region::Region>().unwrap();
+    let mut bucket = Bucket::new(BUCKET, region, creds);
+    let mut dispositionstr = String::from("attachment; filename=\"");
+    dispositionstr += filename;
+    dispositionstr += "\"";
+    bucket.add_header("x-amz-acl", "public-read"); // this way we can serve it later
+    bucket.add_header("content-disposition", &dispositionstr);
+
+    let (by, code) = bucket.put(&path, &data, "text/plain").unwrap();
+
+
+    if code != 200 { 
+        return Err(());
+    }
+    Ok(String::from_utf8(by).unwrap())
+}
+
 pub fn resource_to_s3(
     path: &str, 
     data: &Vec<u8>)
@@ -43,6 +67,7 @@ pub fn resource_to_s3(
     let region = REGION.parse::<self::s3::region::Region>().unwrap();
     let mut bucket = Bucket::new(BUCKET, region, creds);
     bucket.add_header("x-amz-acl", "public-read"); // this way we can serve it later
+    bucket.add_header("content-disposition", "attachment");
 
     let (by, code) = bucket.put(&path, &data, "text/plain").unwrap();
 
