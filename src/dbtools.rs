@@ -1,6 +1,9 @@
 extern crate r2d2;
 extern crate rand;
+extern crate s3;
 
+use self::s3::bucket::Bucket;
+use self::s3::credentials::Credentials;
 use rocket::{State};
 use rocket::request::Request;
 use super::{DbConn, Pool};
@@ -8,6 +11,9 @@ use diesel::Connection; // Required for trait access to PgConnection
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 use dbtools::rand::Rng;
+
+const BUCKET: &'static str = "horuscdn";
+const REGION: &'static str = "eu-central-1";
 
 pub fn get_db_conn(request: &Request) -> Result<DbConn, ()> {
     let pool = request.guard::<State<Pool>>().unwrap();
@@ -26,6 +32,25 @@ pub fn get_db_conn_requestless() -> Result<PgConnection, ()> {
     }
 
     Ok(conn.unwrap())
+}
+
+pub fn resource_to_s3(
+    path: &str, 
+    data: &Vec<u8>)
+    -> Result<String, ()>
+{
+    let creds = Credentials::new(&super::AWS_ACCESS, &super::AWS_SECRET, None);
+    let region = REGION.parse::<self::s3::region::Region>().unwrap();
+    let mut bucket = Bucket::new(BUCKET, region, creds);
+    bucket.add_header("x-amz-acl", "public-read"); // this way we can serve it later
+
+    let (by, code) = bucket.put(&path, &data, "text/plain").unwrap();
+
+
+    if code != 200 { 
+        return Err(());
+    }
+    Ok(String::from_utf8(by).unwrap())
 }
 
 // Database pool initialization

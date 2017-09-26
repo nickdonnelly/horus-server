@@ -16,7 +16,6 @@ use self::chrono::Local;
 use std::path::Path;
 use std::io::Read;
 use std::io::prelude::*;
-use std::fs::File;
 
 #[get("/<image_id>")]
 pub fn show(
@@ -202,28 +201,22 @@ pub fn new(
 
     let raw_img_data = raw_img_data.unwrap();
 
-    let path: &Path = Path::new(&pathstr);
-    let buffer = File::create(&path);
+    let s3result = dbtools::resource_to_s3(&pathstr, &raw_img_data);
 
-    if buffer.is_err() {
-        return Err(Failure(Status::BadRequest));
+    if s3result.is_err() {
+        return Err(Failure(Status::ServiceUnavailable));
     }
 
-    let mut buffer = buffer.unwrap();
-
-    let buffer = buffer.write(&raw_img_data);
-    
     let result = diesel::insert(&image)
         .into(horus_images::table)
         .get_result::<HImage>(&*conn);
     
-    if buffer.is_err() || result.is_err() {
+    if result.is_err() {
         return Err(Failure(Status::InternalServerError));
     }
     
     let result = result.unwrap();
 
-    // TODO Consider using Data.stream_to_file
     Ok(status::Created(String::from("/image/") + result.id.as_str(), None))
 }
 

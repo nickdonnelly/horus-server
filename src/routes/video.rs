@@ -14,7 +14,6 @@ use rocket_contrib::{Json, Template};
 use self::chrono::Local;
 
 use std::io::prelude::*;
-use std::fs::File;
 use std::path::Path;
 
 #[post("/new", format = "video/webm", data = "<vid_data>")]
@@ -51,21 +50,18 @@ pub fn new(
     }
 
     let vid_data_decoded = vid_data_decoded.unwrap();
-    let path: &Path = Path::new(&pathstr);
-    let buffer = File::create(&path);
 
-    if buffer.is_err() {
-        return Err(Failure(Status::InternalServerError));
+    let s3result = dbtools::resource_to_s3(&pathstr, &vid_data_decoded);
+
+    if s3result.is_err() {
+        return Err(Failure(Status::ServiceUnavailable));
     }
-    
-    let mut buffer = buffer.unwrap();
-    let buffer = buffer.write(&vid_data_decoded);
 
     let result = diesel::insert(&video)
         .into(horus_videos::table)
         .get_result::<HVideo>(&*conn);
 
-    if buffer.is_err() || result.is_err() {
+    if result.is_err() {
         return Err(Failure(Status::InternalServerError));
     }
 

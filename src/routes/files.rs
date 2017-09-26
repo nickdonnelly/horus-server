@@ -6,7 +6,7 @@ use rocket::request::Request;
 use rocket::response::{status, NamedFile, Failure, Response, Responder};
 use rocket::http::{ContentType, Status};
 use rocket::data::Data;
-use rocket_contrib::Json;
+use rocket_contrib::{Json, Template};
 use super::super::models::{HFile, LicenseKey, SessionToken};
 use super::super::DbConn;
 use super::super::dbtools;
@@ -16,7 +16,6 @@ use self::chrono::Local;
 use std::path::{Path, PathBuf};
 use std::io::Read;
 use std::io::prelude::*;
-use std::fs::File;
 
 pub struct DownloadableFile
 {
@@ -28,7 +27,7 @@ pub struct DownloadableFile
 pub fn get(
     file_id: String,
     conn: DbConn)
-    -> Option<DownloadableFile>
+    -> Option<Template>
 {
     use schema::horus_files::dsl::*;
     
@@ -40,17 +39,12 @@ pub fn get(
     }
     let mut hfile = hfile.unwrap();
     hfile.download_counter = Some(hfile.download_counter.unwrap() + 1);
-    hfile.save_changes::<HFile>(&*conn);
+    hfile.save_changes::<HFile>(&*conn); // ignore the warning coming from this.
+                                         // Success is not critical
 
-    let fname = FileName(hfile.filename);
-
-
-    Some(DownloadableFile{
-            afile: NamedFile::open(Path::new(&hfile.filepath)).ok().unwrap(),
-            name: fname
-        }
-    )
+    //let fname = FileName(hfile.filename);
     
+    Some(Template::render("show_file", &hfile))
 }
 
 #[get("/<uid>/list/<page>")]
@@ -111,20 +105,17 @@ pub fn new(
         .collect();
     // No need to decode as we are getting raw bytes through an octet-stream, no base64
 
-    let path: &Path = Path::new(&pathstr);
-    let buffer = File::create(&path);
+    let s3result = dbtools::resource_to_s3(&pathstr, &file_data);
 
-    if buffer.is_err() {
-        return Err(Failure(Status::BadRequest));
+    if s3result.is_err() {
+        return Err(Failure(Status::ServiceUnavailable));
     }
 
-    let mut buffer = buffer.unwrap();
-    let buffer = buffer.write(&file_data);
     let result = diesel::insert(&hfile)
         .into(horus_files::table)
         .get_result::<HFile>(&*conn);
 
-    if buffer.is_err() || result.is_err() {
+    if result.is_err() {
         return Err(Failure(Status::BadRequest));
     }
     let result = result.unwrap();

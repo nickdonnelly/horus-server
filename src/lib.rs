@@ -1,4 +1,4 @@
-#![feature(custom_derive, plugin, const_atomic_bool_new, const_atomic_usize_new,const_unsafe_cell_new)]
+#![feature(custom_derive, plugin)]
 #![plugin(rocket_codegen)]
 #![recursion_limit="128"] // For diesel schema inference.
 
@@ -27,6 +27,8 @@ pub mod conv;
 pub mod errors;
 
 static DATABASE_URL: &'static str = env!("DATABASE_URL");
+static AWS_ACCESS: &'static str = env!("AWS_ACCESS");
+static AWS_SECRET: &'static str = env!("AWS_SECRET");
 
 // Database pooling definitions
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
