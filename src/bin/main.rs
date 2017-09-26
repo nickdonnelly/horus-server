@@ -35,7 +35,7 @@ fn main() {
                                   manage::request_auth_cookie, manage::request_auth_url,
                                   manage::base_redirect])
         .mount("/meta", routes![meta::get_version, meta::get_latest_session,
-                                meta::get_latest])
+                                meta::get_latest, meta::changelogs])
         .mount("/static", routes![files::static_asset])
         //.mount("/admin", routes![jobs::list_jobs, jobs::job_status])
         .mount("/", routes![favicon, verify_ssl])

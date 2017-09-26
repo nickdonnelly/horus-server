@@ -24,6 +24,13 @@ pub mod meta {
         String::from(VERSION)
     }
 
+    #[get("/changelogs")]
+    pub fn changelogs() -> Option<Template>
+    {
+        // TODO
+        None
+    }
+
     #[get("/latest/<platform>")]
     pub fn get_latest_session(
         platform: String,
