@@ -2,6 +2,7 @@ extern crate diesel; // this might not even be necessary but im not deleting it
 
 use self::diesel::prelude::*;
 use super::super::DbConn;
+use super::super::contexts;
 use rocket::response::Failure;
 use rocket::response::status;
 use rocket::http::Status;
@@ -25,14 +26,15 @@ pub fn show(
         return None;
     }
     let paste = paste.unwrap();
+    let mut metatag = String::from("<meta property=\"og:type\" content=\"article\" />");
+    metatag += "<meta property=\"article:published_time\" content=\"";
+    metatag += format!("{}", &paste.date_added).as_str();
+    metatag += "\" />";
 
-    let mut context = HashMap::new();
-    context.insert("paste_data", paste.paste_data);
-    if paste.title != None {
-        context.insert("title", paste.title.unwrap());
-    }else{
-        context.insert("title", "Horus Paste".to_string());
-    }
+    let context = contexts::ShowPaste {
+        item: paste,
+        meta_tag: Some(metatag),
+    };
 
     Some(Template::render("show_paste", &context))
 }
