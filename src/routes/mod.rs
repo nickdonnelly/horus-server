@@ -12,6 +12,7 @@ pub mod key;
 
 pub mod meta {
     use super::super::models::{LicenseKey, SessionToken};
+    use rocket_contrib::Template;
     use rocket::response::NamedFile;
     use std::path::Path;
 

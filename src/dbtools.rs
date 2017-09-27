@@ -34,13 +34,28 @@ pub fn get_db_conn_requestless() -> Result<PgConnection, ()> {
     Ok(conn.unwrap())
 }
 
+pub fn delete_s3_object(path: &str) -> Result<String, ()>
+{
+    let creds = get_s3_creds();
+    let region = REGION.parse::<self::s3::region::Region>().unwrap();
+    let bucket = Bucket::new(BUCKET, region, creds);
+    let res = bucket.delete(path);
+    if res.is_err() {
+        return Err(());
+    }
+
+    let (data, code) = res.unwrap();
+
+    Ok(String::from_utf8(data).unwrap())
+}
+
 pub fn resource_to_s3_named(
     filename: &str,
     path: &str, 
     data: &Vec<u8>)
     -> Result<String, ()>
 {
-    let creds = Credentials::new(&super::AWS_ACCESS, &super::AWS_SECRET, None);
+    let creds = get_s3_creds();
     let region = REGION.parse::<self::s3::region::Region>().unwrap();
     let mut bucket = Bucket::new(BUCKET, region, creds);
     let mut dispositionstr = String::from("attachment; filename=\"");
@@ -108,4 +123,9 @@ pub fn get_path_video(filename: &str) -> String {
     path_str += filename;
     path_str += ".webm";
     path_str
+}
+
+fn get_s3_creds() -> Credentials
+{
+    Credentials::new(&super::AWS_ACCESS, &super::AWS_SECRET, None)
 }

@@ -134,7 +134,6 @@ pub fn delete(
     -> Result<status::Custom<()>, Failure>
 {
     use schema::horus_videos::dsl::*;
-
     let video = horus_videos
         .find(&vid_id)
         .get_result::<HVideo>(&*conn);
@@ -157,6 +156,12 @@ fn delete_internal(
     conn: DbConn)
     -> Result<status::Custom<()>, Failure>
 {
+    let s3result = dbtools::delete_s3_object(&video.filepath);
+
+    if s3result.is_err() {
+        return Err(Failure(Status::ServiceUnavailable));
+    }
+
     let result = diesel::delete(&video).execute(&*conn);
 
     if result.is_err() {

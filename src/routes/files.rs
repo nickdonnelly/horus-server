@@ -172,6 +172,12 @@ fn delete_internal(
     conn: DbConn)
     -> Result<status::Custom<()>, Failure>
 {
+    let s3result = dbtools::delete_s3_object(&hfile.filepath);
+
+    if s3result.is_err() {
+        return Err(Failure(Status::ServiceUnavailable));
+    }
+
     let result = diesel::delete(&hfile).execute(&*conn);
     if result.is_err() {
         println!("Database error while deleting image: {}", result.err().unwrap());
