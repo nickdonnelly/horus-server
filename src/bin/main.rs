@@ -43,9 +43,9 @@ fn main() {
         .launch();
 }
 
-#[get("/.well-known/acme-challenge/yG798UxIE5q0BXO6xuf_yVQGx5GkXcURa7q0PKnmhk4")]
+#[get("/.well-known/acme-challenge/kRLJd-GWcR0gToTfnXS-Kvyn8DcK-U6Es--9uA6nGsk")]
 pub fn verify_ssl() -> String {
-    String::from("yG798UxIE5q0BXO6xuf_yVQGx5GkXcURa7q0PKnmhk4.NIKSE7P9moyu47YXlGpDd8NMqKL_JJaev0YL5gWDX7A")
+    String::from("kRLJd-GWcR0gToTfnXS-Kvyn8DcK-U6Es--9uA6nGsk.zFScHQkirc75cfQ9qjihdABaD_u16l-THYgvENWR30k")
 }
 
 #[get("/favicon.ico")]
