@@ -56,3 +56,21 @@ pub struct ManagePaste {
     pub paste: HPaste,
     pub editable: bool,
 }
+
+#[derive(Serialize)]
+pub struct ShowPaste {
+    pub item: HPaste,
+    pub meta_tag: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct ShowVideo {
+    pub item: HVideo,
+    pub meta_tag: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct ShowImage {
+    pub item: HImage,
+    pub meta_tag: Option<String>,
+}

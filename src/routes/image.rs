@@ -5,6 +5,7 @@ extern crate diesel;
 use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
+use super::super::contexts;
 use super::super::models::{LicenseKey,HImage,SessionToken};
 use super::super::forms::HImageChangesetForm;
 use rocket::response::{Failure, NamedFile, status};
@@ -32,7 +33,15 @@ pub fn show(
         return None;
     }
     let image = image.unwrap();
-    Some(Template::render("show_image", &image))
+    let mut metatag = String::from("<meta property=\"og:image\" content=\"https://s3.eu-central-1.amazonaws.com/horuscdn/live/images/");
+    metatag += &image.id.clone();
+    metatag += ".png\" />";
+
+    let context = contexts::ShowImage {
+        item: image,
+        meta_tag: Some(metatag),
+    };
+    Some(Template::render("show_image", &context))
 }
 
 #[get("/full/<image_id>")]

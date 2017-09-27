@@ -5,6 +5,7 @@ extern crate chrono;
 use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
+use super::super::contexts;
 use super::super::models::{LicenseKey, SessionToken, HVideo};
 use super::super::forms::HVideoChangesetForm;
 use rocket::response::{status, Failure, NamedFile};
@@ -237,6 +238,13 @@ pub fn show(
         return None;
     }
     let video = video.unwrap();
+    let mut metatag = String::from("<meta property=\"og:video\" content=\"https://s3.eu-central-1.amazonaws.com/horuscdn/live/videos/");
+    metatag += &video.id.clone();
+    metatag += ".webm\" />";
+    let context = contexts::ShowVideo {
+        item: video,
+        meta_tag: Some(metatag),
+    };
 
-    Some(Template::render("show_video", &video))
+    Some(Template::render("show_video", &context))
 }
