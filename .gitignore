@@ -13,3 +13,7 @@ swp
 *.*.swp
 
 .env
+*.pem
+.pem
+fullchain.pem
+privkey.pem
