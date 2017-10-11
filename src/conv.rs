@@ -5,7 +5,7 @@ extern crate chrono;
 use rocket::{State, Outcome};
 use rocket::http::Status;
 use rocket::request::{self, Request, FromRequest};
-use self::chrono::{Local, DateTime};
+use self::chrono::{Local, DateTime, NaiveDateTime, Duration};
 use super::models::{LicenseKey, HPaste, SessionToken};
 use super::forms::HNewPasteForm;
 use super::fields::FileName;
@@ -13,7 +13,31 @@ use super::Pool;
 use super::dbtools;
 use super::{DbConn, fields};
 use diesel::prelude::*;
-use std::ops::Deref;
+
+pub fn get_dt_from_duration(
+    _type: String,
+    _value: usize)
+    -> Result<NaiveDateTime, String>
+{
+    if _value <= 0 {
+        return Err(format!("Value must be at least 1!"));
+    }
+
+    let mut cur_time: DateTime<Local> = Local::now();
+    let dur: Option<Duration> = match _type.to_lowercase().as_str() {
+        "days" => Some(Duration::days(_value as i64)),
+        "hours" => Some(Duration::hours(_value as i64)),
+        "minutes" => Some(Duration::minutes(_value as i64)),
+        _ => None,
+    };
+
+    if dur.is_none() {
+        return Err(format!("Unrecognized duration type: {}", _type));
+    }
+
+    cur_time = cur_time + dur.unwrap();
+    Ok(cur_time.naive_utc())
+}
 
 impl<'a, 'r> FromRequest<'a ,'r> for FileName 
 {
@@ -114,7 +138,6 @@ impl<'a, 'r> FromRequest<'a, 'r> for LicenseKey {
     }
 }
 
-// DbConn
 impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
     type Error = ();
 
@@ -124,15 +147,6 @@ impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
             Ok(conn) => Outcome::Success(DbConn(conn)),
             Err(_) => Outcome::Failure((Status::ServiceUnavailable, ())),
         }
-    }
-}
-
-
-impl Deref for DbConn {
-    type Target = PgConnection;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 

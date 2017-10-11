@@ -2,7 +2,7 @@ extern crate diesel; // this might not even be necessary but im not deleting it
 
 use self::diesel::prelude::*;
 use super::super::DbConn;
-use super::super::contexts;
+use super::super::{contexts, conv};
 use rocket::response::Failure;
 use rocket::response::status;
 use rocket::http::Status;
@@ -170,17 +170,21 @@ pub fn update(
     if paste.is_err() {
         return Err(Failure(Status::NotFound));
     }
-    let paste = paste.unwrap();
+    let mut paste = paste.unwrap();
 
     if session.uid != paste.owner {
         return Err(Failure(Status::Unauthorized));
     }
 
     let paste_update = updated_values.into_inner();
-    let result = diesel::update(horus_pastes.filter(id.eq(paste_id)))
-        .set(&paste_update)
-        .execute(&*conn);
+    let dt = conv::get_dt_from_duration(paste_update.duration_type, paste_update.duration_val);
+    
+    if !dt.is_err() {
+        paste.is_expiry = true;
+        paste.expiration_time = Some(dt.unwrap());
+    }
 
+    let result = paste.save_changes::<HPaste>(&*conn);
     match result {
         Ok(_) => Ok(status::Accepted(None)),
         Err(_) => Err(Failure(Status::InternalServerError)),

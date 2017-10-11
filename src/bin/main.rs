@@ -20,10 +20,10 @@ fn main() {
         .mount("/paste", routes![paste::new, paste::update, paste::list, 
                                  paste::delete_sessionless, paste::delete,
                                  paste::show])
-        .mount("/image", routes![image::new, image::show,
+        .mount("/image", routes![image::new, image::show, image::update,
                                  image::delete, image::delete_sessionless,
                                  image::list, image::full, image::thumb])
-        .mount("/video", routes![video::new, video::show, video::delete,
+        .mount("/video", routes![video::new, video::show, video::delete, video::update,
                                  video::delete_sessionless, video::full, video::list])
         .mount("/file", routes![files::get, files::delete, files::delete_sessionless,
                                 files::list, files::new])

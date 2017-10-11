@@ -5,7 +5,7 @@ extern crate chrono;
 use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
-use super::super::contexts;
+use super::super::{contexts, conv};
 use super::super::models::{LicenseKey, SessionToken, HVideo};
 use super::super::forms::HVideoChangesetForm;
 use rocket::response::{status, Failure, NamedFile};
@@ -185,21 +185,26 @@ pub fn update(
 
     let vid = horus_videos.filter(id.eq(&vid_id))
         .first::<HVideo>(&*conn);
+
     if vid.is_err() {
         return Err(Failure(Status::NotFound));
     }
     
-    let vid = vid.unwrap();
+    let mut vid = vid.unwrap();
 
     if !apikey.belongs_to(vid.owner) {
         return Err(Failure(Status::Unauthorized));
     }
 
     let vid_update = updated_values.into_inner();
-    let result = diesel::update(horus_videos.filter(id.eq(vid_id)))
-        .set(&vid_update)
-        .execute(&*conn);
+    let dt = conv::get_dt_from_duration(vid_update.duration_type, vid_update.duration_val);
+    
+    if !dt.is_err() {
+        vid.is_expiry = true;
+        vid.expiration_time = Some(dt.unwrap());
+    }
 
+    let result = vid.save_changes::<HVideo>(&*conn);
     match result {
         Ok(_) => Ok(status::Accepted(None)),
         Err(_) => Err(Failure(Status::InternalServerError))

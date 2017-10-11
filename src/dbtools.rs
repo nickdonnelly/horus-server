@@ -12,6 +12,8 @@ use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 use dbtools::rand::Rng;
 
+use std::ops::Deref;
+
 const BUCKET: &'static str = "horuscdn";
 const REGION: &'static str = "eu-central-1";
 
@@ -129,3 +131,13 @@ fn get_s3_creds() -> Credentials
 {
     Credentials::new(&super::AWS_ACCESS, &super::AWS_SECRET, None)
 }
+
+impl Deref for DbConn {
+    type Target = PgConnection;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+

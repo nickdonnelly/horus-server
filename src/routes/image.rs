@@ -3,9 +3,10 @@ extern crate base64;
 extern crate diesel;
 
 use diesel::prelude::*;
+use self::chrono::NaiveDateTime;
 use super::super::DbConn;
 use super::super::dbtools;
-use super::super::contexts;
+use super::super::{contexts, conv};
 use super::super::models::{LicenseKey,HImage,SessionToken};
 use super::super::forms::HImageChangesetForm;
 use rocket::response::{Failure, NamedFile, status};
@@ -251,16 +252,21 @@ pub fn update(
     if img.is_err() {
         return Err(Failure(Status::NotFound));
     }
-    let img = img.unwrap();
+    let mut img = img.unwrap();
 
     if !apikey.belongs_to(img.owner) {
         return Err(Failure(Status::Unauthorized));
     }
 
     let img_update = updated_values.into_inner();
-    let result = diesel::update(horus_images.filter(id.eq(image_id)))
-        .set(&img_update)
-        .execute(&*conn);
+    let dt = conv::get_dt_from_duration(img_update.duration_type, img_update.duration_val);
+    
+    if !dt.is_err() {
+        img.is_expiry = true;
+        img.expiration_time = Some(dt.unwrap());
+    }
+
+    let result = img.save_changes::<HImage>(&*conn);
 
     match result {
         Ok(_) => Ok(status::Accepted(None)),

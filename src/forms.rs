@@ -3,29 +3,29 @@ extern crate chrono;
 use super::schema::*;
 use self::chrono::NaiveDateTime;
 
-#[derive(AsChangeset, Deserialize, Serialize)]
-#[table_name="horus_images"]
+#[derive(Deserialize, Serialize)]
+//#[table_name="horus_images"]
 pub struct HImageChangesetForm {
     pub title: Option<String>,
-    pub is_expiry: Option<bool>,
-    pub expiration_time: Option<NaiveDateTime>,
+    pub duration_type: String, // days,hours,minutes
+    pub duration_val: usize,
 }
 
-#[derive(AsChangeset, Deserialize)]
-#[table_name="horus_videos"]
+#[derive(Deserialize)]
+//#[table_name="horus_videos"]
 pub struct HVideoChangesetForm {
     pub title: Option<String>,
-    pub is_expiry: Option<bool>,
-    pub expiration_time: Option<NaiveDateTime>,
+    pub duration_type: String, // days,hours,minutes
+    pub duration_val: usize,
 }
 
-#[derive(AsChangeset, Deserialize)]
-#[table_name="horus_pastes"]
+#[derive(Deserialize)]
+//#[table_name="horus_pastes"]
 pub struct HPasteChangesetForm {
     pub title: Option<String>,
     pub paste_data: Option<String>,
-    pub is_expiry: Option<bool>,
-    pub expiration_time: Option<NaiveDateTime>,
+    pub duration_type: String, // days,hours,minutes
+    pub duration_val: usize,
 }
 
 #[derive(AsChangeset, Deserialize)]
