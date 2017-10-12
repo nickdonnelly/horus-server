@@ -3,7 +3,6 @@ extern crate base64;
 extern crate diesel;
 
 use diesel::prelude::*;
-use self::chrono::NaiveDateTime;
 use super::super::DbConn;
 use super::super::dbtools;
 use super::super::{contexts, conv};
@@ -178,11 +177,9 @@ fn delete_internal(
 }
 
 
-/// Note: This doesn't support custom titles yet.
-/// Also TODO: Abstract the fuck out of this
-#[post("/new", format="image/png", data = "<img_data>")]
-pub fn new(
+fn new_img(
     img_data: Data,
+    title: String,
     apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>
@@ -194,7 +191,7 @@ pub fn new(
 
     let image = HImage {
         id: iid.clone(),
-        title: None,
+        title: Some(title),
         owner: apikey.get_owner(),
         filepath: pathstr.clone(),
         date_added: Local::now().naive_utc(),
@@ -234,6 +231,27 @@ pub fn new(
     let result = result.unwrap();
 
     Ok(status::Created(String::from("/image/") + result.id.as_str(), None))
+}
+
+#[post("/new", format="image/png", data = "<img_data>")]
+pub fn new(
+    img_data: Data,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Created<()>, Failure>
+{
+    new_img(img_data, String::from("Horus Image"), apikey, conn)
+}
+
+#[post("/new/<title>", format="image/png", data="<img_data>")]
+pub fn new_titled(
+    img_data: Data,
+    title: String,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Created<()>, Failure>
+{
+    new_img(img_data, title, apikey, conn)
 }
 
 #[put("/<image_id>", format = "application/json", data = "<updated_values>")]

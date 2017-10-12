@@ -11,7 +11,6 @@ use schema::horus_pastes::dsl::*;
 use super::super::models::{HPaste, LicenseKey, SessionToken};
 use super::super::forms::{HNewPasteForm, HPasteChangesetForm};
 use rocket_contrib::Template;
-use std::collections::HashMap;
 
 #[get("/<paste_id>")]
 pub fn show(

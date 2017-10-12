@@ -17,9 +17,9 @@ use self::chrono::Local;
 use std::io::prelude::*;
 use std::path::Path;
 
-#[post("/new", format = "video/webm", data = "<vid_data>")]
-pub fn new(
-    vid_data: Data,
+fn new_vid(
+    vid_data: Data, 
+    title: String,
     apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>
@@ -30,7 +30,7 @@ pub fn new(
 
     let video = HVideo {
         id: iid.clone(),
-        title: None,
+        title: Some(title),
         owner: apikey.get_owner(),
         filepath: pathstr.clone(),
         date_added: Local::now().naive_utc(),
@@ -69,6 +69,29 @@ pub fn new(
     let result = result.unwrap();
 
     Ok(status::Created(String::from("/video/") + result.id.as_str(), None))
+
+}
+
+
+#[post("/new", format = "video/webm", data = "<vid_data>")]
+pub fn new(
+    vid_data: Data,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Created<()>, Failure>
+{
+    new_vid(vid_data, String::from("Horus Video"), apikey, conn)
+}
+
+#[post("/new/<title>", format = "video/webm", data = "<vid_data>")]
+pub fn new_titled(
+    vid_data: Data,
+    title: String,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Created<()>, Failure>
+{
+    new_vid(vid_data, title, apikey, conn)
 }
 
 #[get("/<uid>/list/<page>")]
