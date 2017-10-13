@@ -15,6 +15,7 @@ pub mod meta {
     use rocket_contrib::Template;
     use rocket::response::NamedFile;
     use std::path::Path;
+    use std::collections::HashMap;
 
     const VERSION: &'static str = "2.0.0";
     const LATEST_PATH: &'static str = "live/binaries/";
@@ -28,8 +29,11 @@ pub mod meta {
     #[get("/changelogs")]
     pub fn changelogs() -> Option<Template>
     {
-        // TODO
-        None
+        // We don't actually need any context, we are just rendering from
+        // a template for the telemetry data and the precompiled CSS, the data
+        // itself is static in the template.
+        let context: HashMap<String, String> = HashMap::new(); 
+        Some(Template::render("changelog", &context))
     }
 
     #[get("/latest/<platform>")]
