@@ -2,6 +2,7 @@ extern crate chrono;
 extern crate base64;
 extern crate diesel;
 
+use self::chrono::NaiveDateTime;
 use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
@@ -180,6 +181,7 @@ fn delete_internal(
 fn new_img(
     img_data: Data,
     title: String,
+    exp: Option<NaiveDateTime>,
     apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>
@@ -195,8 +197,8 @@ fn new_img(
         owner: apikey.get_owner(),
         filepath: pathstr.clone(),
         date_added: Local::now().naive_utc(),
-        is_expiry: false,
-        expiration_time: None,
+        is_expiry: exp.is_some(),
+        expiration_time: exp,
     };
     // SAVE THE FILE THEN INSERT DB
     let img_data: Vec<u8> = img_data.open()
@@ -233,25 +235,52 @@ fn new_img(
     Ok(status::Created(String::from("/image/") + result.id.as_str(), None))
 }
 
-#[post("/new", format="image/png", data = "<img_data>")]
+/// <img_data> The base64 video data.
+/// <expt> The expiration type 'minutes', 'hours', or 'days', optional.
+/// <expd> The expiration duration, required if expt present.
+#[post("/new/<expt>/<expd>", format="image/png", data = "<img_data>")]
 pub fn new(
     img_data: Data,
+    expt: Option<String>,
+    expd: Option<usize>,
     apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>
 {
-    new_img(img_data, String::from("Horus Image"), apikey, conn)
+    if expt.is_some() && expd.is_some() {
+        let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap());
+        if exp.is_err() {
+            return Err(Failure(Status::BadRequest));
+        }
+        new_img(img_data, String::from("Horus Image"), Some(exp.unwrap()), apikey, conn)
+    } else {
+        new_img(img_data, String::from("Horus Image"), None, apikey, conn)
+    }
 }
 
-#[post("/new/<title>", format="image/png", data="<img_data>")]
+/// <img_data> The base64 video data.
+/// <title> The title of the image, required.
+/// <expt> The expiration type 'minutes', 'hours', or 'days', optional.
+/// <expd> The expiration duration, required if expt present.
+#[post("/new/<title>/<expt>/<expd>", format="image/png", data="<img_data>")]
 pub fn new_titled(
     img_data: Data,
     title: String,
+    expt: Option<String>,
+    expd: Option<usize>,
     apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>
 {
-    new_img(img_data, title, apikey, conn)
+    if expt.is_some() && expd.is_some() {
+        let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap());
+        if exp.is_err() {
+            return Err(Failure(Status::BadRequest));
+        }
+        new_img(img_data, title, Some(exp.unwrap()), apikey, conn)
+    } else {
+        new_img(img_data, title, None, apikey, conn)
+    }
 }
 
 #[put("/<image_id>", format = "application/json", data = "<updated_values>")]

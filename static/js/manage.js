@@ -7,7 +7,7 @@ $(document).ready(function(){
         locstr += '/0';
         console.log(locstr);
         $.ajax($(this).attr("data-href"), 
-        {
+            {
                 contentType: 'application/json',
                 method: 'delete',
                 success: function(){ window.location.href = locstr;}
@@ -52,7 +52,7 @@ function update_paste() {
     {
         contentType: 'application/json',
         method: 'put',
-        data: JSON.stringify({title: title, paste_data: paste_data}),
+        data: JSON.stringify({title: title, paste_data: paste_data, duration_type: 'days', duration_val: -1}),
         success: function(){
             $('.paste-data').removeClass('hljs javascript');
             $('.paste-data').html(paste_data);

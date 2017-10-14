@@ -46,7 +46,7 @@ pub fn delete_s3_object(path: &str) -> Result<String, ()>
         return Err(());
     }
 
-    let (data, code) = res.unwrap();
+    let (data, _) = res.unwrap();
 
     Ok(String::from_utf8(data).unwrap())
 }

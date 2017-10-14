@@ -2,6 +2,7 @@ extern crate diesel;
 extern crate base64;
 extern crate chrono;
 
+use self::chrono::NaiveDateTime;
 use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
@@ -20,6 +21,7 @@ use std::path::Path;
 fn new_vid(
     vid_data: Data, 
     title: String,
+    exp: Option<NaiveDateTime>,
     apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>
@@ -34,8 +36,8 @@ fn new_vid(
         owner: apikey.get_owner(),
         filepath: pathstr.clone(),
         date_added: Local::now().naive_utc(),
-        is_expiry: false,
-        expiration_time: None,
+        is_expiry: exp.is_some(),
+        expiration_time: exp,
     };
 
     let vid_data: Vec<u8> = vid_data.open()
@@ -72,26 +74,52 @@ fn new_vid(
 
 }
 
-
-#[post("/new", format = "video/webm", data = "<vid_data>")]
+/// <vid_data> The base64 video data.
+/// <expt> The expiration type 'minutes', 'hours', or 'days', optional.
+/// <expd> The expiration duration, required if expt present.
+#[post("/new/<expt>/<expd>", format = "video/webm", data = "<vid_data>")]
 pub fn new(
     vid_data: Data,
+    expt: Option<String>,
+    expd: Option<usize>,
     apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>
 {
-    new_vid(vid_data, String::from("Horus Video"), apikey, conn)
+    if expt.is_some() && expd.is_some() {
+        let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap());
+        if exp.is_err() {
+            return Err(Failure(Status::BadRequest));
+        }
+        new_vid(vid_data, String::from("Horus Video"), Some(exp.unwrap()), apikey, conn)
+    } else {
+        new_vid(vid_data, String::from("Horus Video"), None, apikey, conn)
+    }
 }
 
-#[post("/new/<title>", format = "video/webm", data = "<vid_data>")]
+/// <vid_data> The base64 video data.
+/// <title> The title of the image, required.
+/// <expt> The expiration type 'minutes', 'hours', or 'days', optional.
+/// <expd> The expiration duration, required if expt present.
+#[post("/new/<title>/<expt>/<expd>", format = "video/webm", data = "<vid_data>")]
 pub fn new_titled(
     vid_data: Data,
     title: String,
+    expt: Option<String>,
+    expd: Option<usize>,
     apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>
 {
-    new_vid(vid_data, title, apikey, conn)
+    if expt.is_some() && expd.is_some() {
+        let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap());
+        if exp.is_err() {
+            return Err(Failure(Status::BadRequest));
+        }
+        new_vid(vid_data, title, Some(exp.unwrap()), apikey, conn)
+    } else {
+        new_vid(vid_data, title, None, apikey, conn)
+    }
 }
 
 #[get("/<uid>/list/<page>")]
