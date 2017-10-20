@@ -14,6 +14,12 @@ $(document).ready(function(){
             }
         );
     });
+
+    $('.is_date').each(function() {
+        let datestr = $(this).text();
+        datestr = datestr.split(".")[0].replace("T", " ");
+        $(this).text(datestr);
+    });
     
     $('.paste-row').click(function(){window.location.href = $(this).attr('data-href');});
     $('.paste-data').focusout(function(){
