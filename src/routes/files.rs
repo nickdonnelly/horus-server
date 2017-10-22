@@ -1,6 +1,7 @@
 extern crate chrono;
 extern crate diesel;
 
+use self::chrono::NaiveDateTime;
 use diesel::prelude::*;
 use rocket::request::Request;
 use rocket::response::{status, NamedFile, Failure, Response, Responder};
@@ -9,7 +10,7 @@ use rocket::data::Data;
 use rocket_contrib::{Json, Template};
 use super::super::models::{HFile, LicenseKey, SessionToken};
 use super::super::DbConn;
-use super::super::dbtools;
+use super::super::{conv, dbtools};
 use super::super::fields::FileName;
 use self::chrono::Local;
 
@@ -74,10 +75,31 @@ pub fn list(
     Ok(Json(files.unwrap()))
 }
 
-#[post("/new", format="application/octet-stream", data = "<file_data>")]
+#[post("/new/<expt>/<expd>", format="application/octet-stream", data="<file_data>")]
 pub fn new(
     file_data: Data,
     file_name: FileName,
+    expt: Option<String>,
+    expd: Option<usize>,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Created<()>, Failure>
+{
+    if expt.is_some() && expd.is_some() {
+        let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap());
+        if exp.is_err() {
+            return Err(Failure(Status::BadRequest));
+        }
+        new_file(file_data, file_name, Some(exp.unwrap()), apikey, conn)
+    }else{
+        new_file(file_data, file_name, None, apikey, conn)
+    }
+
+}
+pub fn new_file(
+    file_data: Data,
+    file_name: FileName,
+    expire_time: Option<NaiveDateTime>,
     apikey: LicenseKey,
     conn: DbConn)
     -> Result<status::Created<()>, Failure>
@@ -92,8 +114,8 @@ pub fn new(
         filename: file_name.0,
         filepath: pathstr.clone(),
         date_added: Local::now().naive_utc(),
-        is_expiry: false,
-        expiration_time: None,
+        is_expiry: expire_time.is_some(),
+        expiration_time: expire_time,
         download_counter: None, // defaults 0
     };
 
