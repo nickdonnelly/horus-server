@@ -17,7 +17,7 @@ pub mod meta {
     use std::path::Path;
     use std::collections::HashMap;
 
-    const VERSION: &'static str = "2.0.0";
+    const VERSION: &'static str = "2.1.0";
     const LATEST_PATH: &'static str = "live/binaries/";
     
     #[get("/version")]
