@@ -235,11 +235,21 @@ fn new_img(
     Ok(status::Created(String::from("/image/") + result.id.as_str(), None))
 }
 
+#[post("/new", format="image/png", data = "<img_data>")]
+pub fn new(
+    img_data: Data,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Created<()>, Failure>
+{
+    new_img(img_data, String::from("Horus Image"), None, apikey, conn)
+}
+
 /// <img_data> The base64 video data.
 /// <expt> The expiration type 'minutes', 'hours', or 'days', optional.
 /// <expd> The expiration duration, required if expt present.
 #[post("/new/<expt>/<expd>", format="image/png", data = "<img_data>")]
-pub fn new(
+pub fn new_exp(
     img_data: Data,
     expt: Option<String>,
     expd: Option<usize>,

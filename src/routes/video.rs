@@ -74,11 +74,21 @@ fn new_vid(
 
 }
 
+#[post("/new", format = "video/webm", data = "<vid_data>")]
+pub fn new(
+    vid_data: Data,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Created<()>, Failure>
+{
+    new_vid(vid_data, String::from("Horus Video"), None, apikey, conn)
+}
+
 /// <vid_data> The base64 video data.
 /// <expt> The expiration type 'minutes', 'hours', or 'days', optional.
 /// <expd> The expiration duration, required if expt present.
 #[post("/new/<expt>/<expd>", format = "video/webm", data = "<vid_data>")]
-pub fn new(
+pub fn new_exp(
     vid_data: Data,
     expt: Option<String>,
     expd: Option<usize>,

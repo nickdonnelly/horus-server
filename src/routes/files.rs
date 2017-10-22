@@ -75,8 +75,19 @@ pub fn list(
     Ok(Json(files.unwrap()))
 }
 
-#[post("/new/<expt>/<expd>", format="application/octet-stream", data="<file_data>")]
+#[post("/new", format="application/octet-stream", data="<file_data>")]
 pub fn new(
+    file_data: Data,
+    file_name: FileName,
+    apikey: LicenseKey,
+    conn: DbConn)
+    -> Result<status::Created<()>, Failure>
+{
+    new_file(file_data, file_name, None, apikey, conn)
+}
+
+#[post("/new/<expt>/<expd>", format="application/octet-stream", data="<file_data>")]
+pub fn new_exp(
     file_data: Data,
     file_name: FileName,
     expt: Option<String>,
