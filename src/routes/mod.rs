@@ -17,7 +17,7 @@ pub mod meta {
     use std::path::Path;
     use std::collections::HashMap;
 
-    const VERSION: &'static str = "2.1.0";
+    const VERSION: &'static str = "2.1.1";
     const LATEST_PATH: &'static str = "live/binaries/";
     
     #[get("/version")]
@@ -72,15 +72,15 @@ pub mod meta {
     pub fn get_latest_old_win(_apikey: LicenseKey)
         -> Option<NamedFile>
     {
-        println!("THAT ONE");
-        None
+        let pathstr = String::from(LATEST_PATH) + "win64.zip";
+        NamedFile::open(Path::new(&pathstr)).ok()
     }
 
     #[get("/get_latestlinux")]
-    pub fn get_latest_old_win(_apikey: LicenseKey)
+    pub fn get_latest_old_lin(_apikey: LicenseKey)
         -> Option<NamedFile>
     {
-        println!("THIS ONE");
-        None
+        let pathstr = String::from(LATEST_PATH) + "linux.zip";
+        NamedFile::open(Path::new(&pathstr)).ok()
     }
 }

@@ -36,7 +36,8 @@ fn main() {
                                   manage::request_auth_cookie, manage::request_auth_url,
                                   manage::base_redirect])
         .mount("/meta", routes![meta::get_version, meta::get_latest_session,
-                                meta::get_latest, meta::changelogs])
+                                meta::get_latest, meta::changelogs, meta::get_latest_old_lin,
+                                meta::get_latest_old_win])
         .mount("/static", routes![files::static_asset])
         //.mount("/admin", routes![jobs::list_jobs, jobs::job_status])
         .mount("/", routes![favicon, verify_ssl])
@@ -44,9 +45,9 @@ fn main() {
         .launch();
 }
 
-#[get("/.well-known/acme-challenge/kRLJd-GWcR0gToTfnXS-Kvyn8DcK-U6Es--9uA6nGsk")]
+#[get("/.well-known/acme-challenge/EEOTc1pztDweOyyGHCUbAPo118-DfC4ZVHMxBBYSgzU")]
 pub fn verify_ssl() -> String {
-    String::from("kRLJd-GWcR0gToTfnXS-Kvyn8DcK-U6Es--9uA6nGsk.zFScHQkirc75cfQ9qjihdABaD_u16l-THYgvENWR30k")
+    String::from("EEOTc1pztDweOyyGHCUbAPo118-DfC4ZVHMxBBYSgzU.zFScHQkirc75cfQ9qjihdABaD_u16l-THYgvENWR30k")
 }
 
 #[get("/favicon.ico")]
