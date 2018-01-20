@@ -65,4 +65,22 @@ pub mod meta {
 
         NamedFile::open(Path::new(&pathstr)).ok()
     }
+
+    // This is for older versions that are pointing to the wrong
+    // endpoint.
+    #[get("/get_latestwin64")]
+    pub fn get_latest_old_win(_apikey: LicenseKey)
+        -> Option<NamedFile>
+    {
+        println!("THAT ONE");
+        None
+    }
+
+    #[get("/get_latestlinux")]
+    pub fn get_latest_old_win(_apikey: LicenseKey)
+        -> Option<NamedFile>
+    {
+        println!("THIS ONE");
+        None
+    }
 }
