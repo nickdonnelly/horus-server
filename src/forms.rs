@@ -8,7 +8,7 @@ use self::chrono::NaiveDateTime;
 pub struct HImageChangesetForm {
     pub title: Option<String>,
     pub duration_type: String, // days,hours,minutes
-    pub duration_val: usize,
+    pub duration_val: isize,
 }
 
 #[derive(Deserialize)]
@@ -16,7 +16,7 @@ pub struct HImageChangesetForm {
 pub struct HVideoChangesetForm {
     pub title: Option<String>,
     pub duration_type: String, // days,hours,minutes
-    pub duration_val: usize,
+    pub duration_val: isize,
 }
 
 #[derive(Deserialize)]
@@ -25,7 +25,7 @@ pub struct HPasteChangesetForm {
     pub title: Option<String>,
     pub paste_data: Option<String>,
     pub duration_type: String, // days,hours,minutes
-    pub duration_val: usize,
+    pub duration_val: isize,
 }
 
 #[derive(AsChangeset, Deserialize)]

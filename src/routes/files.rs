@@ -97,7 +97,7 @@ pub fn new_exp(
     -> Result<status::Created<()>, Failure>
 {
     if expt.is_some() && expd.is_some() {
-        let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap());
+        let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
             return Err(Failure(Status::BadRequest));
         }
@@ -142,8 +142,8 @@ pub fn new_file(
         return Err(Failure(Status::ServiceUnavailable));
     }
 
-    let result = diesel::insert(&hfile)
-        .into(horus_files::table)
+    let result = diesel::insert_into(horus_files::table)
+        .values(&hfile)
         .get_result::<HFile>(&*conn);
 
     if result.is_err() {

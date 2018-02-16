@@ -1,9 +1,11 @@
 #![feature(custom_derive, plugin)]
 #![plugin(rocket_codegen)]
+#![plugin(dotenv_macros)]
 #![recursion_limit="128"] // For diesel schema inference.
 
 #[macro_use] extern crate diesel;
-#[macro_use] extern crate diesel_codegen;
+#[macro_use] extern crate diesel_infer_schema;
+
 
 #[allow(unused_extern_crates)] extern crate serde_json;
 #[allow(unused_extern_crates)] #[macro_use] extern crate serde_derive;
@@ -26,9 +28,9 @@ pub mod fields;
 pub mod conv;
 pub mod errors;
 
-static DATABASE_URL: &'static str = env!("DATABASE_URL");
-static AWS_ACCESS: &'static str = env!("AWS_ACCESS");
-static AWS_SECRET: &'static str = env!("AWS_SECRET");
+static DATABASE_URL: &'static str = dotenv!("DATABASE_URL");
+static AWS_ACCESS: &'static str = dotenv!("AWS_ACCESS");
+static AWS_SECRET: &'static str = dotenv!("AWS_SECRET");
 
 // Database pooling definitions
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;

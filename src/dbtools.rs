@@ -97,10 +97,10 @@ pub fn resource_to_s3(
 
 // Database pool initialization
 pub fn init_pool() -> Pool {
-    let config = r2d2::Config::default();
+    //let config = r2d2::Config::default();
     let manager = ConnectionManager::<PgConnection>::new(super::DATABASE_URL);
 
-    r2d2::Pool::new(config, manager).expect("db pool")
+    r2d2::Pool::new(manager).expect("db pool")
 }
 
 pub fn get_random_char_id(len: usize) -> String {

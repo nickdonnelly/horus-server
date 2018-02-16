@@ -14,9 +14,12 @@ use super::dbtools;
 use super::{DbConn, fields};
 use diesel::prelude::*;
 
+/// Returns a NaiveDateTime given a duration consisting of a string
+/// that contains the `type` (`days`, `hours`, or `minutes`) and a value
+/// that represents the number of `type`.
 pub fn get_dt_from_duration(
     _type: String,
-    _value: usize)
+    _value: isize)
     -> Result<NaiveDateTime, String>
 {
     if _value <= 0 {

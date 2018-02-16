@@ -38,8 +38,8 @@ pub fn request_auth_url(
     if usertoken.is_err() { // They don't have a token yet
         let usertoken = AuthToken::new(_uid);
 
-        let insert_result = diesel::insert(&usertoken)
-            .into(schema::auth_tokens::table)
+        let insert_result = diesel::insert_into(schema::auth_tokens::table)
+            .values(&usertoken)
             .get_result::<AuthToken>(&*conn);
 
         if insert_result.is_err() {
@@ -93,8 +93,8 @@ pub fn request_auth_cookie(
     let insert_result = token_result.save_changes::<SessionToken>(&*conn);
 
     if insert_result.is_err() {
-        let insert_new_result = diesel::insert(&token_result)
-            .into(schema::session_tokens::table)
+        let insert_new_result = diesel::insert_into(schema::session_tokens::table)
+            .values(&token_result)
             .execute(&*conn);
 
         if insert_new_result.is_err() {

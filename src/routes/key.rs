@@ -82,12 +82,12 @@ pub fn issue_license_with_key(
 
     // Insert the records and verify success
     // The key needs to be inserted first due to FK constraints
-    let license_key_result = diesel::insert(&l_key)
-        .into(schema::horus_license_keys::table)
+    let license_key_result = diesel::insert_into(schema::horus_license_keys::table)
+        .values(&l_key)
         .get_result::<LicenseKey>(&conn);
 
-    let license_result = diesel::insert(&license)
-        .into(schema::horus_licenses::table)
+    let license_result = diesel::insert_into(schema::horus_licenses::table)
+        .values(&license)
         .get_result::<License>(&conn);
 
 

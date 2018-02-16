@@ -79,8 +79,8 @@ pub fn new(
     let mut paste: HPaste = paste_form_data.into();
     paste.owner = apikey.get_owner();
 
-    let result = diesel::insert(&paste)
-        .into(horus_pastes::table)
+    let result = diesel::insert_into(horus_pastes::table)
+        .values(&paste)
         .get_result::<HPaste>(&*conn);
 
     if result.is_err() {
