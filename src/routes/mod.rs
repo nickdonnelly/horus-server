@@ -36,7 +36,7 @@ pub mod meta {
         Some(Template::render("changelog", &context))
     }
 
-    #[get("/latest/<platform>")]
+    #[get("/latest/<platform>", rank = 2)]
     pub fn get_latest_session(
         platform: String,
         _session: SessionToken)
@@ -51,7 +51,7 @@ pub mod meta {
         NamedFile::open(Path::new(&pathstr)).ok()
     }
 
-    #[get("/latest/<platform>", rank = 2)]
+    #[get("/latest/<platform>", rank = 1)]
     pub fn get_latest(
         platform: String,
         _apikey: LicenseKey)
