@@ -202,6 +202,7 @@ main {
     float: left;
     clear: both;
     text-align: center;
+    font-weight: bold;
     width: 10%; }
 
 .change {
@@ -221,5 +222,4 @@ main {
   color: #fff; }
 
 .changelog li {
-  font-weight: bold;
   line-height: 1.65em; }
