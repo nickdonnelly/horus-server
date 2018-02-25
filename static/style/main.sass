@@ -172,18 +172,35 @@ main
     padding: 1em
     display: inline-block
 
+.changelog-item
+  font-size: 1.00rem
+  margin: 0.9em 0
+  span
+    padding: 0.25em 0.5em
+    border-radius: 20px
+    display: block
+    margin-right: 0.5em
+    float: left
+    clear: both 
+    text-align: center
+    width: 10%
+
 .change
-  color: lighten(black, 15%)
+  background-color: darken(magenta, 10%)
+  color: #fff
 
 .addition
-  color: #33cc33
+  background-color: #33cc33
+  color: #fff 
 
 .deletion
-  color: red
+  background-color: red
+  color: #fff
 
 .fix
-  color: #ff9900
-
+  background-color: lighten(black, 40%)
+  color: #fff 
+  
 .changelog li
   font-weight: bold
   line-height: 1.65em
