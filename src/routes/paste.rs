@@ -183,6 +183,10 @@ pub fn update(
         paste.expiration_time = Some(dt.unwrap());
     }
 
+    if let Some(data) = paste_update.paste_data {
+        paste.paste_data = data;
+    }
+
     let result = paste.save_changes::<HPaste>(&*conn);
     match result {
         Ok(_) => Ok(status::Accepted(None)),
