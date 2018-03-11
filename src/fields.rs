@@ -4,7 +4,7 @@ extern crate diesel;
 
 use diesel::prelude::*;
 use self::regex::Regex;
-use super::models::{License, LicenseKey, AuthToken, SessionToken};
+use super::models::{License, LicenseKey, AuthToken, SessionToken, DeploymentKey};
 use super::routes::manage::AuthRequest;
 use super::errors::AuthTokenError;
 use super::forms::UserForm;
@@ -204,3 +204,4 @@ impl SessionToken
         Some(stoken)
     }
 }
+

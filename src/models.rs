@@ -33,6 +33,13 @@ pub struct SessionToken {
     pub expires: Option<NaiveDateTime>,
 }
 
+#[derive(Insertable, Queryable, Serialize, AsChangeset)]
+#[table_name="deployment_keys"]
+pub struct DeploymentKey {
+    key: String,
+    pub deployments: i32,
+}
+
 #[derive(Insertable, Queryable, Serialize)]
 #[table_name="horus_license_keys"]
 pub struct LicenseKey {
@@ -111,3 +118,11 @@ pub struct HJob {
     time_queued: Option<NaiveDateTime>,
 }
 
+impl DeploymentKey {
+    pub fn new(key_hash: String) -> Self {
+        Self {
+            key: key_hash,
+            deployments: 0
+        }
+    }
+}

@@ -9,6 +9,7 @@ pub mod image;
 pub mod video;
 pub mod paste;
 pub mod key;
+pub mod dist;
 
 pub mod meta {
     use super::super::models::{LicenseKey, SessionToken};

@@ -16,11 +16,11 @@ use self::rand::Rng;
 use self::rocket_contrib::Json;
 
 // TODO: Temporary - will be secured
-#[post("/issue/<_uid>")]
-pub fn issue(_uid: i32) 
+#[post("/issue/<uid>")]
+pub fn issue(uid: i32) 
     -> Json<(License, LicenseKey)>
 {
-    Json(issue_license_with_key(1, 3, 3).unwrap())
+    Json(issue_license_with_key(uid, 3, 3).unwrap())
 }
 
 // TODO: Check if the key is expired before returning
