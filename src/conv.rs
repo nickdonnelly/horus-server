@@ -6,7 +6,7 @@ use rocket::{State, Outcome};
 use rocket::http::Status;
 use rocket::request::{self, Request, FromRequest};
 use self::chrono::{Local, DateTime, NaiveDateTime, Duration};
-use super::models::{LicenseKey, HPaste, SessionToken};
+use super::models::{LicenseKey, HPaste, SessionToken, DeploymentKey};
 use super::forms::HNewPasteForm;
 use super::fields::FileName;
 use super::Pool;
@@ -75,8 +75,36 @@ impl<'a, 'r> FromRequest<'a ,'r> for FileName
         Outcome::Success(FileName(neutered_filename))
     }
 }
-impl<'a, 'r> FromRequest<'a, 'r> for SessionToken 
-{
+
+impl<'a, 'r> FromRequest<'a, 'r> for DeploymentKey {
+    type Error = String;
+
+    fn from_request(request: &'a Request<'r>)
+        -> request::Outcome<DeploymentKey, Self::Error>
+    {
+        use schema::deployment_keys::dsl::*;
+
+        let keys: Vec<_> = request.headers().get("x-deployment-key").collect();
+        if keys.len() != 1 {
+            Outcome::Failure((Status::Unauthorized, "Supply exactly one deployment key.".to_string()))
+        } else {
+            
+            let conn = dbtools::get_db_conn(&request).unwrap();
+            let key_ = keys[0];
+
+            // Query database
+            let result = deployment_keys.find(key_).first(&*conn);
+
+            if result.is_err() {
+                Outcome::Failure((Status::Unauthorized, "Invalid deployment key.".to_string()))
+            } else {
+                Outcome::Success(result.unwrap())        
+            }
+        }
+    }
+}
+
+impl<'a, 'r> FromRequest<'a, 'r> for SessionToken {
     type Error = String;
 
     fn from_request(request: &'a Request<'r>) 
