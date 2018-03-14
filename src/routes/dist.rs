@@ -7,7 +7,7 @@ use std;
 use diesel::prelude::*;
 use super::super::schema;
 use super::super::schema::deployment_keys::dsl::*;
-use self::bcrypt::{ DEFAULT_COST, hash, verify };
+use self::bcrypt::{ DEFAULT_COST, hash };
 use self::rand::{ Rng, ThreadRng };
 
 use super::super::models::{ LicenseKey, SessionToken, DeploymentKey };
