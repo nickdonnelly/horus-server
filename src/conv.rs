@@ -83,22 +83,43 @@ impl<'a, 'r> FromRequest<'a, 'r> for DeploymentKey {
         -> request::Outcome<DeploymentKey, Self::Error>
     {
         use schema::deployment_keys::dsl::*;
+        use schema;
+        use super::routes;
 
         let keys: Vec<_> = request.headers().get("x-deployment-key").collect();
+        let lkey: Vec<_> = request.headers().get("x-api-key").collect();
+
         if keys.len() != 1 {
             Outcome::Failure((Status::Unauthorized, "Supply exactly one deployment key.".to_string()))
         } else {
             
             let conn = dbtools::get_db_conn(&request).unwrap();
             let key_ = keys[0];
+            let lkey = lkey[0];
 
             // Query database
-            let result = deployment_keys.find(key_).first(&*conn);
+            let result = deployment_keys.filter(license_key.eq(&lkey))
+                .first(&*conn);
 
-            if result.is_err() {
-                Outcome::Failure((Status::Unauthorized, "Invalid deployment key.".to_string()))
+            let lkey = schema::horus_license_keys::dsl::horus_license_keys
+                .filter(schema::horus_license_keys::dsl::key.eq(&lkey))
+                .first(&*conn);
+
+
+            if result.is_err() || lkey.is_err() {
+                Outcome::Failure((Status::Unauthorized, "Invalid deployment or license key.".to_string()))
             } else {
-                Outcome::Success(result.unwrap())        
+                let result: DeploymentKey = result.unwrap();
+                let lkey: LicenseKey = lkey.unwrap();
+
+                // Verify hash
+                let verification = routes::dist::verify_key(lkey, result, key_.to_string());
+                if verification.is_err() {
+                    Outcome::Failure(
+                        (Status::Unauthorized, "Couldn't verify deployment key owner.".to_string()))
+                } else {
+                    Outcome::Success(verification.unwrap())        
+                }
             }
         }
     }

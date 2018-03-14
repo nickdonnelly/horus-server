@@ -7,19 +7,40 @@ use std;
 use diesel::prelude::*;
 use super::super::schema;
 use super::super::schema::deployment_keys::dsl::*;
-use self::bcrypt::{ DEFAULT_COST, hash };
+use self::bcrypt::{ DEFAULT_COST, hash, verify };
 use self::rand::{ Rng, ThreadRng };
+
+use rocket::http::Status;
+use rocket::data::Data;
+use rocket::response::{ status, Failure };
 
 use super::super::models::{ LicenseKey, SessionToken, DeploymentKey };
 
 
-/// Verifies if a key is correct and returns its database object if so.
-fn verify_key(lkey: LicenseKey, deployment_key: String) -> Result<DeploymentKey, ()>
+#[post("/deploy/<platform>", format="application/octet-stream", data="<update_package>")]
+pub fn deploy(
+    platform: String, 
+    update_package: Data,
+    _depkey: DeploymentKey) 
+    -> Result<status::Created<()>, Failure>
 {
-    let key_hash = hash(&deployment_key, DEFAULT_COST).unwrap();
+    Err(Failure(Status::ServiceUnavailable))
+}
+
+/// Verifies if a key is correct and returns its database object if so.
+pub fn verify_key(
+    lkey: LicenseKey, 
+    depkey: DeploymentKey,
+    deployment_key: String) -> Result<DeploymentKey, ()>
+{
+    let key_hash_valid = verify(&deployment_key, &depkey.hash()).unwrap();
+    if !key_hash_valid {
+        return Err(());
+    }
+
     let conn = super::super::dbtools::get_db_conn_requestless().unwrap();
     let depkey_query: Result<DeploymentKey, _> = deployment_keys.filter(
-        schema::deployment_keys::dsl::key.eq(&key_hash)).first(&conn);
+        schema::deployment_keys::dsl::key.eq(&depkey.hash())).first(&conn);
 
     if depkey_query.is_ok() {
         let depkey_query = depkey_query.unwrap();
@@ -27,9 +48,11 @@ fn verify_key(lkey: LicenseKey, deployment_key: String) -> Result<DeploymentKey,
         if depkey_query.license_key == lkey.key {
             Ok(depkey_query)
         } else {
+            println!("3");
             Err(())
         }
     } else {
+            println!("4");
         Err(())
     }
 }

@@ -38,6 +38,7 @@ fn main() {
         .mount("/meta", routes![meta::get_version, meta::get_latest_session,
                                 meta::get_latest, meta::changelogs, meta::get_latest_old_lin,
                                 meta::get_latest_old_win])
+        .mount("/deploy", routes![dist::deploy])
         .mount("/static", routes![files::static_asset])
         //.mount("/admin", routes![jobs::list_jobs, jobs::job_status])
         .mount("/", routes![favicon, verify_ssl])

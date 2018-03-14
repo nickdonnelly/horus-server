@@ -33,7 +33,7 @@ pub struct SessionToken {
     pub expires: Option<NaiveDateTime>,
 }
 
-#[derive(Insertable, Queryable, Serialize, Deserialize, AsChangeset)]
+#[derive(Insertable, Queryable, Serialize, Deserialize, AsChangeset, Debug)]
 #[table_name="deployment_keys"]
 pub struct DeploymentKey {
     key: String,
@@ -126,5 +126,9 @@ impl DeploymentKey {
             license_key: lkey.key.clone(),
             deployments: 0
         }
+    }
+
+    pub fn hash(&self) -> String {
+        self.key.clone()
     }
 }
