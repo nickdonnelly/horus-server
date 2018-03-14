@@ -14,15 +14,21 @@ use super::super::models::{ LicenseKey, SessionToken, DeploymentKey };
 
 
 /// Verifies if a key is correct and returns its database object if so.
-fn verify_key(deployment_key: String) -> Result<DeploymentKey, ()>
+fn verify_key(lkey: LicenseKey, deployment_key: String) -> Result<DeploymentKey, ()>
 {
     let key_hash = hash(&deployment_key, DEFAULT_COST).unwrap();
     let conn = super::super::dbtools::get_db_conn_requestless().unwrap();
-    let depkey_query = deployment_keys.filter(
+    let depkey_query: Result<DeploymentKey, _> = deployment_keys.filter(
         schema::deployment_keys::dsl::key.eq(&key_hash)).first(&conn);
 
     if depkey_query.is_ok() {
-        Ok(depkey_query.unwrap())
+        let depkey_query = depkey_query.unwrap();
+
+        if depkey_query.license_key == lkey.key {
+            Ok(depkey_query)
+        } else {
+            Err(())
+        }
     } else {
         Err(())
     }
@@ -49,7 +55,7 @@ pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey)
             });
     
     let random_hash = hash(&random_key, DEFAULT_COST).unwrap();
-    let result_key = DeploymentKey::new(random_hash);
+    let result_key = DeploymentKey::new(random_hash, &l_key);
 
     let connection = super::super::dbtools::get_db_conn_requestless().unwrap();
     let dep_key_result = diesel::insert_into(schema::deployment_keys::table)

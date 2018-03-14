@@ -33,11 +33,12 @@ pub struct SessionToken {
     pub expires: Option<NaiveDateTime>,
 }
 
-#[derive(Insertable, Queryable, Serialize, AsChangeset)]
+#[derive(Insertable, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name="deployment_keys"]
 pub struct DeploymentKey {
     key: String,
     pub deployments: i32,
+    pub license_key: String
 }
 
 #[derive(Insertable, Queryable, Serialize)]
@@ -119,9 +120,10 @@ pub struct HJob {
 }
 
 impl DeploymentKey {
-    pub fn new(key_hash: String) -> Self {
+    pub fn new(key_hash: String, lkey: &LicenseKey) -> Self {
         Self {
             key: key_hash,
+            license_key: lkey.key.clone(),
             deployments: 0
         }
     }
