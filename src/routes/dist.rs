@@ -17,10 +17,44 @@ use rocket::response::{ status, Failure };
 
 use super::super::models::{ LicenseKey, SessionToken, DeploymentKey, HorusVersion, NewHorusVersion };
 
-// TODO: enable deployment by id
+#[post("/publish/<deployment_id>")]
+pub fn enable_deployment(
+    deployment_id: i32,
+    conn: DbConn,
+    depkey: DeploymentKey)
+    -> Result<status::Custom<()>, Failure>
+{
+    use schema::horus_versions;
+    // Verify key is the one used to deploy originally.
+    let dbobj = horus_versions::dsl::horus_versions.find(deployment_id)
+        .first(&*conn);
+
+    if dbobj.is_err() {
+        return Err(Failure(Status::NotFound));
+    }
+
+    let mut version: HorusVersion = dbobj.unwrap();
+
+    if version.deployment_key_hash() != depkey.hash() {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    // we are authed, make the change
+    version.publish();
+    let db_result = diesel::update(horus_versions::dsl::horus_versions.find(deployment_id))
+        .set(&version)
+        .execute(&*conn);
+
+    if db_result.is_err() {
+        return Err(Failure(Status::Unauthorized));
+    } else { db_result.unwrap(); }
+
+    Ok(status::Custom(Status::Ok, ()))
+}
+
 
 /// Returns HTTP created with an integer id for the deployment.
-#[post("/deploy/<platform>/<version>", format="application/octet-stream", data="<update_package>")]
+#[post("/new/<platform>/<version>", format="application/octet-stream", data="<update_package>")]
 pub fn deploy(
     platform: String, 
     version: String,

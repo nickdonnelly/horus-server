@@ -1,7 +1,7 @@
 use super::super::schema::horus_versions;
 use chrono::NaiveDateTime;
 
-#[derive(Identifiable, Queryable, Serialize, Deserialize)]
+#[derive(Identifiable, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name="horus_versions"]
 pub struct HorusVersion {
     id: i32,
@@ -44,34 +44,44 @@ impl NewHorusVersion {
 impl HorusVersion {
         
     /// Returns the ID of the object or -1 if the object hasn't got one (not yet in database).
-    fn id(&self) -> i32
+    pub fn id(&self) -> i32
     {
         self.id
     }
 
-    fn version_string(&self) -> String
+    pub fn version_string(&self) -> String
     {
         self.version_string.clone()
     }
 
-    fn deployment_key_hash(&self) -> String
+    pub fn deployment_key_hash(&self) -> String
     {
         self.deployed_with.clone()
     }
 
-    fn platform(&self) -> String
+    pub fn platform(&self) -> String
     {
         self.platform.clone()
     }
 
-    fn aws_path(&self) -> String
+    pub fn aws_path(&self) -> String
     {
         self.aws_bucket_path.clone()
     }
 
-    fn is_public(&self) -> bool
+    pub fn is_public(&self) -> bool
     {
         self.is_public
+    }
+
+    pub fn publish(&mut self)
+    {
+        self.is_public = true;
+    }
+
+    pub fn unpublish(&mut self)
+    {
+        self.is_public = false;
     }
 
 }
