@@ -39,6 +39,7 @@ pub fn get(
         return None;
     }
     let mut hfile = hfile.unwrap();
+    // TODO, make this an async javascript change, visiting the page doesn't imply they click dl.
     hfile.download_counter = Some(hfile.download_counter.unwrap() + 1);
     hfile.save_changes::<HFile>(&*conn); // ignore the warning coming from this.
                                          // Success is not critical
@@ -134,8 +135,8 @@ pub fn new_file(
         .bytes()
         .map(|x| x.unwrap())
         .collect();
-    // No need to decode as we are getting raw bytes through an octet-stream, no base64
 
+    // No need to decode as we are getting raw bytes through an octet-stream, no base64
     let s3result = dbtools::resource_to_s3_named(&hfile.filename, &pathstr, &file_data);
 
     if s3result.is_err() {

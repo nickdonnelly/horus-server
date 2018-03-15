@@ -1,8 +1,8 @@
-extern crate chrono;
-
-use self::chrono::NaiveDate;
-use self::chrono::NaiveDateTime;
+use chrono::{ NaiveDate, NaiveDateTime };
 use super::schema::*;
+
+mod horus_version;
+pub use self::horus_version::{ NewHorusVersion, HorusVersion };
 
 #[derive(Queryable, Identifiable, Serialize, Deserialize)]
 #[table_name="horus_users"]

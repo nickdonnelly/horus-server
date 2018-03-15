@@ -5,6 +5,7 @@ extern crate diesel;
 use std;
 
 use diesel::prelude::*;
+use super::super::{ DbConn, dbtools };
 use super::super::schema;
 use super::super::schema::deployment_keys::dsl::*;
 use self::bcrypt::{ DEFAULT_COST, hash, verify };
@@ -14,17 +15,51 @@ use rocket::http::Status;
 use rocket::data::Data;
 use rocket::response::{ status, Failure };
 
-use super::super::models::{ LicenseKey, SessionToken, DeploymentKey };
+use super::super::models::{ LicenseKey, SessionToken, DeploymentKey, HorusVersion, NewHorusVersion };
 
+// TODO: enable deployment by id
 
-#[post("/deploy/<platform>", format="application/octet-stream", data="<update_package>")]
+/// Returns HTTP created with an integer id for the deployment.
+#[post("/deploy/<platform>/<version>", format="application/octet-stream", data="<update_package>")]
 pub fn deploy(
     platform: String, 
+    version: String,
     update_package: Data,
-    _depkey: DeploymentKey) 
+    conn: DbConn,
+    depkey: DeploymentKey) 
     -> Result<status::Created<()>, Failure>
 {
-    Err(Failure(Status::ServiceUnavailable))
+    use std::io::Read;
+    use schema::horus_versions;
+
+    let file_data: Vec<u8> = update_package.open()
+        .bytes()
+        .map(|x| x.unwrap())
+        .collect();
+
+    let s3_fname = platform.clone() + ".zip";
+    let s3_path = dbtools::get_path_deployment(&version, &s3_fname);
+    let s3_result = dbtools::private_resource_to_s3_named(&s3_fname, &s3_path, &file_data);
+
+    if s3_result.is_err() {
+        return Err(Failure(Status::InternalServerError));
+    }
+
+    let hversion = NewHorusVersion::new(
+        depkey.hash(),
+        s3_path,
+        version,
+        platform);
+
+    let db_result = diesel::insert_into(horus_versions::table)
+        .values(&hversion)
+        .get_result::<HorusVersion>(&*conn);
+
+    if db_result.is_err() {
+        Err(Failure(Status::InternalServerError))
+    } else {
+        Ok(status::Created(format!("{}", db_result.unwrap().id()), None))
+    }
 }
 
 /// Verifies if a key is correct and returns its database object if so.
@@ -48,11 +83,9 @@ pub fn verify_key(
         if depkey_query.license_key == lkey.key {
             Ok(depkey_query)
         } else {
-            println!("3");
             Err(())
         }
     } else {
-            println!("4");
         Err(())
     }
 }

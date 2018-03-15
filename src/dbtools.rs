@@ -51,6 +51,8 @@ pub fn delete_s3_object(path: &str) -> Result<String, ()>
     Ok(String::from_utf8(data).unwrap())
 }
 
+/// Upload a public, named resource to s3.
+/// returns: a public URL to the object
 pub fn resource_to_s3_named(
     filename: &str,
     path: &str, 
@@ -73,6 +75,31 @@ pub fn resource_to_s3_named(
         return Err(());
     }
     Ok(String::from_utf8(by).unwrap())
+}
+
+/// Upload to S3 using the private canned ACL.
+/// returns: the path to the s3 object from the root of the bucket (not a url)
+pub fn private_resource_to_s3_named(
+    filename: &str,
+    path: &str,
+    data: &Vec<u8>)
+    -> Result<String, ()>
+{
+    let creds = get_s3_creds();
+    let region = REGION.parse::<self::s3::region::Region>().unwrap();
+    let mut bucket = Bucket::new(BUCKET, region, creds);
+    let mut dispositionstr = String::from("attachment; filename=\"");
+    dispositionstr += filename;
+    dispositionstr += "\"";
+    bucket.add_header("x-amz-acl", "private"); // only we can read
+    bucket.add_header("content-disposition", &dispositionstr);
+    let (_, code) = bucket.put(&path, &data, "application/octet-stream").unwrap();
+    
+    if code != 200 {
+        Err(())
+    } else {
+        Ok(String::from(path))
+    }
 }
 
 pub fn resource_to_s3(
@@ -114,16 +141,28 @@ pub fn get_path_image(filename: &str) -> String{
     path_str
 }
 
-pub fn get_path_file(filename: &str) -> String {
+pub fn get_path_file(filename: &str) -> String 
+{
     let mut path_str = String::from("live/files/");
     path_str += filename;
     path_str
 }
 
-pub fn get_path_video(filename: &str) -> String {
+pub fn get_path_video(filename: &str) -> String 
+{
     let mut path_str = String::from("live/videos/");
     path_str += filename;
     path_str += ".webm";
+    path_str
+}
+
+pub fn get_path_deployment(version: &str, packagename: &str) -> String
+{
+    let mut path_str = String::from("/live/packages/");
+    path_str += version;
+    path_str += "/";
+    path_str += packagename;
+    path_str += ".zip";
     path_str
 }
 

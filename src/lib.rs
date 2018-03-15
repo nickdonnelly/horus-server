@@ -10,6 +10,7 @@
 #[allow(unused_extern_crates)] extern crate serde_json;
 #[allow(unused_extern_crates)] #[macro_use] extern crate serde_derive;
 
+extern crate chrono;
 extern crate rocket;
 #[allow(unused_imports)] #[macro_use] extern crate rocket_contrib;
 extern crate r2d2_diesel;
