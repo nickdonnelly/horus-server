@@ -20,6 +20,7 @@ use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 
 pub mod schema; // Needed for diesel
+
 pub mod forms; // Modification forms for models
 pub mod models;
 pub mod dbtools;
@@ -28,6 +29,7 @@ pub mod routes;
 pub mod fields;
 pub mod conv;
 pub mod errors;
+pub mod job_juggler; // used to manage jobs in the database.
 
 static DATABASE_URL: &'static str = dotenv!("DATABASE_URL");
 static AWS_ACCESS: &'static str = dotenv!("AWS_ACCESS");
