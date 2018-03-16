@@ -25,4 +25,4 @@ pub use self::himage::HImage;
 pub use self::hvideo::HVideo;
 pub use self::hpaste::HPaste;
 pub use self::hfile::HFile;
-pub use self::hjob::{ HJob, JobStatus };
+pub use self::hjob::{ HJob, JobStatus, NewJob, JobPriority };

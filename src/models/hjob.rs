@@ -18,15 +18,63 @@ pub enum JobStatus {
     Complete = 10
 }
 
-#[derive(Identifiable, Queryable, Insertable, AsChangeset)]
+pub enum JobPriority {
+    DoNotProcess = -1, // the job isn't done being inserted.
+    Normal = 0, // normal jobs made by users
+    Elevated = 1, // jobs that are time dependent but not crucial
+    High = 2, // very important jobs
+    System = 3,  // system level jobs like clearing caches and things that need to be done next.
+    GodMode = 4 // Forcible override - shouldn't be used lightly.
+}
+
+#[derive(Serialize, Deserialize, Identifiable, Queryable, Insertable, AsChangeset)]
 #[table_name="horus_jobs"]
 pub struct HJob {
     pub id: i32,
     pub owner: i32,
     pub job_status: i32,
     pub job_name: String,
-    pub job_data: String,
-    pub time_queued: NaiveDateTime
+    pub job_data: Option<Vec<u8>>,
+    pub time_queued: NaiveDateTime,
+    pub priority: i32
+}
+
+#[derive(Insertable)]
+#[table_name="horus_jobs"]
+pub struct NewJob {
+    owner: i32,
+    job_name: String,
+    pub job_data: Option<Vec<u8>>,
+    pub priority: i32 
+}
+
+impl NewJob {
+    pub fn new(
+        uid: i32,
+        name: String,
+        data: Option<Vec<u8>>,
+        priority: JobPriority) 
+        -> Self
+    {
+        NewJob {
+            owner: uid,
+            job_name: name,
+            job_data: data,
+            priority: priority as i32
+        }
+    }
+
+    /// Return an instance of self without the data (used for quick insert
+    /// without the data being present).
+    pub fn without_data(&self) -> NewJob
+    {
+        NewJob {
+            owner: self.owner,
+            job_name: self.job_name.clone(),
+            job_data: None,
+            priority: JobPriority::DoNotProcess as i32
+        }
+    }
 }
 
 impl FromSqlRow<Integer, Pg> for JobStatus {
