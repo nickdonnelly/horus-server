@@ -1,4 +1,4 @@
-use super::super::models::{ HJob, JobStatus, SessionToken, User };
+use super::super::models::{ HJob, JobStatus, SessionToken, LicenseKey, User };
 use super::super::DbConn;
 use super::super::schema;
 
@@ -22,21 +22,29 @@ pub fn list_jobs(
 #[get("/poll/<job_id>", rank=1)]
 pub fn job_status(
     job_id: i32,
-    session: SessionToken,
-    _conn: DbConn)
-    -> Result<Json<JobStatus>, Failure>
+    lkey: LicenseKey,
+    conn: DbConn)
+    -> Result<Json<i32>, Failure>
 {
-    Err(Failure(Status::InternalServerError))    
+    let status = poll_job(job_id, lkey.get_owner(), conn);
+    match status {
+        None => Err(Failure(Status::InternalServerError)),
+        Some(v) => Ok(Json(v))
+    }
 }
 
 #[get("/poll/<job_id>", rank=2)]
 pub fn job_status_lkey(
     job_id: i32,
     session: SessionToken,
-    _conn: DbConn)
-    -> Result<Json<JobStatus>, Failure>
+    conn: DbConn)
+    -> Result<Json<i32>, Failure>
 {
-    Err(Failure(Status::InternalServerError))    
+    let status = poll_job(job_id, session.uid, conn);
+    match status {
+        None => Err(Failure(Status::InternalServerError)),
+        Some(v) => Ok(Json(v))
+    }
 }
 
 /// Poll a job's status. Returns `None` if error.
