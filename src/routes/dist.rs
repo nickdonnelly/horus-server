@@ -15,7 +15,9 @@ use rocket::http::Status;
 use rocket::data::Data;
 use rocket::response::{ status, Failure };
 
-use super::super::models::{ LicenseKey, SessionToken, DeploymentKey, HorusVersion, NewHorusVersion };
+use super::super::models::{ LicenseKey, SessionToken, DeploymentKey, 
+                            HorusVersion, NewHorusVersion, NewJob, JobPriority };
+use super::super::job_juggler;
 
 #[post("/publish/<deployment_id>")]
 pub fn enable_deployment(
@@ -60,8 +62,9 @@ pub fn deploy(
     version: String,
     update_package: Data,
     conn: DbConn,
+    lkey: LicenseKey,
     depkey: DeploymentKey) 
-    -> Result<status::Created<()>, Failure>
+    -> Result<status::Custom<String>, Failure>
 {
     use std::io::Read;
     use schema::horus_versions;
@@ -71,6 +74,24 @@ pub fn deploy(
         .map(|x| x.unwrap())
         .collect();
 
+    // Create job with file data.
+    let new_job = NewJob::new(
+        lkey.get_owner(),
+        "deployment:deploy".to_string(),
+        Some(file_data),
+        JobPriority::System);
+    
+    let queue_result = job_juggler::enqueue_job(new_job);
+
+    if queue_result.is_err() {
+        return Err(Failure(Status::InternalServerError));
+    }
+    
+    queue_result.unwrap();
+    
+    Ok(status::Custom(Status::Accepted, "Job queued for processing.".to_string()))
+
+    /*
     let s3_fname = platform.clone() + ".zip";
     let s3_path = dbtools::get_path_deployment(&version, &s3_fname);
     let s3_result = dbtools::private_resource_to_s3_named(&s3_fname, &s3_path, &file_data);
@@ -94,6 +115,7 @@ pub fn deploy(
     } else {
         Ok(status::Created(format!("{}", db_result.unwrap().id()), None))
     }
+    */
     // TODO: queue job and return 202 ACCEPTED
 }
 

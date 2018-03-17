@@ -1,5 +1,6 @@
 use std::fmt;
 use std::thread;
+use std::time;
 
 use diesel;
 use diesel::prelude::*;
@@ -9,11 +10,19 @@ use super::schema;
 use super::dbtools;
 use super::models::{ JobStatus, HJob, NewJob, JobPriority };
 
+pub mod job_types;
+
+pub enum JobResult {
+    Complete,
+    Failed
+}
+
 pub struct JobJuggler {
     connection: PgConnection,
     job_queue: Vec<HJob>
 }
 
+#[derive(Debug)]
 pub struct JobJugglerError {
     desc: String
 }
@@ -60,7 +69,7 @@ impl JobJuggler {
 /// then asynchronously uploads the data of the job, so you can
 /// use this in a request to make sure the job gets queued without
 /// waiting for the data to be sent to the database.
-pub fn queue_job(job: NewJob) -> Result<(), JobJugglerError>
+pub fn enqueue_job(job: NewJob) -> Result<(), JobJugglerError>
 {
     use schema::horus_jobs::dsl::*;
 
@@ -78,20 +87,26 @@ pub fn queue_job(job: NewJob) -> Result<(), JobJugglerError>
 
     // Spin up separate thread to do the work of moving the data.
     let child = thread::spawn(move || {
+        thread::sleep(time::Duration::from_millis(3000));
         let mut db_obj = initial_insert_result.unwrap();
-        db_obj.job_data = job.job_data.clone();
+        db_obj.job_data = job.job_data;
         db_obj.priority = job.priority as i32;
 
-        let update_res = diesel::update(horus_jobs.find(db_obj.owner))
+        let update_res = diesel::update(horus_jobs.find(db_obj.id))
             .set(&db_obj)
             .execute(&conn);
 
         if update_res.is_err() {
+            eprintln!("Couldn't update job object...Writing failed.");
             let update_res = diesel::update(horus_jobs.find(db_obj.owner))
                 .set(job_status.eq(JobStatus::Failed as i32))
                 .execute(&conn);
+            if update_res.is_err() {
+                eprintln!("Couldn't write failure to database! There may be broken jobs!");
+            }
 
         }
+        println!("Finished queueing job: id={} => {}", db_obj.id, db_obj.job_name);
     });
 
     // Our initial insert went fine 

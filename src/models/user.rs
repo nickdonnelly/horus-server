@@ -1,6 +1,6 @@
 use super::super::schema::horus_users;
 
-#[derive(Queryable, Identifiable, Serialize, Deserialize)]
+#[derive(Queryable, Identifiable, Associations, Insertable, Serialize, Deserialize)]
 #[table_name="horus_users"]
 pub struct User {
     pub id: i32,

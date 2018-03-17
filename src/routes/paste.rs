@@ -3,8 +3,7 @@ extern crate diesel; // this might not even be necessary but im not deleting it
 use self::diesel::prelude::*;
 use super::super::DbConn;
 use super::super::{contexts, conv};
-use rocket::response::Failure;
-use rocket::response::status;
+use rocket::response::{ status, Failure };
 use rocket::http::Status;
 use rocket_contrib::Json;
 use schema::horus_pastes::dsl::*;

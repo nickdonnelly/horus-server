@@ -1,30 +1,15 @@
-use super::super::models::SessionToken;
+use super::super::models::{ HJob, JobStatus, SessionToken, User };
 use super::super::DbConn;
-use rocket_contrib::Template;
+use super::super::schema;
 
-pub enum JobStatus {
-    Queued, // Maps from 0
-    Running, // Maps from 1
-    Failed, // Maps from 2...etc
-    Completed,
-}
-
-pub trait PendingJob {
-    type Error;
-    fn wait_for_completion();
-    fn request_cancel() -> bool;
-}
-
-pub trait Job {
-    type Error;
-    type JsonType;
-
-    fn run<T: PendingJob>(self) -> Result<T, Self::Error>;
-}
+use diesel::prelude::*;
+use rocket::response::{ status, Failure };
+use rocket::http::Status;
+use rocket_contrib::{ Json, Template };
 
 
 // NONE OF THESE ARE IMPLEMENTED
-#[get("/jobs/<_uid>")]
+#[get("/<_uid>")]
 pub fn list_jobs(
     _uid: u32,
     _session: SessionToken,
@@ -34,12 +19,47 @@ pub fn list_jobs(
     None
 }
 
-#[get("/jobs/<_job_id>")]
+#[get("/poll/<job_id>", rank=1)]
 pub fn job_status(
-    _job_id: u32,
-    _session: SessionToken,
+    job_id: i32,
+    session: SessionToken,
     _conn: DbConn)
-    -> Option<Template>
+    -> Result<Json<JobStatus>, Failure>
 {
-    None
+    Err(Failure(Status::InternalServerError))    
+}
+
+#[get("/poll/<job_id>", rank=2)]
+pub fn job_status_lkey(
+    job_id: i32,
+    session: SessionToken,
+    _conn: DbConn)
+    -> Result<Json<JobStatus>, Failure>
+{
+    Err(Failure(Status::InternalServerError))    
+}
+
+/// Poll a job's status. Returns `None` if error.
+fn poll_job(job_id: i32, owner_id: i32, conn: DbConn) -> Option<i32>
+{
+     use schema::horus_jobs::dsl::*;
+     use schema::horus_users::dsl::*;
+
+     let user = horus_users.find(owner_id).first::<User>(&*conn);
+
+     if user.is_err() {
+        return None;
+     }
+    
+     let user = user.unwrap();
+     let result = HJob::belonging_to(&user)
+        .find(job_id)
+        .select(job_status)
+        .first::<i32>(&*conn);
+
+     if result.is_err() {
+        None
+     } else {
+        Some(result.unwrap())
+     }
 }

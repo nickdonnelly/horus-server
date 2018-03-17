@@ -9,8 +9,10 @@ use diesel::sql_types::Integer;
 use diesel::deserialize::FromSqlRow;
 
 use super::super::schema::horus_jobs;
+use super::User;
 
 #[repr(i16)]
+#[derive(Serialize, Deserialize)]
 pub enum JobStatus {
     Waiting = 0,
     Queued = 1,
@@ -25,10 +27,13 @@ pub enum JobPriority {
     High = 2, // very important jobs
     System = 3,  // system level jobs like clearing caches and things that need to be done next.
     GodMode = 4 // Forcible override - shouldn't be used lightly.
+    // TODO: Directly insert godmode jobs into job queue instead of database.
 }
 
-#[derive(Serialize, Deserialize, Identifiable, Queryable, Insertable, AsChangeset)]
+#[derive(PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Identifiable, Queryable, Associations, Insertable, AsChangeset)]
 #[table_name="horus_jobs"]
+#[belongs_to(User, foreign_key="owner")]
 pub struct HJob {
     pub id: i32,
     pub owner: i32,
