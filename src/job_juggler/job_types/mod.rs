@@ -1,6 +1,6 @@
 use ::job_juggler::JobResult;
-use ::DbConn;
+use diesel::pg::PgConnection;
 
 pub trait ExecutableJob {
-    fn execute(self, conn: DbConn) -> JobResult;
+    fn execute(self, conn: &PgConnection) -> JobResult;
 }

@@ -65,7 +65,7 @@ impl JobJuggler {
         let mut start_jobs = start_jobs.unwrap();
 
         start_jobs.iter().for_each(|job| {
-            let res = diesel::update(horus_jobs.find(job.id))
+            diesel::update(horus_jobs.find(job.id))
                 .set(job_status.eq(JobStatus::Queued as i32))
                 .execute(&self.connection)
                 .unwrap();
@@ -79,24 +79,49 @@ impl JobJuggler {
         Ok(())
     }
 
-    pub fn juggle(self) -> ! 
+    pub fn juggle(mut self) -> ! 
     {
+        use std::time::Duration;
         // Reset status of queued jobs
-        ctrlc::set_handler(move || {
+        /*ctrlc::set_handler(move || {
             println!("Resetting job status for queued jobs...");
             &self.shutdown();
             process::exit(0);
-        }).unwrap();
+        }).unwrap();*/
 
-        loop {}
-        // TODO: run job, check result is good, delete data if complete and data >= 10mb.
+        loop {
+            if !self.job_queue.is_empty() {
+                let current_job = self.job_queue.pop().unwrap();
+                let job_id = current_job.id;
+                let current_job_exec = Self::match_job_type(current_job);
+
+                
+                diesel::update(horus_jobs.find(job_id))
+                    .set(job_status.eq(JobStatus::Running as i32))
+                    .execute(&self.connection)
+                    .unwrap();
+
+                let result = match current_job_exec.execute(&&self.connection) {
+                    JobResult::Complete => JobStatus::Complete,
+                    JobResult::Failed => JobStatus::Failed
+                } as i32;
+
+                diesel::update(horus_jobs.find(job_id))
+                    .set(job_status.eq(result))
+                    .execute(&self.connection)
+                    .unwrap();
+
+                // dont query too often
+                thread::sleep(Duration::from_millis(2000)); 
+            }
+        }
     }
 
     /// Resets all jobs to waiting status in the event of SIGTERM
     fn shutdown(&self) 
     {
         self.job_queue.iter().for_each(|job| {
-            let res = diesel::update(horus_jobs.find(job.id))
+            diesel::update(horus_jobs.find(job.id))
                 .set(job_status.eq(JobStatus::Waiting as i32))
                 .execute(&self.connection)
                 .unwrap();

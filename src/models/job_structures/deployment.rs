@@ -1,6 +1,7 @@
-use ::DbConn;
 use ::job_juggler::{ JobResult, ExecutableJob };
 use ::models::hjob::HJob;
+
+use diesel::pg::PgConnection;
 
 #[derive(Serialize, Deserialize)]
 pub struct Deployment {
@@ -28,7 +29,7 @@ impl Deployment {
 }
 
 impl ExecutableJob for Deployment {
-    fn execute(self, conn: DbConn) -> JobResult
+    fn execute(self, conn: &PgConnection) -> JobResult
     {
         JobResult::Complete
     }
