@@ -1,14 +1,15 @@
-use std::fmt;
-use std::thread;
-use std::time;
+extern crate ctrlc;
+
+use std::{ process, thread, time, fmt };
 
 use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 
-use super::schema;
-use super::dbtools;
-use super::models::{ JobStatus, HJob, NewJob, JobPriority };
+use ::schema;
+use ::schema::horus_jobs::dsl::*;
+use ::dbtools;
+use ::models::{ JobStatus, HJob, NewJob, JobPriority };
 
 pub mod job_types;
 
@@ -37,31 +38,64 @@ impl JobJuggler {
         }
     }
 
-    pub fn initialize(&mut self) -> Result<(), JobJugglerError> {
-        use schema::horus_jobs::dsl::*;
+    pub fn initialize(&mut self) -> Result<(), JobJugglerError> 
+    {
         // Get a max of 4 pending jobs (some of them have large amounts of data,
         // so we don't want to store too much in ram).
         let start_jobs: Result<Vec<HJob>, _> = horus_jobs
             .filter(job_status.ne(JobStatus::Complete as i32))
             .filter(priority.ne(JobPriority::DoNotProcess as i32))
+            // If, for whatever reason, queued jobs are in there (eg. in event of crash)
+            // TODO: This will need to be changed if more than one juggler will run
+            // by associating a juggler with each queued job and running a scan if one
+            // of the job juggler threads crashes.
+            .order(job_status.eq(JobStatus::Queued as i32))
             .order(priority.desc())
-            .order(time_queued.desc())
+            .order(time_queued.asc()) // oldest first
             .limit(4)
             .get_results::<HJob>(&self.connection);
-
-        // TODO: Mark jobs as queued.
             
         if start_jobs.is_err() {
             return Err(JobJugglerError::new("Couldn't get jobs from database.".to_string()));
         }
 
         let mut start_jobs = start_jobs.unwrap();
+
+        start_jobs.iter().for_each(|job| {
+            let res = diesel::update(horus_jobs.find(job.id))
+                .set(job_status.eq(JobStatus::Queued as i32))
+                .execute(&self.connection)
+                .unwrap();
+        });
+
         while !start_jobs.is_empty() {
             let job = start_jobs.pop().unwrap();
             self.job_queue.push(job);
         }
 
         Ok(())
+    }
+
+    pub fn juggle(self) 
+    {
+        // Reset status of queued jobs
+        ctrlc::set_handler(move || {
+            println!("Resetting job status for queued jobs...");
+            &self.shutdown();
+            process::exit(0);
+        }).unwrap();
+        // TODO
+    }
+
+    /// Resets all jobs to waiting status in the event of SIGTERM
+    fn shutdown(&self) 
+    {
+        self.job_queue.iter().for_each(|job| {
+            let res = diesel::update(horus_jobs.find(job.id))
+                .set(job_status.eq(JobStatus::Waiting as i32))
+                .execute(&self.connection)
+                .unwrap();
+        });
     }
 }
 

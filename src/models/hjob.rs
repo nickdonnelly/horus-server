@@ -17,6 +17,7 @@ pub enum JobStatus {
     Waiting = 0,
     Queued = 1,
     Failed = 2,
+    Running = 3,
     Complete = 10
 }
 

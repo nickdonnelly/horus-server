@@ -10,9 +10,14 @@ use rocket_contrib::Template;
 use rocket::response::NamedFile;
 use std::path::Path;
 
-fn main() {
+fn main() 
+{
     use self::routes::*;
+    println!("Checking directory structure...");
     check_dirs();
+    println!("Initializing background job juggler...");
+    start_job_juggler();
+    println!("Igniting rocket...");
     rocket::ignite()
         .attach(Template::fairing())
         .mount("/user", routes![user::show, user::update])
@@ -47,12 +52,14 @@ fn main() {
 }
 
 #[get("/.well-known/acme-challenge/cPN4-yAX5I19xOFv06bc92U8E6SFoxQ3S9Rroq7NhjY")]
-pub fn verify_ssl() -> String {
+pub fn verify_ssl() -> String 
+{
     String::from("cPN4-yAX5I19xOFv06bc92U8E6SFoxQ3S9Rroq7NhjY.zFScHQkirc75cfQ9qjihdABaD_u16l-THYgvENWR30k")
 }
 
 #[get("/favicon.ico")]
-fn favicon() -> Option<NamedFile> {
+fn favicon() -> Option<NamedFile>
+{
     NamedFile::open(Path::new("favicon.ico")).ok()
 }
 
@@ -73,4 +80,20 @@ fn check_dirs() {
             fs::create_dir_all(path).unwrap();
         }
     }
+}
+
+fn start_job_juggler()
+{
+    use job_juggler::JobJuggler;
+    use std::thread;
+
+    let mut juggler = JobJuggler::new();
+
+    if let Err(e) = juggler.initialize() {
+        panic!("Job juggler could not be initialized: {}", e);
+    }
+
+    thread::spawn(move || {
+        juggler.juggle();
+    });
 }
