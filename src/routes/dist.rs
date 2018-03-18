@@ -75,13 +75,13 @@ pub fn deploy(
         .map(|x| x.unwrap())
         .collect();
 
-    let deployment_data = Deployment::new(file_data, depkey.hash(),version, platform);
+    let deployment_data = Deployment::new(file_data, depkey.hash(),version, platform.clone());
     let deployment_data = job_structures::binarize(&deployment_data);
 
     // Create job with file data.
     let new_job = NewJob::new(
         lkey.get_owner(),
-        "deployment:deploy".to_string(),
+        "deployment:deploy:".to_string() + &platform,
         Some(deployment_data),
         JobPriority::System);
     

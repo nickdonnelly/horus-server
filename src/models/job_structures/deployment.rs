@@ -1,3 +1,7 @@
+use ::DbConn;
+use ::job_juggler::{ JobResult, ExecutableJob };
+use ::models::hjob::HJob;
+
 #[derive(Serialize, Deserialize)]
 pub struct Deployment {
     pub deployment_package: Vec<u8>,
@@ -20,5 +24,12 @@ impl Deployment {
             version_string: version,
             platform_string: platform
         }
+    }
+}
+
+impl ExecutableJob for Deployment {
+    fn execute(self, conn: DbConn) -> JobResult
+    {
+        JobResult::Complete
     }
 }

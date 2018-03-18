@@ -11,7 +11,8 @@ use ::schema::horus_jobs::dsl::*;
 use ::dbtools;
 use ::models::{ JobStatus, HJob, NewJob, JobPriority };
 
-pub mod job_types;
+mod job_types;
+pub use self::job_types::ExecutableJob;
 
 pub enum JobResult {
     Complete,
@@ -40,8 +41,10 @@ impl JobJuggler {
 
     pub fn initialize(&mut self) -> Result<(), JobJugglerError> 
     {
-        // Get a max of 4 pending jobs (some of them have large amounts of data,
-        // so we don't want to store too much in ram).
+        // Gets a max of 4 pending jobs (some of them have large amounts of data,
+        // so we don't want to store too much in ram) and puts them into the queue.
+        // TODO: Automatically mark jobs that are "running" as failed - again see
+        // comment below on if we plan to have more than one juggler running concurrently.
         let start_jobs: Result<Vec<HJob>, _> = horus_jobs
             .filter(job_status.ne(JobStatus::Complete as i32))
             .filter(priority.ne(JobPriority::DoNotProcess as i32))
@@ -76,7 +79,7 @@ impl JobJuggler {
         Ok(())
     }
 
-    pub fn juggle(self) 
+    pub fn juggle(self) -> ! 
     {
         // Reset status of queued jobs
         ctrlc::set_handler(move || {
@@ -84,7 +87,9 @@ impl JobJuggler {
             &self.shutdown();
             process::exit(0);
         }).unwrap();
-        // TODO
+
+        loop {}
+        // TODO: run job, check result is good, delete data if complete and data >= 10mb.
     }
 
     /// Resets all jobs to waiting status in the event of SIGTERM
@@ -96,6 +101,16 @@ impl JobJuggler {
                 .execute(&self.connection)
                 .unwrap();
         });
+    }
+
+    fn match_job_type(job: HJob)  -> impl ExecutableJob
+    {
+        use ::models::job_structures::*;
+
+        match job.job_name.as_str() {
+            "deployment:deploy:win64"|"deployment:deploy:linux"|_ 
+                => debinarize::<Deployment>(job.job_data.unwrap().as_slice())
+        }
     }
 }
 
