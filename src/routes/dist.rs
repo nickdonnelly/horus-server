@@ -15,9 +15,10 @@ use rocket::http::Status;
 use rocket::data::Data;
 use rocket::response::{ status, Failure };
 
-use super::super::models::{ LicenseKey, SessionToken, DeploymentKey, 
+use ::models::{ LicenseKey, SessionToken, DeploymentKey, 
                             HorusVersion, NewHorusVersion, NewJob, JobPriority };
-use super::super::job_juggler;
+use ::models::job_structures::{ self, Deployment };
+use ::job_juggler;
 
 #[post("/publish/<deployment_id>")]
 pub fn enable_deployment(
@@ -74,11 +75,14 @@ pub fn deploy(
         .map(|x| x.unwrap())
         .collect();
 
+    let deployment_data = Deployment::new(file_data, depkey.hash(),version, platform);
+    let deployment_data = job_structures::binarize(&deployment_data);
+
     // Create job with file data.
     let new_job = NewJob::new(
         lkey.get_owner(),
         "deployment:deploy".to_string(),
-        Some(file_data),
+        Some(deployment_data),
         JobPriority::System);
     
     let queue_result = job_juggler::enqueue_job(new_job);
@@ -116,7 +120,6 @@ pub fn deploy(
         Ok(status::Created(format!("{}", db_result.unwrap().id()), None))
     }
     */
-    // TODO: queue job and return 202 ACCEPTED
 }
 
 /// Verifies if a key is correct and returns its database object if so.

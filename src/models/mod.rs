@@ -1,6 +1,7 @@
 use chrono::{ NaiveDate, NaiveDateTime };
 use super::schema::*;
 
+pub mod job_structures;
 mod horus_version;
 mod deployment_key;
 mod session_token;

@@ -7,6 +7,8 @@
 #[macro_use] extern crate diesel_infer_schema;
 
 
+extern crate bincode;
+extern crate serde;
 #[allow(unused_extern_crates)] extern crate serde_json;
 #[allow(unused_extern_crates)] #[macro_use] extern crate serde_derive;
 

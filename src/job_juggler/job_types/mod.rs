@@ -1,5 +1,8 @@
 use super::JobResult;
+use ::DbConn;
 
 trait ExecutableJob {
-    fn execute(self) -> JobResult;
+    type DeserializeType;
+
+    fn execute(self, conn: DbConn) -> JobResult;
 }
