@@ -6,9 +6,8 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 
-use ::schema;
+use ::{ DbConn, dbtools, schema };
 use ::schema::horus_jobs::dsl::*;
-use ::dbtools;
 use ::models::{ JobStatus, HJob, NewJob, JobPriority };
 
 mod job_types;
@@ -83,11 +82,11 @@ impl JobJuggler {
     {
         use std::time::Duration;
         // Reset status of queued jobs
-        /*ctrlc::set_handler(move || {
+        ctrlc::set_handler(|| {
             println!("Resetting job status for queued jobs...");
-            &self.shutdown();
+            Self::shutdown();
             process::exit(0);
-        }).unwrap();*/
+        }).unwrap();
 
         loop {
             if !self.job_queue.is_empty() {
@@ -118,14 +117,14 @@ impl JobJuggler {
     }
 
     /// Resets all jobs to waiting status in the event of SIGTERM
-    fn shutdown(&self) 
+    fn shutdown() 
     {
-        self.job_queue.iter().for_each(|job| {
-            diesel::update(horus_jobs.find(job.id))
-                .set(job_status.eq(JobStatus::Waiting as i32))
-                .execute(&self.connection)
-                .unwrap();
-        });
+        let conn = dbtools::get_db_conn_requestless().unwrap();
+        diesel::update(
+            horus_jobs.filter(job_status.eq(JobStatus::Queued as i32)))
+            .set(job_status.eq(JobStatus::Waiting as i32))
+            .execute(&conn)
+            .unwrap();
     }
 
     fn match_job_type(job: HJob)  -> impl ExecutableJob
