@@ -62,7 +62,6 @@ pub fn deploy(
     platform: String, 
     version: String,
     update_package: Data,
-    conn: DbConn,
     lkey: LicenseKey,
     depkey: DeploymentKey) 
     -> Result<status::Custom<String>, Failure>

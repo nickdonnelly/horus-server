@@ -1,5 +1,7 @@
 extern crate diesel;
 
+use std::boxed::Box;
+
 use ::job_juggler::{ JobResult, ExecutableJob, LoggableJob };
 use ::models::hjob::HJob;
 use ::schema::horus_versions::dsl::*;
@@ -36,31 +38,40 @@ impl Deployment {
 }
 
 impl ExecutableJob for Deployment {
-    fn execute(mut self, conn: &PgConnection) -> JobResult
+    fn execute(mut self, conn: &PgConnection) -> (Box<Self>, JobResult)
     {
         use ::dbtools;
         use ::models::{ HorusVersion, NewHorusVersion };
+
+        let mut tl: String = String::new();
 
         // Get the filename and path details
         let s3_fname = &self.platform_string.clone();
         let s3_path = dbtools::get_path_deployment(&self.version_string, s3_fname);
 
         // Send it to s3
-        self.log(format!("Sending package version {} for {} to S3", 
-            &self.version_string, &self.platform_string).as_str());
+        tl = format!("Sending package version {} for {} to S3", 
+            &self.version_string, &self.platform_string);
+        &self.log(tl.as_str());
+
         let s3_result = dbtools::private_resource_to_s3_named(&s3_fname, 
             &s3_path, &self.deployment_package);
 
         if s3_result.is_err() {
-            self.log("Couldn't send data to S3...aborting deployment.");
-            return JobResult::Failed;
+            &self.log("Couldn't send data to S3...aborting deployment.");
+            return (Box::new(self), JobResult::Failed);
         }
 
-        self.log("Done...result was ok.");
-        self.log("Inserting to database...");
+        &self.log("Done...result was ok.");
+        &self.log("Inserting to database...");
+
+        // fixed bug with older entried
+        if self.platform_string == "windows" {
+            self.platform_string = "win64".to_string();
+        }
 
         let hversion = NewHorusVersion::new(
-            self.deployment_key_hash,
+            self.deployment_key_hash.clone(),
             s3_path,
             self.version_string.clone(),
             self.platform_string.clone());
@@ -70,13 +81,16 @@ impl ExecutableJob for Deployment {
             .get_result::<HorusVersion>(conn);
 
         if db_result.is_err() {
-            self.log("Couldn't insert into database...aborting deployment.");
-            JobResult::Failed
+            tl = format!("{}", db_result.err().unwrap());
+            &self.log(tl.as_str());
+            &self.log("Couldn't insert into database...aborting deployment.");
+            (Box::new(self), JobResult::Failed)
         } else {
-            self.log("Successfully inserted into database.");
-            self.log(format!("Deployment of version {} for platform {} complete.",
-                self.version_string, self.platform_string).as_str());
-            JobResult::Complete
+            &self.log("Successfully inserted into database.");
+            tl = format!("Deployment of version {} for platform {} complete.",
+                self.version_string, self.platform_string);
+            &self.log(tl.as_str());
+            (Box::new(self), JobResult::Complete)
         }
     }
 }

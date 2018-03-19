@@ -14,6 +14,7 @@ use ::models::{ JobStatus, HJob, NewJob, JobPriority };
 mod job_types;
 pub use self::job_types::{ LoggableJob, ExecutableJob };
 
+#[derive(Debug)]
 pub enum JobResult {
     Complete,
     Failed
@@ -89,25 +90,29 @@ impl JobJuggler {
             process::exit(0);
         }).unwrap();
 
+        println!("Starting juggle...");
         loop {
             if !self.job_queue.is_empty() {
                 let current_job = self.job_queue.pop_front().unwrap();
                 let job_id = current_job.id;
                 let current_job_exec = Self::match_job_type(current_job);
 
-                
                 diesel::update(horus_jobs.find(job_id))
                     .set(job_status.eq(JobStatus::Running as i32))
                     .execute(&self.connection)
                     .unwrap();
 
-                let result = match current_job_exec.execute(&&self.connection) {
+                let (done_job, result) = current_job_exec.execute(&&self.connection);
+
+                println!("Job finished with result {:?}", result);
+
+                let result = match result {
                     JobResult::Complete => JobStatus::Complete,
                     JobResult::Failed => JobStatus::Failed
                 } as i32;
 
                 diesel::update(horus_jobs.find(job_id))
-                    .set(job_status.eq(result))
+                    .set((job_status.eq(result), logs.eq(done_job.logs())))
                     .execute(&self.connection)
                     .unwrap();
 
@@ -128,7 +133,13 @@ impl JobJuggler {
             .first::<HJob>(&self.connection);
 
         if new_job.is_ok() {
-            self.job_queue.push_back(new_job.unwrap());
+            println!("Enqueueing new job...");
+            let new_job = new_job.unwrap();
+            diesel::update(horus_jobs.find(new_job.id))
+                .set(job_status.eq(JobStatus::Queued as i32))
+                .execute(&self.connection)
+                .unwrap();
+            self.job_queue.push_back(new_job);
         }
     }
 
@@ -143,13 +154,14 @@ impl JobJuggler {
             .unwrap();
     }
 
-    fn match_job_type(job: HJob)  -> impl ExecutableJob
+    fn match_job_type(job: HJob)  -> impl ExecutableJob + LoggableJob
     {
         use ::models::job_structures::*;
 
+        let d = job.job_data.unwrap();
         match job.job_name.as_str() {
             "deployment:deploy:win64"|"deployment:deploy:linux"|_ 
-                => debinarize::<Deployment>(job.job_data.unwrap().as_slice())
+                => debinarize::<Deployment>(d.as_slice()).unwrap()
         }
     }
 }

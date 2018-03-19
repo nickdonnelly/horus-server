@@ -42,7 +42,8 @@ pub struct HJob {
     pub job_name: String,
     pub job_data: Option<Vec<u8>>,
     pub time_queued: NaiveDateTime,
-    pub priority: i32
+    pub priority: i32,
+    pub logs: Option<String>
 }
 
 #[derive(Insertable)]
