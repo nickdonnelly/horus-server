@@ -6,6 +6,7 @@
 #[macro_use] extern crate diesel;
 #[macro_use] extern crate diesel_infer_schema;
 
+#[macro_use] extern crate horus_server_derive;
 
 extern crate bincode;
 extern crate serde;

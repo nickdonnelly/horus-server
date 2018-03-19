@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Nicholas Donnelly <nick@donnelly.cc>"]
 
 [dependencies]
+horus_server_derive = { path = "horus-server-derive" }
 rocket = { version = "0.3.6", features = ["tls"] }
 rocket_codegen = "0.3.6"
 diesel = { version = "1.0.0", features = ["chrono", "postgres"] }

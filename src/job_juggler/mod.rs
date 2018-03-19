@@ -1,6 +1,7 @@
 extern crate ctrlc;
 
 use std::{ process, thread, time, fmt };
+use std::collections::VecDeque;
 
 use diesel;
 use diesel::prelude::*;
@@ -11,7 +12,7 @@ use ::schema::horus_jobs::dsl::*;
 use ::models::{ JobStatus, HJob, NewJob, JobPriority };
 
 mod job_types;
-pub use self::job_types::ExecutableJob;
+pub use self::job_types::{ LoggableJob, ExecutableJob };
 
 pub enum JobResult {
     Complete,
@@ -20,7 +21,7 @@ pub enum JobResult {
 
 pub struct JobJuggler {
     connection: PgConnection,
-    job_queue: Vec<HJob>
+    job_queue: VecDeque<HJob>
 }
 
 #[derive(Debug)]
@@ -34,7 +35,7 @@ impl JobJuggler {
     {
         JobJuggler {
             connection: dbtools::get_db_conn_requestless().unwrap(),
-            job_queue: Vec::new()
+            job_queue: VecDeque::new()
         }
     }
 
@@ -71,8 +72,8 @@ impl JobJuggler {
         });
 
         while !start_jobs.is_empty() {
-            let job = start_jobs.pop().unwrap();
-            self.job_queue.push(job);
+            let job = start_jobs.remove(0);
+            self.job_queue.push_back(job);
         }
 
         Ok(())
@@ -90,7 +91,7 @@ impl JobJuggler {
 
         loop {
             if !self.job_queue.is_empty() {
-                let current_job = self.job_queue.pop().unwrap();
+                let current_job = self.job_queue.pop_front().unwrap();
                 let job_id = current_job.id;
                 let current_job_exec = Self::match_job_type(current_job);
 
@@ -111,8 +112,23 @@ impl JobJuggler {
                     .unwrap();
 
                 // dont query too often
-                thread::sleep(Duration::from_millis(2000)); 
+                thread::sleep(Duration::from_millis(2500)); 
+                &mut self.check_for_new_job();
             }
+        }
+    }
+
+    fn check_for_new_job(&mut self)
+    {
+        let new_job: Result<HJob, _> = horus_jobs
+            .filter(job_status.ne(JobStatus::Complete as i32))
+            .filter(priority.ne(JobPriority::DoNotProcess as i32))
+            .order(priority.desc())
+            .order(time_queued.asc()) // oldest first
+            .first::<HJob>(&self.connection);
+
+        if new_job.is_ok() {
+            self.job_queue.push_back(new_job.unwrap());
         }
     }
 

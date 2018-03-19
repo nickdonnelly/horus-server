@@ -75,7 +75,7 @@ pub fn deploy(
         .map(|x| x.unwrap())
         .collect();
 
-    let deployment_data = Deployment::new(file_data, depkey.hash(),version, platform.clone());
+    let deployment_data = Deployment::new(file_data, depkey.hash(), version, platform.clone());
     let deployment_data = job_structures::binarize(&deployment_data);
 
     // Create job with file data.
@@ -94,32 +94,6 @@ pub fn deploy(
     queue_result.unwrap();
     
     Ok(status::Custom(Status::Accepted, "Job queued for processing.".to_string()))
-
-    /*
-    let s3_fname = platform.clone() + ".zip";
-    let s3_path = dbtools::get_path_deployment(&version, &s3_fname);
-    let s3_result = dbtools::private_resource_to_s3_named(&s3_fname, &s3_path, &file_data);
-
-    if s3_result.is_err() {
-        return Err(Failure(Status::InternalServerError));
-    }
-
-    let hversion = NewHorusVersion::new(
-        depkey.hash(),
-        s3_path,
-        version,
-        platform);
-
-    let db_result = diesel::insert_into(horus_versions::table)
-        .values(&hversion)
-        .get_result::<HorusVersion>(&*conn);
-
-    if db_result.is_err() {
-        Err(Failure(Status::InternalServerError))
-    } else {
-        Ok(status::Created(format!("{}", db_result.unwrap().id()), None))
-    }
-    */
 }
 
 /// Verifies if a key is correct and returns its database object if so.
