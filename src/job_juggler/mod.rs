@@ -112,7 +112,7 @@ impl JobJuggler {
                 } as i32;
 
                 diesel::update(horus_jobs.find(job_id))
-                    .set((job_status.eq(result), logs.eq(done_job.logs())))
+                    .set((logs.eq(done_job.logs()), job_status.eq(result)))
                     .execute(&self.connection)
                     .unwrap();
 
@@ -126,19 +126,21 @@ impl JobJuggler {
     fn check_for_new_job(&mut self)
     {
         let new_job: Result<HJob, _> = horus_jobs
-            .filter(job_status.ne(JobStatus::Complete as i32))
+            .filter(job_status.eq(JobStatus::Waiting as i32))
             .filter(priority.ne(JobPriority::DoNotProcess as i32))
             .order(priority.desc())
             .order(time_queued.asc()) // oldest first
             .first::<HJob>(&self.connection);
 
         if new_job.is_ok() {
-            println!("Enqueueing new job...");
             let new_job = new_job.unwrap();
+            print!("Enqueueing new job (id={})...", new_job.id);
             diesel::update(horus_jobs.find(new_job.id))
                 .set(job_status.eq(JobStatus::Queued as i32))
                 .execute(&self.connection)
                 .unwrap();
+            print!("done.\n");
+
             self.job_queue.push_back(new_job);
         }
     }

@@ -44,7 +44,6 @@ fn impl_loggable_job(tree: &syn::DeriveInput) -> quote::Tokens
                 {
                     self.#logname.push('\n');
                     self.#logname.push_str(s);
-                    println!("{}", s);
                 }
 
                 fn logs(&self) -> String
