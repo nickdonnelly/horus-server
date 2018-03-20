@@ -3,6 +3,7 @@ use chrono::NaiveDateTime;
 
 #[derive(Identifiable, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name="horus_versions"]
+#[primary_key(platform, version_string)]
 pub struct HorusVersion {
     id: i32,
     deployed_with: String, // hash

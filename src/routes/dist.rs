@@ -20,16 +20,17 @@ use ::models::{ LicenseKey, SessionToken, DeploymentKey,
 use ::models::job_structures::{ self, Deployment };
 use ::job_juggler;
 
-#[post("/publish/<deployment_id>")]
+#[post("/publish/<platform>/<version_s>")]
 pub fn enable_deployment(
-    deployment_id: i32,
+    version_s: String,
+    platform: String,
     conn: DbConn,
     depkey: DeploymentKey)
     -> Result<status::Custom<()>, Failure>
 {
     use schema::horus_versions;
     // Verify key is the one used to deploy originally.
-    let dbobj = horus_versions::dsl::horus_versions.find(deployment_id)
+    let dbobj = horus_versions::dsl::horus_versions.find((&platform, &version_s))
         .first(&*conn);
 
     if dbobj.is_err() {
@@ -44,7 +45,7 @@ pub fn enable_deployment(
 
     // we are authed, make the change
     version.publish();
-    let db_result = diesel::update(horus_versions::dsl::horus_versions.find(deployment_id))
+    let db_result = diesel::update(horus_versions::dsl::horus_versions.find((&platform, &version_s)))
         .set(&version)
         .execute(&*conn);
 
