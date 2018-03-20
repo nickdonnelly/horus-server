@@ -2,11 +2,11 @@ use super::LicenseKey;
 use super::super::schema::deployment_keys;
 
 #[derive(Insertable, Queryable, Serialize, Deserialize, AsChangeset, Debug)]
-#[table_name="deployment_keys"]
+#[table_name = "deployment_keys"]
 pub struct DeploymentKey {
     key: String,
     pub deployments: i32,
-    pub license_key: String
+    pub license_key: String,
 }
 
 impl DeploymentKey {
@@ -14,7 +14,7 @@ impl DeploymentKey {
         Self {
             key: key_hash,
             license_key: lkey.key.clone(),
-            deployments: 0
+            deployments: 0,
         }
     }
 

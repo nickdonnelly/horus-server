@@ -1,4 +1,4 @@
-use chrono::{ NaiveDate, NaiveDateTime };
+use chrono::{NaiveDate, NaiveDateTime};
 use super::schema::*;
 
 pub mod job_structures;
@@ -15,7 +15,7 @@ mod hpaste;
 mod hfile;
 mod hjob;
 
-pub use self::horus_version::{ NewHorusVersion, HorusVersion };
+pub use self::horus_version::{HorusVersion, NewHorusVersion};
 pub use self::deployment_key::DeploymentKey;
 pub use self::session_token::SessionToken;
 pub use self::auth_token::AuthToken;
@@ -26,4 +26,4 @@ pub use self::himage::HImage;
 pub use self::hvideo::HVideo;
 pub use self::hpaste::HPaste;
 pub use self::hfile::HFile;
-pub use self::hjob::{ HJob, JobStatus, NewJob, JobPriority };
+pub use self::hjob::{HJob, JobPriority, JobStatus, NewJob};

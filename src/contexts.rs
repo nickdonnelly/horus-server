@@ -1,11 +1,11 @@
-use super::models::{HImage, HVideo, HPaste, HFile};
+use super::models::{HFile, HImage, HPaste, HVideo};
 
 #[derive(Serialize)]
 pub struct ImageList {
     pub title: String,
     pub page_title: String,
     pub editable: bool,
-    pub images: Vec<HImage>
+    pub images: Vec<HImage>,
 }
 
 #[derive(Serialize)]

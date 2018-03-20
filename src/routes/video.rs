@@ -1,13 +1,13 @@
-extern crate diesel;
 extern crate base64;
 extern crate chrono;
+extern crate diesel;
 
 use self::chrono::NaiveDateTime;
 use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
 use super::super::{contexts, conv};
-use super::super::models::{LicenseKey, SessionToken, HVideo};
+use super::super::models::{HVideo, LicenseKey, SessionToken};
 use super::super::forms::HVideoChangesetForm;
 use rocket::response::{status, Failure, NamedFile};
 use rocket::data::Data;
@@ -19,13 +19,12 @@ use std::io::prelude::*;
 use std::path::Path;
 
 fn new_vid(
-    vid_data: Data, 
+    vid_data: Data,
     title: String,
     exp: Option<NaiveDateTime>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     use schema::horus_videos;
     let iid = dbtools::get_random_char_id(8);
     let pathstr = dbtools::get_path_video(&iid);
@@ -40,10 +39,7 @@ fn new_vid(
         expiration_time: exp,
     };
 
-    let vid_data: Vec<u8> = vid_data.open()
-        .bytes()
-        .map(|x| x.unwrap())
-        .collect();
+    let vid_data: Vec<u8> = vid_data.open().bytes().map(|x| x.unwrap()).collect();
 
     // 1 more character due too "webm" vs "png"
     let vid_data_decoded = base64::decode(&vid_data[23..]);
@@ -70,17 +66,18 @@ fn new_vid(
 
     let result = result.unwrap();
 
-    Ok(status::Created(String::from("/video/") + result.id.as_str(), None))
-
+    Ok(status::Created(
+        String::from("/video/") + result.id.as_str(),
+        None,
+    ))
 }
 
 #[post("/new", format = "video/webm", data = "<vid_data>")]
 pub fn new(
     vid_data: Data,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     new_vid(vid_data, String::from("Horus Video"), None, apikey, conn)
 }
 
@@ -93,15 +90,20 @@ pub fn new_exp(
     expt: Option<String>,
     expd: Option<usize>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
             return Err(Failure(Status::BadRequest));
         }
-        new_vid(vid_data, String::from("Horus Video"), Some(exp.unwrap()), apikey, conn)
+        new_vid(
+            vid_data,
+            String::from("Horus Video"),
+            Some(exp.unwrap()),
+            apikey,
+            conn,
+        )
     } else {
         new_vid(vid_data, String::from("Horus Video"), None, apikey, conn)
     }
@@ -118,9 +120,8 @@ pub fn new_titled(
     expt: Option<String>,
     expd: Option<usize>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
@@ -137,9 +138,8 @@ pub fn list(
     uid: i32,
     page: u32,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<Json<Vec<HVideo>>, Failure>
-{
+    conn: DbConn,
+) -> Result<Json<Vec<HVideo>>, Failure> {
     use schema::horus_videos::dsl::*;
 
     if !apikey.belongs_to(uid) {
@@ -166,21 +166,18 @@ pub fn list(
 pub fn delete_sessionless(
     vid_id: String,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Custom<()>, Failure> {
     use schema::horus_videos::dsl::*;
 
-    let video = horus_videos
-        .find(&vid_id)
-        .get_result::<HVideo>(&*conn);
+    let video = horus_videos.find(&vid_id).get_result::<HVideo>(&*conn);
 
     if video.is_err() {
         return Err(Failure(Status::NotFound));
     }
 
     let video = video.unwrap();
-    
+
     if !apikey.belongs_to(video.owner) {
         return Err(Failure(Status::Unauthorized));
     }
@@ -192,20 +189,17 @@ pub fn delete_sessionless(
 pub fn delete(
     vid_id: String,
     session: SessionToken,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Custom<()>, Failure> {
     use schema::horus_videos::dsl::*;
-    let video = horus_videos
-        .find(&vid_id)
-        .get_result::<HVideo>(&*conn);
+    let video = horus_videos.find(&vid_id).get_result::<HVideo>(&*conn);
 
     if video.is_err() {
         return Err(Failure(Status::NotFound));
     }
 
     let video = video.unwrap();
-    
+
     if session.uid != video.owner {
         return Err(Failure(Status::Unauthorized));
     }
@@ -213,11 +207,7 @@ pub fn delete(
     delete_internal(video, conn)
 }
 
-fn delete_internal(
-    video: HVideo,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
+fn delete_internal(video: HVideo, conn: DbConn) -> Result<status::Custom<()>, Failure> {
     let s3result = dbtools::delete_s3_object(&video.filepath);
 
     if s3result.is_err() {
@@ -227,7 +217,10 @@ fn delete_internal(
     let result = diesel::delete(&video).execute(&*conn);
 
     if result.is_err() {
-        println!("Database error while deleting video: {}", result.err().unwrap());
+        println!(
+            "Database error while deleting video: {}",
+            result.err().unwrap()
+        );
         return Err(Failure(Status::InternalServerError));
     }
 
@@ -239,18 +232,16 @@ pub fn update(
     vid_id: String,
     updated_values: Json<HVideoChangesetForm>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Accepted<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Accepted<()>, Failure> {
     use schema::horus_videos::dsl::*;
 
-    let vid = horus_videos.filter(id.eq(&vid_id))
-        .first::<HVideo>(&*conn);
+    let vid = horus_videos.filter(id.eq(&vid_id)).first::<HVideo>(&*conn);
 
     if vid.is_err() {
         return Err(Failure(Status::NotFound));
     }
-    
+
     let mut vid = vid.unwrap();
 
     if !apikey.belongs_to(vid.owner) {
@@ -259,7 +250,7 @@ pub fn update(
 
     let vid_update = updated_values.into_inner();
     let dt = conv::get_dt_from_duration(vid_update.duration_type, vid_update.duration_val);
-    
+
     if !dt.is_err() {
         vid.is_expiry = true;
         vid.expiration_time = Some(dt.unwrap());
@@ -268,20 +259,15 @@ pub fn update(
     let result = vid.save_changes::<HVideo>(&*conn);
     match result {
         Ok(_) => Ok(status::Accepted(None)),
-        Err(_) => Err(Failure(Status::InternalServerError))
+        Err(_) => Err(Failure(Status::InternalServerError)),
     }
 }
 
 #[get("/full/<vid_id>")]
-pub fn full(
-    vid_id: String,
-    conn: DbConn)
-    -> Option<NamedFile>
-{
+pub fn full(vid_id: String, conn: DbConn) -> Option<NamedFile> {
     use schema::horus_videos::dsl::*;
-    let video = horus_videos.find(vid_id)
-        .get_result::<HVideo>(&*conn);
-    
+    let video = horus_videos.find(vid_id).get_result::<HVideo>(&*conn);
+
     if video.is_err() {
         return None;
     }
@@ -291,14 +277,9 @@ pub fn full(
 }
 
 #[get("/<vid_id>")]
-pub fn show(
-    vid_id: String,
-    conn: DbConn)
-    -> Option<Template>
-{
+pub fn show(vid_id: String, conn: DbConn) -> Option<Template> {
     use schema::horus_videos::dsl::*;
-    let video = horus_videos.find(&vid_id)
-        .get_result::<HVideo>(&*conn);
+    let video = horus_videos.find(&vid_id).get_result::<HVideo>(&*conn);
 
     if video.is_err() {
         return None;

@@ -20,48 +20,38 @@ pub mod meta {
 
     const VERSION: &'static str = "2.4";
     const LATEST_PATH: &'static str = "live/binaries/";
-    
+
     #[get("/version")]
-    pub fn get_version() -> String 
-    {
+    pub fn get_version() -> String {
         String::from(VERSION)
     }
 
     #[get("/changelogs")]
-    pub fn changelogs() -> Option<Template>
-    {
+    pub fn changelogs() -> Option<Template> {
         // We don't actually need any context, we are just rendering from
         // a template for the telemetry data and the precompiled CSS, the data
         // itself is static in the template.
-        let context: HashMap<String, String> = HashMap::new(); 
+        let context: HashMap<String, String> = HashMap::new();
         Some(Template::render("changelog", &context))
     }
 
     #[get("/latest/<platform>", rank = 2)]
-    pub fn get_latest_session(
-        platform: String,
-        _session: SessionToken)
-        -> Option<NamedFile>
-    {
+    pub fn get_latest_session(platform: String, _session: SessionToken) -> Option<NamedFile> {
         let pathstr = match platform.to_lowercase().as_str() {
             "linux" => String::from(LATEST_PATH) + "linux.zip",
             "win64" => String::from(LATEST_PATH) + "win64.zip",
-            _ => String::new()
+            _ => String::new(),
         };
 
         NamedFile::open(Path::new(&pathstr)).ok()
     }
 
     #[get("/latest/<platform>", rank = 1)]
-    pub fn get_latest(
-        platform: String,
-        _apikey: LicenseKey)
-        -> Option<NamedFile>
-    {
+    pub fn get_latest(platform: String, _apikey: LicenseKey) -> Option<NamedFile> {
         let pathstr = match platform.to_lowercase().as_str() {
             "linux" => String::from(LATEST_PATH) + "linux.zip",
             "win64" => String::from(LATEST_PATH) + "win64.zip",
-            _ => String::new()
+            _ => String::new(),
         };
 
         NamedFile::open(Path::new(&pathstr)).ok()
@@ -70,17 +60,13 @@ pub mod meta {
     // This is for older versions that are pointing to the wrong
     // endpoint.
     #[get("/get_latestwin64")]
-    pub fn get_latest_old_win(_apikey: LicenseKey)
-        -> Option<NamedFile>
-    {
+    pub fn get_latest_old_win(_apikey: LicenseKey) -> Option<NamedFile> {
         let pathstr = String::from(LATEST_PATH) + "win64.zip";
         NamedFile::open(Path::new(&pathstr)).ok()
     }
 
     #[get("/get_latestlinux")]
-    pub fn get_latest_old_lin(_apikey: LicenseKey)
-        -> Option<NamedFile>
-    {
+    pub fn get_latest_old_lin(_apikey: LicenseKey) -> Option<NamedFile> {
         let pathstr = String::from(LATEST_PATH) + "linux.zip";
         NamedFile::open(Path::new(&pathstr)).ok()
     }

@@ -3,7 +3,7 @@ extern crate diesel; // this might not even be necessary but im not deleting it
 use self::diesel::prelude::*;
 use super::super::DbConn;
 use super::super::{contexts, conv};
-use rocket::response::{ status, Failure };
+use rocket::response::{status, Failure};
 use rocket::http::Status;
 use rocket_contrib::Json;
 use schema::horus_pastes::dsl::*;
@@ -12,13 +12,8 @@ use super::super::forms::{HNewPasteForm, HPasteChangesetForm};
 use rocket_contrib::Template;
 
 #[get("/<paste_id>")]
-pub fn show(
-    paste_id: String, 
-    conn: DbConn) 
-    -> Option<Template> 
-{
-    let paste = horus_pastes.find(paste_id)
-        .first::<HPaste>(&*conn);
+pub fn show(paste_id: String, conn: DbConn) -> Option<Template> {
+    let paste = horus_pastes.find(paste_id).first::<HPaste>(&*conn);
 
     if paste.is_err() {
         return None;
@@ -42,9 +37,8 @@ pub fn list(
     uid: i32,
     page: u32,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<Json<Vec<HPaste>>, Failure>
-{
+    conn: DbConn,
+) -> Result<Json<Vec<HPaste>>, Failure> {
     if !apikey.belongs_to(uid) {
         return Err(Failure(Status::Unauthorized));
     }
@@ -57,7 +51,10 @@ pub fn list(
         .get_results::<HPaste>(&*conn);
 
     if pastes.is_err() {
-        println!("Paste selection failed with error: {}", pastes.err().unwrap());
+        println!(
+            "Paste selection failed with error: {}",
+            pastes.err().unwrap()
+        );
         return Err(Failure(Status::InternalServerError));
     }
 
@@ -67,11 +64,10 @@ pub fn list(
 /// Acceptance string is the ID of the new paste
 #[post("/new", format = "application/json", data = "<paste>")]
 pub fn new(
-    paste: Json<HNewPasteForm>, 
+    paste: Json<HNewPasteForm>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     use schema::horus_pastes;
 
     let paste_form_data = paste.into_inner();
@@ -88,21 +84,23 @@ pub fn new(
 
     let result = result.unwrap();
 
-    Ok(status::Created(String::from("/paste/") + result.id.as_str(), None))
+    Ok(status::Created(
+        String::from("/paste/") + result.id.as_str(),
+        None,
+    ))
 }
 
-fn delete_internal(
-    paste: HPaste,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
+fn delete_internal(paste: HPaste, conn: DbConn) -> Result<status::Custom<()>, Failure> {
     let result = diesel::delete(&paste).execute(&*conn);
 
     if result.is_err() {
-        println!("Databse error while deleting paste: {}", result.err().unwrap());
+        println!(
+            "Databse error while deleting paste: {}",
+            result.err().unwrap()
+        );
         return Err(Failure(Status::InternalServerError));
     }
-    
+
     Ok(status::Custom(Status::Ok, ()))
 }
 
@@ -110,45 +108,39 @@ fn delete_internal(
 pub fn delete(
     paste_id: String,
     session: SessionToken,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
-    let paste = horus_pastes
-        .find(paste_id)
-        .get_result::<HPaste>(&*conn);
+    conn: DbConn,
+) -> Result<status::Custom<()>, Failure> {
+    let paste = horus_pastes.find(paste_id).get_result::<HPaste>(&*conn);
 
     if paste.is_err() {
-        return Err(Failure(Status::NotFound))
+        return Err(Failure(Status::NotFound));
     }
 
     let paste = paste.unwrap();
 
     if session.uid != paste.owner {
-        return Err(Failure(Status::Unauthorized))
+        return Err(Failure(Status::Unauthorized));
     }
-    
+
     delete_internal(paste, conn)
 }
 
-#[delete("/<paste_id>", rank = 2 )]
+#[delete("/<paste_id>", rank = 2)]
 pub fn delete_sessionless(
     paste_id: String,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
-    let paste = horus_pastes
-        .find(paste_id)
-        .get_result::<HPaste>(&*conn);
+    conn: DbConn,
+) -> Result<status::Custom<()>, Failure> {
+    let paste = horus_pastes.find(paste_id).get_result::<HPaste>(&*conn);
 
     if paste.is_err() {
-        return Err(Failure(Status::NotFound))
+        return Err(Failure(Status::NotFound));
     }
 
     let paste = paste.unwrap();
 
     if !apikey.belongs_to(paste.owner) {
-        return Err(Failure(Status::Unauthorized))
+        return Err(Failure(Status::Unauthorized));
     }
 
     delete_internal(paste, conn)
@@ -159,10 +151,10 @@ pub fn update(
     paste_id: String,
     updated_values: Json<HPasteChangesetForm>,
     session: SessionToken,
-    conn: DbConn)
-    -> Result<status::Accepted<()>, Failure>
-{
-    let paste = horus_pastes.filter(id.eq(&paste_id))
+    conn: DbConn,
+) -> Result<status::Accepted<()>, Failure> {
+    let paste = horus_pastes
+        .filter(id.eq(&paste_id))
         .first::<HPaste>(&*conn);
 
     if paste.is_err() {
@@ -176,7 +168,7 @@ pub fn update(
 
     let paste_update = updated_values.into_inner();
     let dt = conv::get_dt_from_duration(paste_update.duration_type, paste_update.duration_val);
-    
+
     if !dt.is_err() {
         paste.is_expiry = true;
         paste.expiration_time = Some(dt.unwrap());

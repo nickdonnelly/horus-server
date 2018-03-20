@@ -3,7 +3,7 @@ use chrono::NaiveDateTime;
 
 #[derive(Identifiable, Insertable, Queryable, AsChangeset, Debug)]
 #[primary_key(uid)]
-#[table_name="session_tokens"]
+#[table_name = "session_tokens"]
 pub struct SessionToken {
     pub uid: i32,
     pub token: String,

@@ -1,73 +1,60 @@
-use super::super::models::{ HJob, JobStatus, SessionToken, LicenseKey, User };
+use super::super::models::{HJob, JobStatus, LicenseKey, SessionToken, User};
 use super::super::DbConn;
 use super::super::schema;
 
 use diesel::prelude::*;
-use rocket::response::{ status, Failure };
+use rocket::response::{status, Failure};
 use rocket::http::Status;
-use rocket_contrib::{ Json, Template };
-
+use rocket_contrib::{Json, Template};
 
 // NONE OF THESE ARE IMPLEMENTED
 #[get("/<_uid>")]
-pub fn list_jobs(
-    _uid: u32,
-    _session: SessionToken,
-    _conn: DbConn)
-    -> Option<Template>
-{
+pub fn list_jobs(_uid: u32, _session: SessionToken, _conn: DbConn) -> Option<Template> {
     None
 }
 
-#[get("/poll/<job_id>", rank=1)]
-pub fn job_status(
-    job_id: i32,
-    lkey: LicenseKey,
-    conn: DbConn)
-    -> Result<Json<i32>, Failure>
-{
+#[get("/poll/<job_id>", rank = 1)]
+pub fn job_status(job_id: i32, lkey: LicenseKey, conn: DbConn) -> Result<Json<i32>, Failure> {
     let status = poll_job(job_id, lkey.get_owner(), conn);
     match status {
         None => Err(Failure(Status::InternalServerError)),
-        Some(v) => Ok(Json(v))
+        Some(v) => Ok(Json(v)),
     }
 }
 
-#[get("/poll/<job_id>", rank=2)]
+#[get("/poll/<job_id>", rank = 2)]
 pub fn job_status_lkey(
     job_id: i32,
     session: SessionToken,
-    conn: DbConn)
-    -> Result<Json<i32>, Failure>
-{
+    conn: DbConn,
+) -> Result<Json<i32>, Failure> {
     let status = poll_job(job_id, session.uid, conn);
     match status {
         None => Err(Failure(Status::InternalServerError)),
-        Some(v) => Ok(Json(v))
+        Some(v) => Ok(Json(v)),
     }
 }
 
 /// Poll a job's status. Returns `None` if error.
-fn poll_job(job_id: i32, owner_id: i32, conn: DbConn) -> Option<i32>
-{
-     use schema::horus_jobs::dsl::*;
-     use schema::horus_users::dsl::*;
+fn poll_job(job_id: i32, owner_id: i32, conn: DbConn) -> Option<i32> {
+    use schema::horus_jobs::dsl::*;
+    use schema::horus_users::dsl::*;
 
-     let user = horus_users.find(owner_id).first::<User>(&*conn);
+    let user = horus_users.find(owner_id).first::<User>(&*conn);
 
-     if user.is_err() {
+    if user.is_err() {
         return None;
-     }
-    
-     let user = user.unwrap();
-     let result = HJob::belonging_to(&user)
+    }
+
+    let user = user.unwrap();
+    let result = HJob::belonging_to(&user)
         .find(job_id)
         .select(job_status)
         .first::<i32>(&*conn);
 
-     if result.is_err() {
+    if result.is_err() {
         None
-     } else {
+    } else {
         Some(result.unwrap())
-     }
+    }
 }

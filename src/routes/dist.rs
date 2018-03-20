@@ -1,35 +1,33 @@
-extern crate rand;
 extern crate bcrypt;
 extern crate diesel;
+extern crate rand;
 
 use std;
 
 use diesel::prelude::*;
-use super::super::{ DbConn, dbtools };
+use super::super::{dbtools, DbConn};
 use super::super::schema;
 use super::super::schema::deployment_keys::dsl::*;
-use self::bcrypt::{ DEFAULT_COST, hash, verify };
-use self::rand::{ Rng, ThreadRng };
+use self::bcrypt::{hash, verify, DEFAULT_COST};
+use self::rand::{Rng, ThreadRng};
 
 use rocket::http::Status;
 use rocket::data::Data;
-use rocket::response::{ status, Failure, Redirect };
+use rocket::response::{status, Failure, Redirect};
 
-use ::models::{ LicenseKey, SessionToken, DeploymentKey, 
-                HorusVersion, NewHorusVersion, NewJob, JobPriority };
-use ::models::job_structures::{ self, Deployment };
-use ::job_juggler;
+use models::{DeploymentKey, HorusVersion, JobPriority, LicenseKey, NewHorusVersion, NewJob,
+             SessionToken};
+use models::job_structures::{self, Deployment};
+use job_juggler;
 
 #[get("/version")]
-pub fn version_legacy() -> Redirect
-{
+pub fn version_legacy() -> Redirect {
     Redirect::to("/dist/version/win64")
 }
 
 #[get("/version/<plat>")]
 /// If no platform is given, it is assumed to be win64 just for compatability with older versions.
-pub fn get_version(plat: Option<String>, conn: DbConn) -> Result<String, status::Custom<String>>
-{
+pub fn get_version(plat: Option<String>, conn: DbConn) -> Result<String, status::Custom<String>> {
     use schema::horus_versions::dsl::*;
 
     let plat = if plat.is_none() {
@@ -37,29 +35,54 @@ pub fn get_version(plat: Option<String>, conn: DbConn) -> Result<String, status:
     } else {
         plat.unwrap()
     };
-    
-    let version = horus_versions.filter(platform.eq(plat))
+
+    let version = horus_versions
+        .filter(platform.eq(plat))
         .order(deploy_timestamp.desc())
         .first::<HorusVersion>(&*conn);
-    
+
     if version.is_err() {
-        return Err(status::Custom(Status::BadRequest, "Couldn't fetch latest version. Are you sure your platform is correct?".to_string()));
+        return Err(status::Custom(
+            Status::BadRequest,
+            "Couldn't fetch latest version. Are you sure your platform is correct?".to_string(),
+        ));
     }
 
     let version = version.unwrap();
     Ok(version.version_string())
 }
 
-#[get("/latest/<platform>", rank=1)]
-pub fn get_latest(platform: String, _apikey: LicenseKey) -> Option<Redirect>
-{
-    None
+#[get("/latest/<plat>", rank = 1)]
+pub fn get_latest(plat: String, conn: DbConn, _apikey: LicenseKey) -> Result<Redirect, Failure> {
+
+    _get_latest(plat, conn)
 }
 
-#[get("/latest/<platform>", rank=2)]
-pub fn get_latest_sess(platform: String, _sess: SessionToken) -> Option<Redirect>
-{
-    None
+#[get("/latest/<plat>", rank = 2)]
+pub fn get_latest_sess(plat: String, conn: DbConn, _sess: SessionToken) -> Result<Redirect, Failure> {
+    _get_latest(plat, conn)
+}
+
+fn _get_latest(plat: String, conn: DbConn) -> Result<Redirect, Failure>
+{    
+    use schema::horus_versions::dsl::*;
+
+    let ver = horus_versions.filter(platform.eq(plat))
+        .order(deploy_timestamp.desc())
+        .first::<HorusVersion>(&*conn);
+
+    if ver.is_err() {
+        return Err(Failure(Status::NotFound));
+    }
+    
+    let ver = ver.unwrap();
+    let url = dbtools::get_s3_presigned_url(ver.aws_path());
+
+    if url.is_err() {
+        Err(Failure(Status::ServiceUnavailable))
+    } else {
+        Ok(Redirect::to(url.unwrap().as_str()))
+    }
 }
 
 #[post("/deploy/publish/<platform>/<version_s>")]
@@ -67,12 +90,12 @@ pub fn enable_deployment(
     version_s: String,
     platform: String,
     conn: DbConn,
-    depkey: DeploymentKey)
-    -> Result<status::Custom<()>, Failure>
-{
+    depkey: DeploymentKey,
+) -> Result<status::Custom<()>, Failure> {
     use schema::horus_versions;
     // Verify key is the one used to deploy originally.
-    let dbobj = horus_versions::dsl::horus_versions.find((&platform, &version_s))
+    let dbobj = horus_versions::dsl::horus_versions
+        .find((&platform, &version_s))
         .first(&*conn);
 
     if dbobj.is_err() {
@@ -87,35 +110,34 @@ pub fn enable_deployment(
 
     // we are authed, make the change
     version.publish();
-    let db_result = diesel::update(horus_versions::dsl::horus_versions.find((&platform, &version_s)))
-        .set(&version)
+    let db_result = diesel::update(
+        horus_versions::dsl::horus_versions.find((&platform, &version_s)),
+    ).set(&version)
         .execute(&*conn);
 
     if db_result.is_err() {
         return Err(Failure(Status::Unauthorized));
-    } else { db_result.unwrap(); }
+    } else {
+        db_result.unwrap();
+    }
 
     Ok(status::Custom(Status::Ok, ()))
 }
 
-
 /// Returns HTTP created with an integer id for the deployment.
-#[post("/deploy/new/<platform>/<version>", format="application/octet-stream", data="<update_package>")]
+#[post("/deploy/new/<platform>/<version>", format = "application/octet-stream",
+       data = "<update_package>")]
 pub fn deploy(
-    platform: String, 
+    platform: String,
     version: String,
     update_package: Data,
     lkey: LicenseKey,
-    depkey: DeploymentKey) 
-    -> Result<status::Custom<String>, Failure>
-{
+    depkey: DeploymentKey,
+) -> Result<status::Custom<String>, Failure> {
     use std::io::Read;
     use schema::horus_versions;
 
-    let file_data: Vec<u8> = update_package.open()
-        .bytes()
-        .map(|x| x.unwrap())
-        .collect();
+    let file_data: Vec<u8> = update_package.open().bytes().map(|x| x.unwrap()).collect();
 
     let deployment_data = Deployment::new(file_data, depkey.hash(), version, platform.clone());
     let deployment_data = job_structures::binarize(&deployment_data);
@@ -125,33 +147,38 @@ pub fn deploy(
         lkey.get_owner(),
         "deployment:deploy:".to_string() + &platform,
         Some(deployment_data),
-        JobPriority::System);
-    
+        JobPriority::System,
+    );
+
     let queue_result = job_juggler::enqueue_job(new_job);
 
     if queue_result.is_err() {
         return Err(Failure(Status::InternalServerError));
     }
-    
+
     queue_result.unwrap();
-    
-    Ok(status::Custom(Status::Accepted, "Job queued for processing.".to_string()))
+
+    Ok(status::Custom(
+        Status::Accepted,
+        "Job queued for processing.".to_string(),
+    ))
 }
 
 /// Verifies if a key is correct and returns its database object if so.
 pub fn verify_key(
-    lkey: LicenseKey, 
+    lkey: LicenseKey,
     depkey: DeploymentKey,
-    deployment_key: String) -> Result<DeploymentKey, ()>
-{
+    deployment_key: String,
+) -> Result<DeploymentKey, ()> {
     let key_hash_valid = verify(&deployment_key, &depkey.hash()).unwrap();
     if !key_hash_valid {
         return Err(());
     }
 
     let conn = super::super::dbtools::get_db_conn_requestless().unwrap();
-    let depkey_query: Result<DeploymentKey, _> = deployment_keys.filter(
-        schema::deployment_keys::dsl::key.eq(&depkey.hash())).first(&conn);
+    let depkey_query: Result<DeploymentKey, _> = deployment_keys
+        .filter(schema::deployment_keys::dsl::key.eq(&depkey.hash()))
+        .first(&conn);
 
     if depkey_query.is_ok() {
         let depkey_query = depkey_query.unwrap();
@@ -166,11 +193,10 @@ pub fn verify_key(
     }
 }
 
-/// Issue a deployment key. 
+/// Issue a deployment key.
 /// Returns a tuple containing a plaintext deployment key and its corresponding
-/// database object. 
-pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey), ()>
-{
+/// database object.
+pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey), ()> {
     if l_key.privilege_level.is_none() {
         return Err(());
     }
@@ -179,26 +205,30 @@ pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey)
         return Err(());
     }
 
-    let random_key: String = rand::thread_rng().gen_ascii_chars()
-        .take(128).collect::<Vec<char>>().iter().fold(String::new(),
-            | mut acc, c | {
-                acc.push(*c);
-                acc
-            });
-    
+    let random_key: String = rand::thread_rng()
+        .gen_ascii_chars()
+        .take(128)
+        .collect::<Vec<char>>()
+        .iter()
+        .fold(String::new(), |mut acc, c| {
+            acc.push(*c);
+            acc
+        });
+
     let random_hash = hash(&random_key, DEFAULT_COST).unwrap();
     let result_key = DeploymentKey::new(random_hash, &l_key);
 
     let connection = super::super::dbtools::get_db_conn_requestless().unwrap();
     let dep_key_result = diesel::insert_into(schema::deployment_keys::table)
-        .values(&result_key).get_result::<DeploymentKey>(&connection);
+        .values(&result_key)
+        .get_result::<DeploymentKey>(&connection);
 
     if dep_key_result.is_err() {
         return Err(());
     }
 
     let dep_key_result = dep_key_result.unwrap();
-    
+
     // Return the actual db object, not the one we made
-    Ok((String::from(random_key), dep_key_result)) 
+   Ok((String::from(random_key), dep_key_result))
 }

@@ -2,7 +2,7 @@ use super::super::schema::horus_pastes;
 use chrono::NaiveDateTime;
 
 #[derive(AsChangeset, Identifiable, Serialize, Insertable, Queryable, Deserialize)]
-#[table_name="horus_pastes"]
+#[table_name = "horus_pastes"]
 pub struct HPaste {
     pub id: String,
     pub title: Option<String>,
@@ -10,5 +10,5 @@ pub struct HPaste {
     pub owner: i32,
     pub date_added: NaiveDateTime,
     pub is_expiry: bool,
-    pub expiration_time: Option<NaiveDateTime>
+    pub expiration_time: Option<NaiveDateTime>,
 }

@@ -1,23 +1,31 @@
 #![feature(custom_derive, plugin, conservative_impl_trait)]
 #![plugin(rocket_codegen)]
 #![plugin(dotenv_macros)]
-#![recursion_limit="128"] // For diesel schema inference.
+#![recursion_limit = "128"] // For diesel schema inference.
 
-#[macro_use] extern crate diesel;
-#[macro_use] extern crate diesel_infer_schema;
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate diesel_infer_schema;
 
-#[macro_use] extern crate horus_server_derive;
+#[macro_use]
+extern crate horus_server_derive;
 
 extern crate bincode;
 extern crate serde;
-#[allow(unused_extern_crates)] extern crate serde_json;
-#[allow(unused_extern_crates)] #[macro_use] extern crate serde_derive;
+#[allow(unused_extern_crates)]
+#[macro_use]
+extern crate serde_derive;
+#[allow(unused_extern_crates)]
+extern crate serde_json;
 
 extern crate chrono;
-extern crate rocket;
-#[allow(unused_imports)] #[macro_use] extern crate rocket_contrib;
-extern crate r2d2_diesel;
 extern crate r2d2;
+extern crate r2d2_diesel;
+extern crate rocket;
+#[allow(unused_imports)]
+#[macro_use]
+extern crate rocket_contrib;
 
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
@@ -40,5 +48,4 @@ static AWS_SECRET: &'static str = dotenv!("AWS_SECRET");
 
 // Database pooling definitions
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
-pub struct DbConn(
-    pub r2d2::PooledConnection<ConnectionManager<PgConnection>>);
+pub struct DbConn(pub r2d2::PooledConnection<ConnectionManager<PgConnection>>);

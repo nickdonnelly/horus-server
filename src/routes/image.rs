@@ -1,5 +1,5 @@
-extern crate chrono;
 extern crate base64;
+extern crate chrono;
 extern crate diesel;
 
 use self::chrono::NaiveDateTime;
@@ -7,9 +7,9 @@ use diesel::prelude::*;
 use super::super::DbConn;
 use super::super::dbtools;
 use super::super::{contexts, conv};
-use super::super::models::{LicenseKey,HImage,SessionToken};
+use super::super::models::{HImage, LicenseKey, SessionToken};
 use super::super::forms::HImageChangesetForm;
-use rocket::response::{Failure, NamedFile, status};
+use rocket::response::{status, Failure, NamedFile};
 use rocket::data::Data;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
@@ -20,15 +20,10 @@ use std::io::Read;
 use std::io::prelude::*;
 
 #[get("/<image_id>")]
-pub fn show(
-    image_id: String,
-    conn: DbConn)
-    -> Option<Template>
-{
+pub fn show(image_id: String, conn: DbConn) -> Option<Template> {
     use schema::horus_images::dsl::*;
 
-    let image = horus_images.find(&image_id)
-        .get_result::<HImage>(&*conn);
+    let image = horus_images.find(&image_id).get_result::<HImage>(&*conn);
 
     if image.is_err() {
         return None;
@@ -46,14 +41,9 @@ pub fn show(
 }
 
 #[get("/full/<image_id>")]
-pub fn full(
-    image_id: String,
-    conn: DbConn)
-    -> Option<NamedFile>
-{
+pub fn full(image_id: String, conn: DbConn) -> Option<NamedFile> {
     use schema::horus_images::dsl::*;
-    let image = horus_images.find(image_id)
-        .get_result::<HImage>(&*conn);
+    let image = horus_images.find(image_id).get_result::<HImage>(&*conn);
 
     if image.is_err() {
         return None;
@@ -65,11 +55,7 @@ pub fn full(
 }
 
 #[get("/thumb/<image_id>")]
-pub fn thumb(
-    image_id: String,
-    conn: DbConn)
-    -> Option<NamedFile>
-{
+pub fn thumb(image_id: String, conn: DbConn) -> Option<NamedFile> {
     full(image_id, conn)
 }
 
@@ -80,9 +66,8 @@ pub fn list(
     uid: i32,
     page: u32,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<Json<Vec<HImage>>, Failure>
-{
+    conn: DbConn,
+) -> Result<Json<Vec<HImage>>, Failure> {
     use schema::horus_images::dsl::*;
 
     if !apikey.belongs_to(uid) {
@@ -107,21 +92,18 @@ pub fn list(
 pub fn delete(
     image_id: String,
     session: SessionToken,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Custom<()>, Failure> {
     use schema::horus_images::dsl::*;
 
-    let image = horus_images
-        .find(&image_id)
-        .get_result::<HImage>(&*conn);
+    let image = horus_images.find(&image_id).get_result::<HImage>(&*conn);
 
     if image.is_err() {
         return Err(Failure(Status::NotFound));
     }
 
     let image = image.unwrap();
-    
+
     if session.uid != image.owner {
         return Err(Failure(Status::Unauthorized));
     }
@@ -129,38 +111,30 @@ pub fn delete(
     delete_internal(image, conn)
 }
 
-#[delete("/<image_id>", rank=2)]
+#[delete("/<image_id>", rank = 2)]
 pub fn delete_sessionless(
     image_id: String,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Custom<()>, Failure> {
     use schema::horus_images::dsl::*;
 
-    let image = horus_images
-        .find(&image_id)
-        .get_result::<HImage>(&*conn);
+    let image = horus_images.find(&image_id).get_result::<HImage>(&*conn);
 
     if image.is_err() {
         return Err(Failure(Status::NotFound));
     }
 
     let image = image.unwrap();
-    
+
     if !apikey.belongs_to(image.owner) {
         return Err(Failure(Status::Unauthorized));
     }
 
-
     delete_internal(image, conn)
 }
 
-fn delete_internal(
-    image: HImage,
-    conn: DbConn) 
-    -> Result<status::Custom<()>, Failure>
-{
+fn delete_internal(image: HImage, conn: DbConn) -> Result<status::Custom<()>, Failure> {
     let s3result = dbtools::delete_s3_object(&image.filepath);
 
     if s3result.is_err() {
@@ -170,22 +144,23 @@ fn delete_internal(
     let result = diesel::delete(&image).execute(&*conn);
 
     if result.is_err() {
-        println!("Database error while deleting image: {}", result.err().unwrap());
+        println!(
+            "Database error while deleting image: {}",
+            result.err().unwrap()
+        );
         return Err(Failure(Status::InternalServerError));
     }
 
     Ok(status::Custom(Status::Ok, ()))
 }
 
-
 fn new_img(
     img_data: Data,
     title: String,
     exp: Option<NaiveDateTime>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     use schema::horus_images;
     let iid: String = dbtools::get_random_char_id(8);
 
@@ -201,10 +176,7 @@ fn new_img(
         expiration_time: exp,
     };
     // SAVE THE FILE THEN INSERT DB
-    let img_data: Vec<u8> = img_data.open()
-        .bytes()
-        .map(|x| x.unwrap())
-        .collect();
+    let img_data: Vec<u8> = img_data.open().bytes().map(|x| x.unwrap()).collect();
 
     // Removes the prefix
     let raw_img_data = base64::decode(&img_data[22..]);
@@ -225,44 +197,51 @@ fn new_img(
     let result = diesel::insert_into(horus_images::table)
         .values(&image)
         .get_result::<HImage>(&*conn);
-    
+
     if result.is_err() {
         return Err(Failure(Status::InternalServerError));
     }
-    
+
     let result = result.unwrap();
 
-    Ok(status::Created(String::from("/image/") + result.id.as_str(), None))
+    Ok(status::Created(
+        String::from("/image/") + result.id.as_str(),
+        None,
+    ))
 }
 
-#[post("/new", format="image/png", data = "<img_data>")]
+#[post("/new", format = "image/png", data = "<img_data>")]
 pub fn new(
     img_data: Data,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     new_img(img_data, String::from("Horus Image"), None, apikey, conn)
 }
 
 /// <img_data> The base64 video data.
 /// <expt> The expiration type 'minutes', 'hours', or 'days', optional.
 /// <expd> The expiration duration, required if expt present.
-#[post("/new/<expt>/<expd>", format="image/png", data = "<img_data>")]
+#[post("/new/<expt>/<expd>", format = "image/png", data = "<img_data>")]
 pub fn new_exp(
     img_data: Data,
     expt: Option<String>,
     expd: Option<usize>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
             return Err(Failure(Status::BadRequest));
         }
-        new_img(img_data, String::from("Horus Image"), Some(exp.unwrap()), apikey, conn)
+        new_img(
+            img_data,
+            String::from("Horus Image"),
+            Some(exp.unwrap()),
+            apikey,
+            conn,
+        )
     } else {
         new_img(img_data, String::from("Horus Image"), None, apikey, conn)
     }
@@ -272,16 +251,15 @@ pub fn new_exp(
 /// <title> The title of the image, required.
 /// <expt> The expiration type 'minutes', 'hours', or 'days', optional.
 /// <expd> The expiration duration, required if expt present.
-#[post("/new/<title>/<expt>/<expd>", format="image/png", data="<img_data>")]
+#[post("/new/<title>/<expt>/<expd>", format = "image/png", data = "<img_data>")]
 pub fn new_titled(
     img_data: Data,
     title: String,
     expt: Option<String>,
     expd: Option<usize>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
@@ -298,12 +276,12 @@ pub fn update(
     image_id: String,
     updated_values: Json<HImageChangesetForm>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Accepted<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Accepted<()>, Failure> {
     use schema::horus_images::dsl::*;
 
-    let img = horus_images.filter(id.eq(&image_id))
+    let img = horus_images
+        .filter(id.eq(&image_id))
         .first::<HImage>(&*conn);
 
     if img.is_err() {
@@ -317,7 +295,7 @@ pub fn update(
 
     let img_update = updated_values.into_inner();
     let dt = conv::get_dt_from_duration(img_update.duration_type, img_update.duration_val);
-    
+
     if !dt.is_err() {
         img.is_expiry = true;
         img.expiration_time = Some(dt.unwrap());
@@ -330,4 +308,3 @@ pub fn update(
         Err(_) => Err(Failure(Status::InternalServerError)),
     }
 }
-

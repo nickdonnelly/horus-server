@@ -1,8 +1,7 @@
 #[derive(Debug)]
-pub enum AuthTokenError
-{
+pub enum AuthTokenError {
     Invalid,
     Expired,
     ConsumeFailure,
-    NotFound
+    NotFound,
 }

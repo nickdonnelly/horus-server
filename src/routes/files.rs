@@ -4,7 +4,7 @@ extern crate diesel;
 use self::chrono::NaiveDateTime;
 use diesel::prelude::*;
 use rocket::request::Request;
-use rocket::response::{status, NamedFile, Failure, Response, Responder};
+use rocket::response::{status, Failure, NamedFile, Responder, Response};
 use rocket::http::{ContentType, Status};
 use rocket::data::Data;
 use rocket_contrib::{Json, Template};
@@ -18,22 +18,16 @@ use std::path::{Path, PathBuf};
 use std::io::Read;
 use std::io::prelude::*;
 
-pub struct DownloadableFile
-{
-    pub afile: NamedFile, 
-    pub name: FileName
+pub struct DownloadableFile {
+    pub afile: NamedFile,
+    pub name: FileName,
 }
 
 #[get("/<file_id>")]
-pub fn get(
-    file_id: String,
-    conn: DbConn)
-    -> Option<Template>
-{
+pub fn get(file_id: String, conn: DbConn) -> Option<Template> {
     use schema::horus_files::dsl::*;
-    
-    let hfile = horus_files.find(&file_id)
-        .get_result::<HFile>(&*conn);
+
+    let hfile = horus_files.find(&file_id).get_result::<HFile>(&*conn);
 
     if hfile.is_err() {
         return None;
@@ -43,7 +37,7 @@ pub fn get(
     hfile.download_counter = Some(hfile.download_counter.unwrap() + 1);
     hfile.save_changes::<HFile>(&*conn); // ignore the warning coming from this.
                                          // Success is not critical
-    
+
     Some(Template::render("show_file", &hfile))
 }
 
@@ -52,9 +46,8 @@ pub fn list(
     uid: i32,
     page: u32,
     session: SessionToken,
-    conn: DbConn)
-    -> Result<Json<Vec<HFile>>, Failure>
-{
+    conn: DbConn,
+) -> Result<Json<Vec<HFile>>, Failure> {
     use schema::horus_files::dsl::*;
 
     if session.uid != uid {
@@ -76,46 +69,42 @@ pub fn list(
     Ok(Json(files.unwrap()))
 }
 
-#[post("/new", format="application/octet-stream", data="<file_data>")]
+#[post("/new", format = "application/octet-stream", data = "<file_data>")]
 pub fn new(
     file_data: Data,
     file_name: FileName,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     new_file(file_data, file_name, None, apikey, conn)
 }
 
-#[post("/new/<expt>/<expd>", format="application/octet-stream", data="<file_data>")]
+#[post("/new/<expt>/<expd>", format = "application/octet-stream", data = "<file_data>")]
 pub fn new_exp(
     file_data: Data,
     file_name: FileName,
     expt: Option<String>,
     expd: Option<usize>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
             return Err(Failure(Status::BadRequest));
         }
         new_file(file_data, file_name, Some(exp.unwrap()), apikey, conn)
-    }else{
+    } else {
         new_file(file_data, file_name, None, apikey, conn)
     }
-
 }
 pub fn new_file(
     file_data: Data,
     file_name: FileName,
     expire_time: Option<NaiveDateTime>,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Created<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure> {
     use schema::horus_files;
     let fid: String = dbtools::get_random_char_id(8);
     let pathstr = dbtools::get_path_file(&fid);
@@ -131,10 +120,7 @@ pub fn new_file(
         download_counter: None, // defaults 0
     };
 
-    let file_data: Vec<u8> = file_data.open()   
-        .bytes()
-        .map(|x| x.unwrap())
-        .collect();
+    let file_data: Vec<u8> = file_data.open().bytes().map(|x| x.unwrap()).collect();
 
     // No need to decode as we are getting raw bytes through an octet-stream, no base64
     let s3result = dbtools::resource_to_s3_named(&hfile.filename, &pathstr, &file_data);
@@ -151,20 +137,20 @@ pub fn new_file(
         return Err(Failure(Status::BadRequest));
     }
     let result = result.unwrap();
-    Ok(status::Created(String::from("/file/") + result.id.as_str(), None))
+    Ok(status::Created(
+        String::from("/file/") + result.id.as_str(),
+        None,
+    ))
 }
 
 #[delete("/<file_id>")]
 pub fn delete(
     file_id: String,
     session: SessionToken,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Custom<()>, Failure> {
     use schema::horus_files::dsl::*;
-    let hfile = horus_files
-        .find(&file_id)
-        .get_result::<HFile>(&*conn);
+    let hfile = horus_files.find(&file_id).get_result::<HFile>(&*conn);
     if hfile.is_err() {
         return Err(Failure(Status::NotFound));
     }
@@ -181,13 +167,10 @@ pub fn delete(
 pub fn delete_sessionless(
     file_id: String,
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
+    conn: DbConn,
+) -> Result<status::Custom<()>, Failure> {
     use schema::horus_files::dsl::*;
-    let hfile = horus_files
-        .find(&file_id)
-        .get_result::<HFile>(&*conn);
+    let hfile = horus_files.find(&file_id).get_result::<HFile>(&*conn);
     if hfile.is_err() {
         return Err(Failure(Status::NotFound));
     }
@@ -197,15 +180,10 @@ pub fn delete_sessionless(
         return Err(Failure(Status::Unauthorized));
     }
 
-
     delete_internal(hfile, conn)
 }
 
-fn delete_internal(
-    hfile: HFile,
-    conn: DbConn)
-    -> Result<status::Custom<()>, Failure>
-{
+fn delete_internal(hfile: HFile, conn: DbConn) -> Result<status::Custom<()>, Failure> {
     let s3result = dbtools::delete_s3_object(&hfile.filepath);
 
     if s3result.is_err() {
@@ -214,7 +192,10 @@ fn delete_internal(
 
     let result = diesel::delete(&hfile).execute(&*conn);
     if result.is_err() {
-        println!("Database error while deleting image: {}", result.err().unwrap());
+        println!(
+            "Database error while deleting image: {}",
+            result.err().unwrap()
+        );
         return Err(Failure(Status::InternalServerError));
     }
 
@@ -243,7 +224,6 @@ impl Responder<'static> for DownloadableFile {
 // This is not to do with files as user-uploaded bits. This
 // just serves the static assets for the manage page.
 #[get("/<file..>")]
-fn static_asset(file: PathBuf) -> Option<NamedFile> 
-{
+fn static_asset(file: PathBuf) -> Option<NamedFile> {
     NamedFile::open(Path::new("static/").join(file)).ok()
 }

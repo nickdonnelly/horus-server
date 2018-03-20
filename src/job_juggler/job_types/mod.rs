@@ -1,6 +1,6 @@
 use std::boxed::Box;
 
-use ::job_juggler::JobResult;
+use job_juggler::JobResult;
 
 use diesel::pg::PgConnection;
 

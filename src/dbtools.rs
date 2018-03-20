@@ -2,17 +2,19 @@ extern crate r2d2;
 extern crate rand;
 extern crate s3;
 
+use std::process;
+use std::ops::Deref;
+
 use self::s3::bucket::Bucket;
 use self::s3::credentials::Credentials;
-use rocket::{State};
+use rocket::State;
 use rocket::request::Request;
 use super::{DbConn, Pool};
 use diesel::Connection; // Required for trait access to PgConnection
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
-use dbtools::rand::Rng;
 
-use std::ops::Deref;
+use dbtools::rand::Rng;
 
 const BUCKET: &'static str = "horuscdn";
 const REGION: &'static str = "eu-central-1";
@@ -36,8 +38,7 @@ pub fn get_db_conn_requestless() -> Result<PgConnection, ()> {
     Ok(conn.unwrap())
 }
 
-pub fn delete_s3_object(path: &str) -> Result<String, ()>
-{
+pub fn delete_s3_object(path: &str) -> Result<String, ()> {
     let creds = get_s3_creds();
     let region = REGION.parse::<self::s3::region::Region>().unwrap();
     let bucket = Bucket::new(BUCKET, region, creds);
@@ -53,12 +54,7 @@ pub fn delete_s3_object(path: &str) -> Result<String, ()>
 
 /// Upload a public, named resource to s3.
 /// returns: a public URL to the object
-pub fn resource_to_s3_named(
-    filename: &str,
-    path: &str, 
-    data: &Vec<u8>)
-    -> Result<String, ()>
-{
+pub fn resource_to_s3_named(filename: &str, path: &str, data: &Vec<u8>) -> Result<String, ()> {
     let creds = get_s3_creds();
     let region = REGION.parse::<self::s3::region::Region>().unwrap();
     let mut bucket = Bucket::new(BUCKET, region, creds);
@@ -70,8 +66,7 @@ pub fn resource_to_s3_named(
 
     let (by, code) = bucket.put(&path, &data, "text/plain").unwrap();
 
-
-    if code != 200 { 
+    if code != 200 {
         return Err(());
     }
     Ok(String::from_utf8(by).unwrap())
@@ -82,9 +77,8 @@ pub fn resource_to_s3_named(
 pub fn private_resource_to_s3_named(
     filename: &str,
     path: &str,
-    data: &Vec<u8>)
-    -> Result<String, ()>
-{
+    data: &Vec<u8>,
+) -> Result<String, ()> {
     let creds = get_s3_creds();
     let region = REGION.parse::<self::s3::region::Region>().unwrap();
     let mut bucket = Bucket::new(BUCKET, region, creds);
@@ -93,8 +87,10 @@ pub fn private_resource_to_s3_named(
     dispositionstr += "\"";
     bucket.add_header("x-amz-acl", "private"); // only we can read
     bucket.add_header("content-disposition", &dispositionstr);
-    let (_, code) = bucket.put(&path, &data, "application/octet-stream").unwrap();
-    
+    let (_, code) = bucket
+        .put(&path, &data, "application/octet-stream")
+        .unwrap();
+
     if code != 200 {
         Err(())
     } else {
@@ -102,11 +98,7 @@ pub fn private_resource_to_s3_named(
     }
 }
 
-pub fn resource_to_s3(
-    path: &str, 
-    data: &Vec<u8>)
-    -> Result<String, ()>
-{
+pub fn resource_to_s3(path: &str, data: &Vec<u8>) -> Result<String, ()> {
     let creds = Credentials::new(&super::AWS_ACCESS, &super::AWS_SECRET, None);
     let region = REGION.parse::<self::s3::region::Region>().unwrap();
     let mut bucket = Bucket::new(BUCKET, region, creds);
@@ -115,8 +107,7 @@ pub fn resource_to_s3(
 
     let (by, code) = bucket.put(&path, &data, "text/plain").unwrap();
 
-
-    if code != 200 { 
+    if code != 200 {
         return Err(());
     }
     Ok(String::from_utf8(by).unwrap())
@@ -134,30 +125,27 @@ pub fn get_random_char_id(len: usize) -> String {
     rand::thread_rng().gen_ascii_chars().take(len).collect()
 }
 
-pub fn get_path_image(filename: &str) -> String{
+pub fn get_path_image(filename: &str) -> String {
     let mut path_str = String::from("live/images/");
     path_str += filename;
     path_str += ".png";
     path_str
 }
 
-pub fn get_path_file(filename: &str) -> String 
-{
+pub fn get_path_file(filename: &str) -> String {
     let mut path_str = String::from("live/files/");
     path_str += filename;
     path_str
 }
 
-pub fn get_path_video(filename: &str) -> String 
-{
+pub fn get_path_video(filename: &str) -> String {
     let mut path_str = String::from("live/videos/");
     path_str += filename;
     path_str += ".webm";
     path_str
 }
 
-pub fn get_path_deployment(version: &str, packagename: &str) -> String
-{
+pub fn get_path_deployment(version: &str, packagename: &str) -> String {
     let mut path_str = String::from("/live/packages/");
     path_str += version;
     path_str += "/";
@@ -166,8 +154,28 @@ pub fn get_path_deployment(version: &str, packagename: &str) -> String
     path_str
 }
 
-fn get_s3_creds() -> Credentials
-{
+/// Return a pre-signed URL, for a path starting at the root of the crate.
+pub fn get_s3_presigned_url(path: String) -> Result<String, String> {
+    use self::process::Command;
+    
+    let mut url_base = "s3://".to_string() + BUCKET;
+    url_base += path.as_str(); 
+
+    let url = Command::new("aws s3 presign")
+        .arg("--expires-in")
+        .arg("60") // seconds.
+        .arg(url_base)
+        .output();
+
+    if url.is_err() {
+        Err("Couldn't get a presigned download URL.".to_string())
+    } else {
+        let url = url.unwrap();
+        Ok(String::from_utf8_lossy(&url.stdout).to_string())
+    }
+}
+
+fn get_s3_creds() -> Credentials {
     Credentials::new(&super::AWS_ACCESS, &super::AWS_SECRET, None)
 }
 
@@ -178,5 +186,3 @@ impl Deref for DbConn {
         &self.0
     }
 }
-
-

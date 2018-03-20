@@ -2,7 +2,7 @@ use super::super::schema::horus_files;
 use chrono::NaiveDateTime;
 
 #[derive(Queryable, Serialize, Identifiable, Insertable, AsChangeset)]
-#[table_name="horus_files"]
+#[table_name = "horus_files"]
 pub struct HFile {
     pub id: String,
     pub owner: i32,

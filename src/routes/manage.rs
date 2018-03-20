@@ -4,18 +4,18 @@ extern crate time;
 use self::diesel::prelude::*;
 use super::super::DbConn;
 use super::super::models::*;
-use super::super::contexts::{ImageList, PasteList, VideoList, FileList};
+use super::super::contexts::{FileList, ImageList, PasteList, VideoList};
 use super::super::contexts::{ManageImage, ManagePaste, ManageVideo};
 use super::super::schema;
 use super::super::errors::AuthTokenError;
 use rocket::response::{status, Failure, Redirect};
 use rocket::http::{Cookie, Cookies, Status};
-use rocket_contrib::{Template};
+use rocket_contrib::Template;
 
 #[derive(FromForm)]
-pub struct AuthRequest{
+pub struct AuthRequest {
     redirect_path: String,
-    pub auth_secret: String
+    pub auth_secret: String,
 }
 
 /// Gives dtapp a URL to open in the users browser that will auth
@@ -25,17 +25,16 @@ pub struct AuthRequest{
 #[get("/request_auth_url")]
 pub fn request_auth_url(
     apikey: LicenseKey,
-    conn: DbConn)
-    -> Result<status::Custom<String>, Failure> 
-{
+    conn: DbConn,
+) -> Result<status::Custom<String>, Failure> {
     use schema::auth_tokens::dsl::*;
 
     let _uid = apikey.get_owner();
-    let usertoken = auth_tokens.find(_uid)
-        .get_result::<AuthToken>(&*conn);
+    let usertoken = auth_tokens.find(_uid).get_result::<AuthToken>(&*conn);
     let mut url = String::from("/manage/request_auth?redirect_path=images/0&auth_secret=");
 
-    if usertoken.is_err() { // They don't have a token yet
+    if usertoken.is_err() {
+        // They don't have a token yet
         let usertoken = AuthToken::new(_uid);
 
         let insert_result = diesel::insert_into(schema::auth_tokens::table)
@@ -48,10 +47,10 @@ pub fn request_auth_url(
 
         let insert_result = insert_result.unwrap();
         url += insert_result.token.as_str();
-    }else {
+    } else {
         // update existing token
         let usertoken = usertoken.unwrap().refresh(); // new token
-        // Need identifiable to be implemented
+                                                      // Need identifiable to be implemented
         let update_result = usertoken.save_changes::<AuthToken>(&*conn);
 
         if update_result.is_err() {
@@ -70,25 +69,22 @@ pub fn request_auth_url(
 pub fn request_auth_cookie(
     mut cookies: Cookies,
     auth_req: AuthRequest,
-    conn: DbConn
-    )
-    -> Result<Redirect, Failure>
-{
+    conn: DbConn,
+) -> Result<Redirect, Failure> {
     let redirect_url = auth_req.redirect_path.clone();
-    
+
     let token_result = auth_req.into_token();
     if token_result.is_err() {
         return match token_result {
-            Err(AuthTokenError::ConsumeFailure) =>
-                Err(Failure(Status::InternalServerError)),
+            Err(AuthTokenError::ConsumeFailure) => Err(Failure(Status::InternalServerError)),
             Err(AuthTokenError::Invalid) => Err(Failure(Status::InternalServerError)),
             Err(AuthTokenError::Expired) => Err(Failure(Status::BadRequest)),
             Err(AuthTokenError::NotFound) => Err(Failure(Status::NotFound)),
 
             // never fires, but has to be here for exhaustiveness..
-            Ok(_) => Err(Failure(Status::InternalServerError)), 
+            Ok(_) => Err(Failure(Status::InternalServerError)),
         };
-    } 
+    }
     let token_result = token_result.unwrap();
     let insert_result = token_result.save_changes::<SessionToken>(&*conn);
 
@@ -113,31 +109,20 @@ pub fn request_auth_cookie(
 }
 
 #[get("/account")]
-pub fn my_account(
-    apikey: LicenseKey,
-    conn: DbConn)
-    -> Option<Template>
-{
+pub fn my_account(apikey: LicenseKey, conn: DbConn) -> Option<Template> {
     use schema::horus_users::dsl::*;
     let uid = apikey.get_owner();
 
-    let user = horus_users.filter(id.eq(&uid))
-        .first::<User>(&*conn);
+    let user = horus_users.filter(id.eq(&uid)).first::<User>(&*conn);
 
     match user {
         Err(_) => None,
-        Ok(u) => Some(Template::render("manage_account", &u))
+        Ok(u) => Some(Template::render("manage_account", &u)),
     }
 }
 
-
 #[get("/images/<page>")]
-pub fn my_images(
-    page: u32,
-    session: SessionToken,
-    conn: DbConn)
-    -> Option<Template>
-{
+pub fn my_images(page: u32, session: SessionToken, conn: DbConn) -> Option<Template> {
     use schema::horus_images::dsl::*;
     use schema::horus_users::dsl::*;
     let images = horus_images
@@ -146,11 +131,13 @@ pub fn my_images(
         .limit(24)
         .offset((page * 24) as i64)
         .get_results::<HImage>(&*conn);
-    
+
     let images = images.unwrap();
-    let name = horus_users.find(&session.uid)
+    let name = horus_users
+        .find(&session.uid)
         .get_result::<User>(&*conn)
-        .unwrap().first_name;
+        .unwrap()
+        .first_name;
 
     let mut ititle = String::from(name);
     ititle += "'s Images";
@@ -166,12 +153,7 @@ pub fn my_images(
 }
 
 #[get("/files/<page>")]
-pub fn my_files(
-    page: u32,
-    session: SessionToken,
-    conn: DbConn)
-    -> Option<Template>
-{
+pub fn my_files(page: u32, session: SessionToken, conn: DbConn) -> Option<Template> {
     use schema::horus_files::dsl::*;
     use schema::horus_users::dsl::*;
 
@@ -208,16 +190,11 @@ pub fn my_files(
 }
 
 #[get("/pastes/<page>")]
-pub fn my_pastes(
-    page: u32,
-    session: SessionToken,
-    conn: DbConn)
-    -> Option<Template>
-{
+pub fn my_pastes(page: u32, session: SessionToken, conn: DbConn) -> Option<Template> {
     use schema::horus_pastes::dsl::*;
     use schema::horus_users::dsl::*;
 
-    let pastes = horus_pastes   
+    let pastes = horus_pastes
         .filter(owner.eq(&session.uid))
         .limit(24)
         .order(date_added.desc())
@@ -230,10 +207,12 @@ pub fn my_pastes(
 
     let pastes = pastes.unwrap();
 
-    let name = horus_users.find(&session.uid)
+    let name = horus_users
+        .find(&session.uid)
         .get_result::<User>(&*conn)
-        .unwrap().first_name;
-    
+        .unwrap()
+        .first_name;
+
     let mut ititle = String::from(name);
     ititle += "'s Pastes";
 
@@ -248,16 +227,11 @@ pub fn my_pastes(
 }
 
 #[get("/videos/<page>")]
-pub fn my_videos(
-    page: u32,
-    session: SessionToken,
-    conn: DbConn)
-    -> Option<Template>
-{
+pub fn my_videos(page: u32, session: SessionToken, conn: DbConn) -> Option<Template> {
     use schema::horus_videos::dsl::*;
     use schema::horus_users::dsl::*;
 
-    let videos  = horus_videos
+    let videos = horus_videos
         .filter(owner.eq(&session.uid))
         .order(date_added.desc())
         .limit(8)
@@ -265,9 +239,11 @@ pub fn my_videos(
         .get_results::<HVideo>(&*conn);
 
     let videos = videos.unwrap();
-    let name = horus_users.find(&session.uid)
+    let name = horus_users
+        .find(&session.uid)
         .get_result::<User>(&*conn)
-        .unwrap().first_name;
+        .unwrap()
+        .first_name;
 
     let mut ititle = String::from(name);
     ititle += "'s Videos";
@@ -282,15 +258,9 @@ pub fn my_videos(
 }
 
 #[get("/video/<video_id>")]
-pub fn video(
-    video_id: String,
-    conn: DbConn,
-    session: SessionToken)
-    -> Option<Template>
-{
+pub fn video(video_id: String, conn: DbConn, session: SessionToken) -> Option<Template> {
     use schema::horus_videos::dsl::*;
-    let video = horus_videos.find(video_id)
-        .get_result::<HVideo>(&*conn);
+    let video = horus_videos.find(video_id).get_result::<HVideo>(&*conn);
 
     if video.is_err() {
         return None;
@@ -304,7 +274,7 @@ pub fn video(
     let mut ititle = String::new();
     if video.title.is_none() {
         ititle += "Horus Video";
-    }else{
+    } else {
         ititle += video.title.unwrap().as_str()
     }
     let context = ManageVideo {
@@ -318,15 +288,9 @@ pub fn video(
 }
 
 #[get("/image/<image_id>")]
-pub fn image(
-    image_id: String,
-    conn: DbConn,
-    session: SessionToken)
-    -> Option<Template>
-{
+pub fn image(image_id: String, conn: DbConn, session: SessionToken) -> Option<Template> {
     use schema::horus_images::dsl::*;
-    let image = horus_images.find(image_id)
-        .get_result::<HImage>(&*conn);
+    let image = horus_images.find(image_id).get_result::<HImage>(&*conn);
 
     if image.is_err() {
         return None;
@@ -340,7 +304,7 @@ pub fn image(
     let mut ititle = String::new();
     if image.title.is_none() {
         ititle += "Horus Image";
-    }else{
+    } else {
         ititle += image.title.unwrap().as_str()
     }
     let context = ManageImage {
@@ -354,15 +318,9 @@ pub fn image(
 }
 
 #[get("/paste/<paste_id>")]
-pub fn paste(
-    paste_id: String,
-    conn: DbConn,
-    session: SessionToken)
-    -> Option<Template>
-{
+pub fn paste(paste_id: String, conn: DbConn, session: SessionToken) -> Option<Template> {
     use schema::horus_pastes::dsl::*;
-    let paste = horus_pastes.find(paste_id)
-        .get_result::<HPaste>(&*conn);
+    let paste = horus_pastes.find(paste_id).get_result::<HPaste>(&*conn);
 
     if paste.is_err() {
         return None;
@@ -392,16 +350,26 @@ pub fn paste(
 // REDIRECTS
 
 #[get("/images")]
-pub fn my_images_pageless() -> Redirect { Redirect::to("images/0") }
+pub fn my_images_pageless() -> Redirect {
+    Redirect::to("images/0")
+}
 
 #[get("/videos")]
-pub fn my_videos_pageless() -> Redirect { Redirect::to("images/0") }
+pub fn my_videos_pageless() -> Redirect {
+    Redirect::to("images/0")
+}
 
 #[get("/files")]
-pub fn my_files_pageless() -> Redirect { Redirect::to("images/0") }
+pub fn my_files_pageless() -> Redirect {
+    Redirect::to("images/0")
+}
 
 #[get("/pastes")]
-pub fn my_pastes_pageless() -> Redirect { Redirect::to("images/0") }
+pub fn my_pastes_pageless() -> Redirect {
+    Redirect::to("images/0")
+}
 
 #[get("/manage")]
-pub fn base_redirect() -> Redirect { Redirect::to("images/0") }
+pub fn base_redirect() -> Redirect {
+    Redirect::to("images/0")
+}

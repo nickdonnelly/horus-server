@@ -1,7 +1,7 @@
 /// API routes for handling keys.
 extern crate chrono;
-extern crate rand;
 extern crate diesel;
+extern crate rand;
 extern crate rocket_contrib;
 
 use diesel::prelude::*;
@@ -11,38 +11,31 @@ use super::super::dbtools;
 use super::super::schema::horus_license_keys::dsl::*;
 use super::super::schema::horus_licenses::dsl::*;
 use super::super::models::{License, LicenseKey};
-use self::chrono::{Local, Date, Duration};
+use self::chrono::{Date, Duration, Local};
 use self::rand::Rng;
 use self::rocket_contrib::Json;
 
 // TODO: Temporary - will be secured
 #[post("/issue/<uid>")]
-pub fn issue(uid: i32) 
-    -> Json<(License, LicenseKey)>
-{
+pub fn issue(uid: i32) -> Json<(License, LicenseKey)> {
     Json(issue_license_with_key(uid, 3, 3).unwrap())
 }
 
 // TODO: Check if the key is expired before returning
-pub fn key_valid(keystr: &str) -> bool
-{
+pub fn key_valid(keystr: &str) -> bool {
     let conn = dbtools::get_db_conn_requestless().unwrap();
 
-    let _key: Result<LicenseKey, diesel::result::Error> = horus_license_keys.filter(
-        schema::horus_license_keys::dsl::key.eq(keystr))
+    let _key: Result<LicenseKey, diesel::result::Error> = horus_license_keys
+        .filter(schema::horus_license_keys::dsl::key.eq(keystr))
         .first(&conn);
     return _key.is_err();
 }
 
 /// Endpoint: Check API Key
 #[get("/<apikey>/validity-check")]
-pub fn validity_check(
-    apikey: String, 
-    conn: DbConn) 
-    -> Result<Json<LicenseKey>, String> 
-{
-    let _key = horus_license_keys.filter(
-        schema::horus_license_keys::dsl::key.eq(&apikey))
+pub fn validity_check(apikey: String, conn: DbConn) -> Result<Json<LicenseKey>, String> {
+    let _key = horus_license_keys
+        .filter(schema::horus_license_keys::dsl::key.eq(&apikey))
         .first(&*conn);
 
     if _key.is_err() {
@@ -54,11 +47,10 @@ pub fn validity_check(
 
 /// Requestless license issuance. To be used with caution...
 pub fn issue_license_with_key(
-    owner_id: i32, 
-    l_type: i16, 
-    priv_lvl: i16) 
-    -> Result<(License, LicenseKey), ()> 
-{
+    owner_id: i32,
+    l_type: i16,
+    priv_lvl: i16,
+) -> Result<(License, LicenseKey), ()> {
     // key owner license_type
     let conn = super::super::dbtools::get_db_conn_requestless().unwrap();
 
@@ -90,21 +82,18 @@ pub fn issue_license_with_key(
         .values(&license)
         .get_result::<License>(&conn);
 
-
-
     if license_result.is_err() || license_key_result.is_err() {
         // Remove extra records in the event one was successful
         let d_license_result = diesel::delete(
-            horus_licenses.filter(schema::horus_licenses::dsl::key.eq(&keystr)))
-            .execute(&conn);
-        
+            horus_licenses.filter(schema::horus_licenses::dsl::key.eq(&keystr)),
+        ).execute(&conn);
+
         let d_license_key_result = diesel::delete(
-            horus_license_keys.filter(schema::horus_license_keys::dsl::key.eq(&keystr)))
-            .execute(&conn);
-    
+            horus_license_keys.filter(schema::horus_license_keys::dsl::key.eq(&keystr)),
+        ).execute(&conn);
+
         if d_license_result.is_err() || d_license_key_result.is_err() {
-            println!(
-                "NOTICE: Database error while trying to delete faultily created license!");
+            println!("NOTICE: Database error while trying to delete faultily created license!");
         }
 
         return Err(());
@@ -112,4 +101,3 @@ pub fn issue_license_with_key(
 
     Ok((license_result.unwrap(), license_key_result.unwrap()))
 }
-
