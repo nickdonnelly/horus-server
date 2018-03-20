@@ -13,14 +13,56 @@ use self::rand::{ Rng, ThreadRng };
 
 use rocket::http::Status;
 use rocket::data::Data;
-use rocket::response::{ status, Failure };
+use rocket::response::{ status, Failure, Redirect };
 
 use ::models::{ LicenseKey, SessionToken, DeploymentKey, 
-                            HorusVersion, NewHorusVersion, NewJob, JobPriority };
+                HorusVersion, NewHorusVersion, NewJob, JobPriority };
 use ::models::job_structures::{ self, Deployment };
 use ::job_juggler;
 
-#[post("/publish/<platform>/<version_s>")]
+#[get("/version")]
+pub fn version_legacy() -> Redirect
+{
+    Redirect::to("/dist/version/win64")
+}
+
+#[get("/version/<plat>")]
+/// If no platform is given, it is assumed to be win64 just for compatability with older versions.
+pub fn get_version(plat: Option<String>, conn: DbConn) -> Result<String, status::Custom<String>>
+{
+    use schema::horus_versions::dsl::*;
+
+    let plat = if plat.is_none() {
+        "win64".to_string()
+    } else {
+        plat.unwrap()
+    };
+    
+    let version = horus_versions.filter(platform.eq(plat))
+        .order(deploy_timestamp.desc())
+        .first::<HorusVersion>(&*conn);
+    
+    if version.is_err() {
+        return Err(status::Custom(Status::BadRequest, "Couldn't fetch latest version. Are you sure your platform is correct?".to_string()));
+    }
+
+    let version = version.unwrap();
+    Ok(version.version_string())
+}
+
+#[get("/latest/<platform>", rank=1)]
+pub fn get_latest(platform: String, _apikey: LicenseKey) -> Option<Redirect>
+{
+    None
+}
+
+#[get("/latest/<platform>", rank=2)]
+pub fn get_latest_sess(platform: String, _sess: SessionToken) -> Option<Redirect>
+{
+    None
+}
+
+#[post("/deploy/publish/<platform>/<version_s>")]
 pub fn enable_deployment(
     version_s: String,
     platform: String,
@@ -58,7 +100,7 @@ pub fn enable_deployment(
 
 
 /// Returns HTTP created with an integer id for the deployment.
-#[post("/new/<platform>/<version>", format="application/octet-stream", data="<update_package>")]
+#[post("/deploy/new/<platform>/<version>", format="application/octet-stream", data="<update_package>")]
 pub fn deploy(
     platform: String, 
     version: String,

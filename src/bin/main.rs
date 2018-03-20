@@ -10,8 +10,7 @@ use rocket_contrib::Template;
 use rocket::response::NamedFile;
 use std::path::Path;
 
-fn main() 
-{
+fn main() {
     use self::routes::*;
     println!("Checking directory structure...");
     check_dirs();
@@ -43,7 +42,8 @@ fn main()
         .mount("/meta", routes![meta::get_version, meta::get_latest_session,
                                 meta::get_latest, meta::changelogs, meta::get_latest_old_lin,
                                 meta::get_latest_old_win])
-        .mount("/deploy", routes![dist::deploy, dist::enable_deployment])
+        .mount("/dist", routes![dist::deploy, dist::enable_deployment, dist::get_version,
+                                dist::get_latest, dist::get_latest_sess, dist::version_legacy])
         .mount("/static", routes![files::static_asset])
         //.mount("/admin", routes![jobs::list_jobs, jobs::job_status])
         .mount("/", routes![favicon, verify_ssl])
@@ -52,14 +52,14 @@ fn main()
 }
 
 #[get("/.well-known/acme-challenge/cPN4-yAX5I19xOFv06bc92U8E6SFoxQ3S9Rroq7NhjY")]
-pub fn verify_ssl() -> String 
-{
-    String::from("cPN4-yAX5I19xOFv06bc92U8E6SFoxQ3S9Rroq7NhjY.zFScHQkirc75cfQ9qjihdABaD_u16l-THYgvENWR30k")
+pub fn verify_ssl() -> String {
+    String::from(
+        "cPN4-yAX5I19xOFv06bc92U8E6SFoxQ3S9Rroq7NhjY.zFScHQkirc75cfQ9qjihdABaD_u16l-THYgvENWR30k",
+    )
 }
 
 #[get("/favicon.ico")]
-fn favicon() -> Option<NamedFile>
-{
+fn favicon() -> Option<NamedFile> {
     NamedFile::open(Path::new("favicon.ico")).ok()
 }
 
@@ -73,7 +73,7 @@ fn check_dirs() {
     directories.push("live/videos/".to_string());
     directories.push("live/videos/thumbnails".to_string());
     directories.push("live/files/".to_string());
-    
+
     for dirstr in directories {
         let path: &Path = Path::new(&dirstr);
         if !path.exists() {
@@ -82,8 +82,7 @@ fn check_dirs() {
     }
 }
 
-fn start_job_juggler()
-{
+fn start_job_juggler() {
     use job_juggler::JobJuggler;
     use std::thread;
 
