@@ -40,8 +40,7 @@ fn main() {
                                   manage::request_auth_cookie, manage::request_auth_url,
                                   manage::base_redirect])
         .mount("/meta", routes![meta::get_version, meta::get_latest_session,
-                                meta::get_latest, meta::changelogs, meta::get_latest_old_lin,
-                                meta::get_latest_old_win])
+                                meta::get_latest, meta::changelogs])
         .mount("/dist", routes![dist::deploy, dist::enable_deployment, dist::get_version,
                                 dist::get_latest, dist::get_latest_sess, dist::version_legacy])
         .mount("/static", routes![files::static_asset])

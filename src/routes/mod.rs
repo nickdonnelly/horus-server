@@ -49,18 +49,4 @@ pub mod meta {
         use ::routes::dist;
         dist::get_latest(platform, conn, apikey)
     }
-
-    // This is for older versions that are pointing to the wrong
-    // endpoint.
-    #[get("/get_latestwin64")]
-    pub fn get_latest_old_win(_apikey: LicenseKey) -> Option<NamedFile> {
-        let pathstr = String::from(LATEST_PATH) + "win64.zip";
-        NamedFile::open(Path::new(&pathstr)).ok()
-    }
-
-    #[get("/get_latestlinux")]
-    pub fn get_latest_old_lin(_apikey: LicenseKey) -> Option<NamedFile> {
-        let pathstr = String::from(LATEST_PATH) + "linux.zip";
-        NamedFile::open(Path::new(&pathstr)).ok()
-    }
 }
