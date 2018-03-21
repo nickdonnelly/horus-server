@@ -11,6 +11,7 @@ use ::schema::horus_license_keys::dsl::*;
 use ::schema::horus_licenses::dsl::*;
 
 // TODO: Temporary - will be secured
+// Not currently mounted.
 #[post("/issue/<uid>")]
 pub fn issue(uid: i32) -> Json<(License, LicenseKey)> {
     Json(issue_license_with_key(uid, 3, 3).unwrap())

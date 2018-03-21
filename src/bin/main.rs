@@ -20,7 +20,7 @@ fn main() {
     rocket::ignite()
         .attach(Template::fairing())
         .mount("/user", routes![user::show, user::update])
-        .mount("/key", routes![key::validity_check, key::issue])
+        .mount("/key", routes![key::validity_check])
         .mount("/paste", routes![paste::new, paste::update, paste::list, 
                                  paste::delete_sessionless, paste::delete,
                                  paste::show])
