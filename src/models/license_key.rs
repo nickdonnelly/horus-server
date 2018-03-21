@@ -1,5 +1,6 @@
-use super::super::schema::horus_license_keys;
 use chrono::NaiveDate;
+
+use ::schema::horus_license_keys;
 
 #[derive(Insertable, Queryable, Serialize)]
 #[table_name = "horus_license_keys"]

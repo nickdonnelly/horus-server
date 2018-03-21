@@ -1,10 +1,10 @@
-use ::models::{HJob, LicenseKey, SessionToken, User};
-use ::DbConn;
-
 use diesel::prelude::*;
 use rocket::response::Failure;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
+
+use ::models::{HJob, LicenseKey, SessionToken, User};
+use ::DbConn;
 
 // NONE OF THESE ARE IMPLEMENTED
 #[get("/<_uid>")]

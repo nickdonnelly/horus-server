@@ -1,5 +1,4 @@
 /// API routes for handling keys.
-
 use diesel::{ self, prelude::* };
 use chrono::{Date, Duration, Local};
 use rand::{ self, Rng };

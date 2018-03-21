@@ -1,8 +1,8 @@
 use std::boxed::Box;
 
-use job_juggler::JobResult;
-
 use diesel::pg::PgConnection;
+
+use job_juggler::JobResult;
 
 pub trait LoggableJob {
     fn log(&mut self, s: &str);

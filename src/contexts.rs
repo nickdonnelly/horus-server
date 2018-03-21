@@ -1,4 +1,4 @@
-use super::models::{HFile, HImage, HPaste, HVideo};
+use ::models::{HFile, HImage, HPaste, HVideo};
 
 #[derive(Serialize)]
 pub struct ImageList {

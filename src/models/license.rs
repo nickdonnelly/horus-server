@@ -1,4 +1,4 @@
-use super::super::schema::horus_licenses;
+use ::schema::horus_licenses;
 
 #[derive(Insertable, Queryable, Serialize)]
 #[table_name = "horus_licenses"]

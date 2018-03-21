@@ -10,8 +10,8 @@ use rocket::response::{ status, Failure, Redirect };
 
 use ::{dbtools, DbConn};
 use ::schema::{ self, deployment_keys::dsl::* };
-use models::{ DeploymentKey, HorusVersion, JobPriority, LicenseKey, NewJob, SessionToken };
-use models::job_structures::{self, Deployment};
+use ::models::{ DeploymentKey, HorusVersion, JobPriority, LicenseKey, NewJob, SessionToken };
+use ::models::job_structures::{self, Deployment};
 use job_juggler;
 
 #[get("/version")]

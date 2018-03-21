@@ -1,5 +1,6 @@
-use super::super::schema::horus_pastes;
 use chrono::NaiveDateTime;
+
+use ::schema::horus_pastes;
 
 #[derive(AsChangeset, Identifiable, Serialize, Insertable, Queryable, Deserialize)]
 #[table_name = "horus_pastes"]

@@ -1,5 +1,5 @@
 use super::LicenseKey;
-use super::super::schema::deployment_keys;
+use ::schema::deployment_keys;
 
 #[derive(Insertable, Queryable, Serialize, Deserialize, AsChangeset, Debug)]
 #[table_name = "deployment_keys"]

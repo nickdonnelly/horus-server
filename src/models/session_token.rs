@@ -1,5 +1,6 @@
-use super::super::schema::session_tokens;
 use chrono::NaiveDateTime;
+
+use ::schema::session_tokens;
 
 #[derive(Identifiable, Insertable, Queryable, AsChangeset, Debug)]
 #[primary_key(uid)]

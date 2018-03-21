@@ -7,7 +7,7 @@ use diesel::row::Row;
 use diesel::sql_types::Integer;
 use diesel::deserialize::FromSqlRow;
 
-use super::super::schema::horus_jobs;
+use ::schema::horus_jobs;
 use super::User;
 
 #[repr(i16)]

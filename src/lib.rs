@@ -31,7 +31,7 @@ extern crate rocket_contrib;
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 
-pub mod schema; // Needed for diesel
+pub mod schema; 
 
 pub mod forms; // Modification forms for models
 pub mod models;

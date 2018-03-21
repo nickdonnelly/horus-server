@@ -1,4 +1,4 @@
-use super::super::schema::horus_users;
+use ::schema::horus_users;
 
 #[derive(Queryable, Identifiable, Associations, Insertable, Serialize, Deserialize)]
 #[table_name = "horus_users"]

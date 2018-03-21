@@ -1,14 +1,14 @@
 extern crate regex;
 
+use chrono::Local;
+use diesel::{ self, prelude::* };
+use self::regex::Regex;
+
 use ::models::{AuthToken, License, LicenseKey, SessionToken};
 use ::routes::manage::AuthRequest;
 use ::errors::AuthTokenError;
 use ::forms::UserForm;
 use ::dbtools;
-
-use chrono::Local;
-use diesel::{ self, prelude::* };
-use self::regex::Regex;
 
 // This file contains the implementations of fields like "email" and other fields that require thorough validation. Only definitions should go here, actual usage should be within new/update methods for any given controller.
 

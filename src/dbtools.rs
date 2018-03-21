@@ -7,13 +7,13 @@ use self::s3::bucket::Bucket;
 use self::s3::credentials::Credentials;
 use rocket::State;
 use rocket::request::Request;
-use ::{DbConn, Pool};
 use diesel::Connection; // Required for trait access to PgConnection
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 use {r2d2, rand};
-
 use rand::Rng;
+
+use ::{DbConn, Pool};
 
 const BUCKET: &'static str = "horuscdn";
 const REGION: &'static str = "eu-central-1";

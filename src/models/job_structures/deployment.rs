@@ -1,9 +1,10 @@
 use std::boxed::Box;
 
-use job_juggler::{ExecutableJob, JobResult, LoggableJob};
-
 use diesel::{ self, prelude::* };
 use diesel::pg::PgConnection;
+
+use job_juggler::{ExecutableJob, JobResult, LoggableJob};
+
 
 #[derive(Serialize, Deserialize, LoggableJob)]
 #[LogName = "log_data"]

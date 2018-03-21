@@ -1,5 +1,6 @@
-use super::super::schema::horus_files;
 use chrono::NaiveDateTime;
+
+use ::schema::horus_files;
 
 #[derive(Queryable, Serialize, Identifiable, Insertable, AsChangeset)]
 #[table_name = "horus_files"]

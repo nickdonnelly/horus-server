@@ -1,5 +1,6 @@
-use super::super::schema::horus_videos;
 use chrono::NaiveDateTime;
+
+use ::schema::horus_videos;
 
 #[derive(AsChangeset, Queryable, Serialize, Identifiable, Insertable)]
 #[table_name = "horus_videos"]

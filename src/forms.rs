@@ -1,5 +1,6 @@
-use ::schema::*;
 use chrono::NaiveDateTime;
+
+use ::schema::*;
 
 #[derive(Deserialize, Serialize)]
 //#[table_name="horus_images"]

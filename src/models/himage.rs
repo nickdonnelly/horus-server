@@ -1,5 +1,6 @@
-use super::super::schema::horus_images;
 use chrono::NaiveDateTime;
+
+use ::schema::horus_images;
 
 #[derive(AsChangeset, Queryable, Serialize, Identifiable, Insertable)]
 #[table_name = "horus_images"]

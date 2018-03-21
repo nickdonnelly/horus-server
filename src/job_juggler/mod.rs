@@ -8,8 +8,8 @@ use diesel::prelude::*;
 use diesel::pg::PgConnection;
 
 use { dbtools, schema };
-use models::{HJob, JobPriority, JobStatus, NewJob};
-use schema::horus_jobs::dsl::*;
+use ::models::{HJob, JobPriority, JobStatus, NewJob};
+use ::schema::horus_jobs::dsl::*;
 
 mod job_types;
 pub use self::job_types::{ExecutableJob, LoggableJob};

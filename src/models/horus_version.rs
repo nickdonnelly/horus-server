@@ -1,5 +1,6 @@
-use super::super::schema::horus_versions;
 use chrono::NaiveDateTime;
+
+use ::schema::horus_versions;
 
 #[derive(Identifiable, Queryable, Serialize, Deserialize, AsChangeset)]
 #[table_name = "horus_versions"]

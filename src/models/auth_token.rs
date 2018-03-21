@@ -1,5 +1,6 @@
-use super::super::schema::auth_tokens;
 use chrono::NaiveDateTime;
+
+use ::schema::auth_tokens;
 
 #[derive(Identifiable, Insertable, Queryable, AsChangeset)]
 #[primary_key(uid)]
