@@ -1,12 +1,11 @@
 /// API routes for handling keys.
 use diesel::{ self, prelude::* };
-use chrono::{Date, Duration, Local};
+use chrono::{Date, NaiveDate, Duration, Local};
 use rand::{ self, Rng };
 use rocket_contrib::Json;
 
 use ::DbConn;
 use ::schema;
-use ::dbtools;
 use ::models::{License, LicenseKey};
 use ::schema::horus_license_keys::dsl::*;
 use ::schema::horus_licenses::dsl::*;
@@ -17,21 +16,16 @@ pub fn issue(uid: i32) -> Json<(License, LicenseKey)> {
     Json(issue_license_with_key(uid, 3, 3).unwrap())
 }
 
-// TODO: Check if the key is expired before returning
-pub fn key_valid(keystr: &str) -> bool {
-    let conn = dbtools::get_db_conn_requestless().unwrap();
-
-    let _key: Result<LicenseKey, diesel::result::Error> = horus_license_keys
-        .filter(schema::horus_license_keys::dsl::key.eq(keystr))
-        .first(&conn);
-    return _key.is_err();
-}
-
 /// Endpoint: Check API Key
 #[get("/<apikey>/validity-check")]
 pub fn validity_check(apikey: String, conn: DbConn) -> Result<Json<LicenseKey>, String> {
+    use schema::horus_license_keys::dsl::*;
+
+    let today: NaiveDate = Local::today().naive_local();
+
     let _key = horus_license_keys
-        .filter(schema::horus_license_keys::dsl::key.eq(&apikey))
+        .filter(key.eq(&apikey))
+        .filter(valid_until.ge(&today))
         .first(&*conn);
 
     if _key.is_err() {
