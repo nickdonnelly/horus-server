@@ -1,15 +1,13 @@
-extern crate diesel;
-extern crate rocket;
-
-use super::super::DbConn;
-use diesel::prelude::*;
-use super::super::models::{LicenseKey, User};
-use super::super::forms::UserForm;
-use super::super::schema::horus_users::dsl::*;
-use self::rocket::response::Failure;
-use self::rocket::response::status;
-use self::rocket::http::Status;
+use diesel::{ self, prelude::* };
+use rocket::response::Failure;
+use rocket::response::status;
+use rocket::http::Status;
 use rocket_contrib::Json;
+
+use ::DbConn;
+use ::models::{LicenseKey, User};
+use ::forms::UserForm;
+use ::schema::horus_users::dsl::*;
 
 // Option usage allows us to automatically 404 if the record is not found
 // by just returning "None".

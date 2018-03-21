@@ -1,16 +1,16 @@
-extern crate diesel;
 extern crate time;
 
-use self::diesel::prelude::*;
-use super::super::DbConn;
-use super::super::models::*;
-use super::super::contexts::{FileList, ImageList, PasteList, VideoList};
-use super::super::contexts::{ManageImage, ManagePaste, ManageVideo};
-use super::super::schema;
-use super::super::errors::AuthTokenError;
+use diesel::{ self, prelude::* };
 use rocket::response::{status, Failure, Redirect};
 use rocket::http::{Cookie, Cookies, Status};
 use rocket_contrib::Template;
+
+use ::DbConn;
+use ::models::{ LicenseKey, SessionToken, AuthToken, User, HImage, HVideo, HPaste, HFile };
+use ::contexts::{FileList, ImageList, PasteList, VideoList};
+use ::contexts::{ManageImage, ManagePaste, ManageVideo};
+use ::schema;
+use ::errors::AuthTokenError;
 
 #[derive(FromForm)]
 pub struct AuthRequest {

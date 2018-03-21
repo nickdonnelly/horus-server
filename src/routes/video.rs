@@ -1,22 +1,21 @@
 extern crate base64;
-extern crate chrono;
-extern crate diesel;
 
-use self::chrono::NaiveDateTime;
-use diesel::prelude::*;
-use super::super::DbConn;
-use super::super::dbtools;
-use super::super::{contexts, conv};
-use super::super::models::{HVideo, LicenseKey, SessionToken};
-use super::super::forms::HVideoChangesetForm;
+use std::io::prelude::*;
+use std::path::Path;
+
+use chrono::{ Local, NaiveDateTime };
+use diesel::{ self, prelude::* };
 use rocket::response::{status, Failure, NamedFile};
 use rocket::data::Data;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
-use self::chrono::Local;
 
-use std::io::prelude::*;
-use std::path::Path;
+use ::DbConn;
+use ::dbtools;
+use ::{contexts, conv};
+use ::models::{HVideo, LicenseKey, SessionToken};
+use ::forms::HVideoChangesetForm;
+
 
 fn new_vid(
     vid_data: Data,

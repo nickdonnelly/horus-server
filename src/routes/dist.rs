@@ -1,22 +1,16 @@
 extern crate bcrypt;
-extern crate diesel;
-extern crate rand;
 
-use std;
-
-use diesel::prelude::*;
-use super::super::{dbtools, DbConn};
-use super::super::schema;
-use super::super::schema::deployment_keys::dsl::*;
+use diesel::{ self, prelude::* };
 use self::bcrypt::{hash, verify, DEFAULT_COST};
-use self::rand::{Rng, ThreadRng};
+use rand::{ self, Rng };
 
 use rocket::http::Status;
 use rocket::data::Data;
-use rocket::response::{status, Failure, Redirect};
+use rocket::response::{ status, Failure, Redirect };
 
-use models::{DeploymentKey, HorusVersion, JobPriority, LicenseKey, NewHorusVersion, NewJob,
-             SessionToken};
+use ::{dbtools, DbConn};
+use ::schema::{ self, deployment_keys::dsl::* };
+use models::{ DeploymentKey, HorusVersion, JobPriority, LicenseKey, NewJob, SessionToken };
 use models::job_structures::{self, Deployment};
 use job_juggler;
 
@@ -136,7 +130,6 @@ pub fn deploy(
     depkey: DeploymentKey,
 ) -> Result<status::Custom<String>, Failure> {
     use std::io::Read;
-    use schema::horus_versions;
 
     let file_data: Vec<u8> = update_package.open().bytes().map(|x| x.unwrap()).collect();
 

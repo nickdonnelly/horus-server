@@ -7,9 +7,9 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 
-use {dbtools, schema, DbConn};
-use schema::horus_jobs::dsl::*;
+use { dbtools, schema };
 use models::{HJob, JobPriority, JobStatus, NewJob};
+use schema::horus_jobs::dsl::*;
 
 mod job_types;
 pub use self::job_types::{ExecutableJob, LoggableJob};
@@ -184,7 +184,7 @@ pub fn enqueue_job(job: NewJob) -> Result<(), JobJugglerError> {
     }
 
     // Spin up separate thread to do the work of moving the data.
-    let child = thread::spawn(move || {
+    thread::spawn(move || {
         thread::sleep(time::Duration::from_millis(3000));
         let mut db_obj = initial_insert_result.unwrap();
         db_obj.job_data = job.job_data;

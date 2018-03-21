@@ -1,22 +1,20 @@
-extern crate chrono;
-extern crate diesel;
+use std::path::{Path, PathBuf};
+use std::io::Read;
 
-use self::chrono::NaiveDateTime;
-use diesel::prelude::*;
+use diesel;
+use chrono::{ Local, NaiveDateTime };
+#[allow(unused_imports)] use diesel::prelude::*;
 use rocket::request::Request;
 use rocket::response::{status, Failure, NamedFile, Responder, Response};
 use rocket::http::{ContentType, Status};
 use rocket::data::Data;
 use rocket_contrib::{Json, Template};
-use super::super::models::{HFile, LicenseKey, SessionToken};
-use super::super::DbConn;
-use super::super::{conv, dbtools};
-use super::super::fields::FileName;
-use self::chrono::Local;
 
-use std::path::{Path, PathBuf};
-use std::io::Read;
-use std::io::prelude::*;
+use ::models::{HFile, LicenseKey, SessionToken};
+use ::DbConn;
+use ::{conv, dbtools};
+use ::fields::FileName;
+
 
 pub struct DownloadableFile {
     pub afile: NamedFile,
@@ -35,8 +33,7 @@ pub fn get(file_id: String, conn: DbConn) -> Option<Template> {
     let mut hfile = hfile.unwrap();
     // TODO, make this an async javascript change, visiting the page doesn't imply they click dl.
     hfile.download_counter = Some(hfile.download_counter.unwrap() + 1);
-    hfile.save_changes::<HFile>(&*conn); // ignore the warning coming from this.
-                                         // Success is not critical
+    hfile.save_changes::<HFile>(&*conn).unwrap();
 
     Some(Template::render("show_file", &hfile))
 }

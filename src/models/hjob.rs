@@ -2,7 +2,6 @@ use std::boxed::Box;
 use std::error::Error;
 
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
 use diesel::pg::Pg;
 use diesel::row::Row;
 use diesel::sql_types::Integer;

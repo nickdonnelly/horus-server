@@ -1,19 +1,16 @@
 /// API routes for handling keys.
-extern crate chrono;
-extern crate diesel;
-extern crate rand;
-extern crate rocket_contrib;
 
-use diesel::prelude::*;
-use super::super::DbConn;
-use super::super::schema;
-use super::super::dbtools;
-use super::super::schema::horus_license_keys::dsl::*;
-use super::super::schema::horus_licenses::dsl::*;
-use super::super::models::{License, LicenseKey};
-use self::chrono::{Date, Duration, Local};
-use self::rand::Rng;
-use self::rocket_contrib::Json;
+use diesel::{ self, prelude::* };
+use chrono::{Date, Duration, Local};
+use rand::{ self, Rng };
+use rocket_contrib::Json;
+
+use ::DbConn;
+use ::schema;
+use ::dbtools;
+use ::models::{License, LicenseKey};
+use ::schema::horus_license_keys::dsl::*;
+use ::schema::horus_licenses::dsl::*;
 
 // TODO: Temporary - will be secured
 #[post("/issue/<uid>")]

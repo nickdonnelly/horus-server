@@ -12,6 +12,7 @@ extern crate diesel_infer_schema;
 extern crate horus_server_derive;
 
 extern crate bincode;
+extern crate rand;
 extern crate serde;
 #[allow(unused_extern_crates)]
 #[macro_use]

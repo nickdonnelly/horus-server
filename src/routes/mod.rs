@@ -12,15 +12,13 @@ pub mod key;
 pub mod dist;
 
 pub mod meta {
-    use ::models::{LicenseKey, SessionToken};
-    use ::DbConn;
-    use rocket_contrib::Template;
-    use rocket::response::{ status, Redirect, Failure, NamedFile };
-    use std::path::Path;
     use std::collections::HashMap;
 
-    const VERSION: &'static str = "2.4";
-    const LATEST_PATH: &'static str = "live/binaries/";
+    use rocket_contrib::Template;
+    use rocket::response::{ status, Redirect, Failure };
+
+    use ::models::{LicenseKey, SessionToken};
+    use ::DbConn;
 
     #[get("/version")]
     pub fn get_version(conn: DbConn) -> Result<String, status::Custom<String>> {

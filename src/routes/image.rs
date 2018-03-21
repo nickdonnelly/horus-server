@@ -1,23 +1,21 @@
 extern crate base64;
-extern crate chrono;
-extern crate diesel;
 
-use self::chrono::NaiveDateTime;
-use diesel::prelude::*;
-use super::super::DbConn;
-use super::super::dbtools;
-use super::super::{contexts, conv};
-use super::super::models::{HImage, LicenseKey, SessionToken};
-use super::super::forms::HImageChangesetForm;
+use std::path::Path;
+use std::io::Read;
+
+use chrono::{ Local, NaiveDateTime };
+#[allow(unused_imports)] use diesel::{ self, prelude::* };
 use rocket::response::{status, Failure, NamedFile};
 use rocket::data::Data;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
-use self::chrono::Local;
 
-use std::path::Path;
-use std::io::Read;
-use std::io::prelude::*;
+use ::DbConn;
+use ::dbtools;
+use ::{contexts, conv};
+use ::models::{HImage, LicenseKey, SessionToken};
+use ::forms::HImageChangesetForm;
+
 
 #[get("/<image_id>")]
 pub fn show(image_id: String, conn: DbConn) -> Option<Template> {

@@ -1,9 +1,8 @@
-use super::super::models::{HJob, JobStatus, LicenseKey, SessionToken, User};
-use super::super::DbConn;
-use super::super::schema;
+use ::models::{HJob, LicenseKey, SessionToken, User};
+use ::DbConn;
 
 use diesel::prelude::*;
-use rocket::response::{status, Failure};
+use rocket::response::Failure;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
 

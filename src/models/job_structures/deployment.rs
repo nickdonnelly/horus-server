@@ -1,12 +1,8 @@
-extern crate diesel;
-
 use std::boxed::Box;
 
 use job_juggler::{ExecutableJob, JobResult, LoggableJob};
-use models::hjob::HJob;
-use schema::horus_versions::dsl::*;
 
-use diesel::prelude::*;
+use diesel::{ self, prelude::* };
 use diesel::pg::PgConnection;
 
 #[derive(Serialize, Deserialize, LoggableJob)]
@@ -36,7 +32,7 @@ impl ExecutableJob for Deployment {
         use dbtools;
         use models::{HorusVersion, NewHorusVersion};
 
-        let mut tl: String = String::new();
+        let mut tl: String;
 
         // Get the filename and path details
         let s3_fname = &self.platform_string.clone();
@@ -47,7 +43,7 @@ impl ExecutableJob for Deployment {
             "Sending package version {} for {} to S3",
             &self.version_string, &self.platform_string
         );
-        &self.log(tl.as_str());
+        &self.log(&tl);
 
         let s3_result =
             dbtools::private_resource_to_s3_named(&s3_fname, &s3_path, &self.deployment_package);
@@ -78,7 +74,7 @@ impl ExecutableJob for Deployment {
 
         if db_result.is_err() {
             tl = format!("{}", db_result.err().unwrap());
-            &self.log(tl.as_str());
+            &self.log(&tl);
             &self.log("Couldn't insert into database...aborting deployment.");
             (Box::new(self), JobResult::Failed)
         } else {
@@ -87,7 +83,7 @@ impl ExecutableJob for Deployment {
                 "Deployment of version {} for platform {} complete.",
                 self.version_string, self.platform_string
             );
-            &self.log(tl.as_str());
+            &self.log(&tl);
             (Box::new(self), JobResult::Complete)
         }
     }

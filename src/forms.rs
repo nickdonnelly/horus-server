@@ -1,7 +1,5 @@
-extern crate chrono;
-
-use super::schema::*;
-use self::chrono::NaiveDateTime;
+use ::schema::*;
+use chrono::NaiveDateTime;
 
 #[derive(Deserialize, Serialize)]
 //#[table_name="horus_images"]

@@ -1,5 +1,3 @@
-extern crate r2d2;
-extern crate rand;
 extern crate s3;
 
 use std::process;
@@ -9,12 +7,13 @@ use self::s3::bucket::Bucket;
 use self::s3::credentials::Credentials;
 use rocket::State;
 use rocket::request::Request;
-use super::{DbConn, Pool};
+use ::{DbConn, Pool};
 use diesel::Connection; // Required for trait access to PgConnection
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
+use {r2d2, rand};
 
-use dbtools::rand::Rng;
+use rand::Rng;
 
 const BUCKET: &'static str = "horuscdn";
 const REGION: &'static str = "eu-central-1";

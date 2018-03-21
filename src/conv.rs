@@ -1,18 +1,16 @@
 /// This file holds conversions for various types. Primarily,
 /// it is here for request guards.
-extern crate chrono;
 
+use chrono::{DateTime, Duration, Local, NaiveDateTime};
+use diesel::prelude::*;
 use rocket::{Outcome, State};
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
-use self::chrono::{DateTime, Duration, Local, NaiveDateTime};
-use super::models::{DeploymentKey, HPaste, LicenseKey, SessionToken};
-use super::forms::HNewPasteForm;
-use super::fields::FileName;
-use super::Pool;
-use super::dbtools;
-use super::{fields, DbConn};
-use diesel::prelude::*;
+
+use ::models::{DeploymentKey, HPaste, LicenseKey, SessionToken};
+use ::forms::HNewPasteForm;
+use ::{ Pool, dbtools };
+use ::{fields::{ self, FileName }, DbConn};
 
 /// Returns a NaiveDateTime given a duration consisting of a string
 /// that contains the `type` (`days`, `hours`, or `minutes`) and a value

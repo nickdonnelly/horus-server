@@ -1,4 +1,4 @@
-use bincode::{self, deserialize, serialize, Config};
+use bincode::{self, Config};
 use serde::{Deserialize, Serialize};
 
 mod deployment;

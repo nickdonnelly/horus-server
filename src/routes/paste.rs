@@ -1,15 +1,14 @@
-extern crate diesel; // this might not even be necessary but im not deleting it
-
-use self::diesel::prelude::*;
-use super::super::DbConn;
-use super::super::{contexts, conv};
+use diesel::{ self, prelude::* };
 use rocket::response::{status, Failure};
 use rocket::http::Status;
 use rocket_contrib::Json;
-use schema::horus_pastes::dsl::*;
-use super::super::models::{HPaste, LicenseKey, SessionToken};
-use super::super::forms::{HNewPasteForm, HPasteChangesetForm};
 use rocket_contrib::Template;
+
+use ::DbConn;
+use ::{contexts, conv};
+use ::models::{HPaste, LicenseKey, SessionToken};
+use ::forms::{HNewPasteForm, HPasteChangesetForm};
+use ::schema::horus_pastes::dsl::*;
 
 #[get("/<paste_id>")]
 pub fn show(paste_id: String, conn: DbConn) -> Option<Template> {
