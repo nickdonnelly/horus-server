@@ -131,6 +131,11 @@ pub fn deploy(
 ) -> Result<status::Custom<String>, Failure> {
     use std::io::Read;
 
+    // not more than xxx.xxx.xxx not less than x.x.x
+    if version.len() > 11 || version.len() < 5 {
+        return Err(Failure(Status::BadRequest));
+    }
+
     let file_data: Vec<u8> = update_package.open().bytes().map(|x| x.unwrap()).collect();
 
     let deployment_data = Deployment::new(file_data, depkey.hash(), version, platform.clone());
