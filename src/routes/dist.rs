@@ -81,7 +81,8 @@ fn _get_latest(plat: String, conn: DbConn) -> Result<Redirect, Failure>
     if url.is_err() {
         Err(Failure(Status::ServiceUnavailable))
     } else {
-        Ok(Redirect::to(url.unwrap().as_str()))
+        let url = url.unwrap();
+        Ok(Redirect::to(&url))
     }
 }
 

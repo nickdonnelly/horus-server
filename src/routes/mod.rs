@@ -12,9 +12,10 @@ pub mod key;
 pub mod dist;
 
 pub mod meta {
-    use super::super::models::{LicenseKey, SessionToken};
+    use ::models::{LicenseKey, SessionToken};
+    use ::DbConn;
     use rocket_contrib::Template;
-    use rocket::response::NamedFile;
+    use rocket::response::{ status, Redirect, Failure, NamedFile };
     use std::path::Path;
     use std::collections::HashMap;
 
@@ -22,8 +23,9 @@ pub mod meta {
     const LATEST_PATH: &'static str = "live/binaries/";
 
     #[get("/version")]
-    pub fn get_version() -> String {
-        String::from(VERSION)
+    pub fn get_version(conn: DbConn) -> Result<String, status::Custom<String>> {
+        use ::routes::dist;
+        dist::get_version(Some("win64".to_string()), conn)
     }
 
     #[get("/changelogs")]
@@ -36,25 +38,16 @@ pub mod meta {
     }
 
     #[get("/latest/<platform>", rank = 2)]
-    pub fn get_latest_session(platform: String, _session: SessionToken) -> Option<NamedFile> {
-        let pathstr = match platform.to_lowercase().as_str() {
-            "linux" => String::from(LATEST_PATH) + "linux.zip",
-            "win64" => String::from(LATEST_PATH) + "win64.zip",
-            _ => String::new(),
-        };
-
-        NamedFile::open(Path::new(&pathstr)).ok()
+    pub fn get_latest_session(platform: String, conn: DbConn, session: SessionToken) -> Result<Redirect, Failure> {
+        use ::routes::dist;
+        
+        dist::get_latest_sess(platform, conn, session)
     }
 
     #[get("/latest/<platform>", rank = 1)]
-    pub fn get_latest(platform: String, _apikey: LicenseKey) -> Option<NamedFile> {
-        let pathstr = match platform.to_lowercase().as_str() {
-            "linux" => String::from(LATEST_PATH) + "linux.zip",
-            "win64" => String::from(LATEST_PATH) + "win64.zip",
-            _ => String::new(),
-        };
-
-        NamedFile::open(Path::new(&pathstr)).ok()
+    pub fn get_latest(platform: String, conn: DbConn, apikey: LicenseKey) -> Result<Redirect, Failure> {
+        use ::routes::dist;
+        dist::get_latest(platform, conn, apikey)
     }
 
     // This is for older versions that are pointing to the wrong

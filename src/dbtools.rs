@@ -161,13 +161,16 @@ pub fn get_s3_presigned_url(path: String) -> Result<String, String> {
     let mut url_base = "s3://".to_string() + BUCKET;
     url_base += path.as_str(); 
 
-    let url = Command::new("aws s3 presign")
+    let url = Command::new("aws")
+        .arg("s3")
+        .arg("presign")
         .arg("--expires-in")
         .arg("60") // seconds.
         .arg(url_base)
         .output();
 
     if url.is_err() {
+        eprintln!("Couldn't get a presigned download URL: {}", url.err().unwrap());
         Err("Couldn't get a presigned download URL.".to_string())
     } else {
         let url = url.unwrap();
