@@ -10,7 +10,8 @@ use rocket_contrib::Template;
 use rocket::response::NamedFile;
 use std::path::Path;
 
-fn main() {
+fn main()
+{
     use self::routes::*;
     println!("Checking directory structure...");
     check_dirs();
@@ -28,12 +29,12 @@ fn main() {
                                  image::update, image::delete, image::delete_sessionless,
                                  image::list, image::full, image::thumb])
         .mount("/video", routes![video::new, video::new_titled, video::show, video::delete,
-                                 video::update, video::delete_sessionless, video::full, 
+                                 video::update, video::delete_sessionless, video::full,
                                  video::list, video::new_exp])
         .mount("/file", routes![files::get, files::delete, files::delete_sessionless,
                                 files::list, files::new, files::new_exp])
         .mount("/manage", routes![manage::image, manage::video, manage::paste,
-                                  manage::my_images, manage::my_images_pageless, 
+                                  manage::my_images, manage::my_images_pageless,
                                   manage::my_videos, manage::my_videos_pageless,
                                   manage::my_files, manage::my_files_pageless,
                                   manage::my_pastes, manage::my_pastes_pageless,
@@ -51,18 +52,21 @@ fn main() {
 }
 
 #[get("/.well-known/acme-challenge/cPN4-yAX5I19xOFv06bc92U8E6SFoxQ3S9Rroq7NhjY")]
-pub fn verify_ssl() -> String {
+pub fn verify_ssl() -> String
+{
     String::from(
         "cPN4-yAX5I19xOFv06bc92U8E6SFoxQ3S9Rroq7NhjY.zFScHQkirc75cfQ9qjihdABaD_u16l-THYgvENWR30k",
     )
 }
 
 #[get("/favicon.ico")]
-fn favicon() -> Option<NamedFile> {
+fn favicon() -> Option<NamedFile>
+{
     NamedFile::open(Path::new("favicon.ico")).ok()
 }
 
-fn check_dirs() {
+fn check_dirs()
+{
     use std::fs;
     use std::path::Path;
 
@@ -81,7 +85,8 @@ fn check_dirs() {
     }
 }
 
-fn start_job_juggler() {
+fn start_job_juggler()
+{
     use job_juggler::JobJuggler;
     use std::thread;
 

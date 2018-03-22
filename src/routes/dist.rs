@@ -1,27 +1,29 @@
 extern crate bcrypt;
 
-use diesel::{ self, prelude::* };
+use diesel::{self, prelude::*};
 use self::bcrypt::{hash, verify, DEFAULT_COST};
-use rand::{ self, Rng };
+use rand::{self, Rng};
 
 use rocket::http::Status;
 use rocket::data::Data;
-use rocket::response::{ status, Failure, Redirect };
+use rocket::response::{status, Failure, Redirect};
 
-use ::{dbtools, DbConn};
-use ::schema::{ self, deployment_keys::dsl::* };
-use ::models::{ DeploymentKey, HorusVersion, JobPriority, LicenseKey, NewJob, SessionToken };
-use ::models::job_structures::{self, Deployment};
+use {dbtools, DbConn};
+use schema::{self, deployment_keys::dsl::*};
+use models::{DeploymentKey, HorusVersion, JobPriority, LicenseKey, NewJob, SessionToken};
+use models::job_structures::{self, Deployment};
 use job_juggler;
 
 #[get("/version")]
-pub fn version_legacy() -> Redirect {
+pub fn version_legacy() -> Redirect
+{
     Redirect::to("/dist/version/win64")
 }
 
 #[get("/version/<plat>")]
 /// If no platform is given, it is assumed to be win64 just for compatability with older versions.
-pub fn get_version(plat: Option<String>, conn: DbConn) -> Result<String, status::Custom<String>> {
+pub fn get_version(plat: Option<String>, conn: DbConn) -> Result<String, status::Custom<String>>
+{
     use schema::horus_versions::dsl::*;
 
     let plat = if plat.is_none() {
@@ -47,28 +49,31 @@ pub fn get_version(plat: Option<String>, conn: DbConn) -> Result<String, status:
 }
 
 #[get("/latest/<plat>", rank = 1)]
-pub fn get_latest(plat: String, conn: DbConn, _apikey: LicenseKey) -> Result<Redirect, Failure> {
-
+pub fn get_latest(plat: String, conn: DbConn, _apikey: LicenseKey) -> Result<Redirect, Failure>
+{
     _get_latest(plat, conn)
 }
 
 #[get("/latest/<plat>", rank = 2)]
-pub fn get_latest_sess(plat: String, conn: DbConn, _sess: SessionToken) -> Result<Redirect, Failure> {
+pub fn get_latest_sess(plat: String, conn: DbConn, _sess: SessionToken)
+    -> Result<Redirect, Failure>
+{
     _get_latest(plat, conn)
 }
 
 fn _get_latest(plat: String, conn: DbConn) -> Result<Redirect, Failure>
-{    
+{
     use schema::horus_versions::dsl::*;
 
-    let ver = horus_versions.filter(platform.eq(plat))
+    let ver = horus_versions
+        .filter(platform.eq(plat))
         .order(deploy_timestamp.desc())
         .first::<HorusVersion>(&*conn);
 
     if ver.is_err() {
         return Err(Failure(Status::NotFound));
     }
-    
+
     let ver = ver.unwrap();
     let url = dbtools::get_s3_presigned_url(ver.aws_path());
 
@@ -86,7 +91,8 @@ pub fn enable_deployment(
     platform: String,
     conn: DbConn,
     depkey: DeploymentKey,
-) -> Result<status::Custom<()>, Failure> {
+) -> Result<status::Custom<()>, Failure>
+{
     use schema::horus_versions;
     // Verify key is the one used to deploy originally.
     let dbobj = horus_versions::dsl::horus_versions
@@ -128,10 +134,12 @@ pub fn deploy(
     update_package: Data,
     lkey: LicenseKey,
     depkey: DeploymentKey,
-) -> Result<status::Custom<String>, Failure> {
+) -> Result<status::Custom<String>, Failure>
+{
     use std::io::Read;
 
     // not more than xxx.xxx.xxx not less than x.x.x
+    // TODO: Regex this.
     if version.len() > 11 || version.len() < 5 {
         return Err(Failure(Status::BadRequest));
     }
@@ -168,7 +176,8 @@ pub fn verify_key(
     lkey: LicenseKey,
     depkey: DeploymentKey,
     deployment_key: String,
-) -> Result<DeploymentKey, ()> {
+) -> Result<DeploymentKey, ()>
+{
     let key_hash_valid = verify(&deployment_key, &depkey.hash()).unwrap();
     if !key_hash_valid {
         return Err(());
@@ -195,7 +204,8 @@ pub fn verify_key(
 /// Issue a deployment key.
 /// Returns a tuple containing a plaintext deployment key and its corresponding
 /// database object.
-pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey), ()> {
+pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey), ()>
+{
     if l_key.privilege_level.is_none() {
         return Err(());
     }
@@ -229,5 +239,5 @@ pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey)
     let dep_key_result = dep_key_result.unwrap();
 
     // Return the actual db object, not the one we made
-   Ok((String::from(random_key), dep_key_result))
+    Ok((String::from(random_key), dep_key_result))
 }

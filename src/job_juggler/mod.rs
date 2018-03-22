@@ -7,38 +7,44 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 
-use { dbtools, schema };
-use ::models::{HJob, JobPriority, JobStatus, NewJob};
-use ::schema::horus_jobs::dsl::*;
+use {dbtools, schema};
+use models::{HJob, JobPriority, JobStatus, NewJob};
+use schema::horus_jobs::dsl::*;
 
 mod job_types;
 pub use self::job_types::{ExecutableJob, LoggableJob};
 
 #[derive(Debug)]
-pub enum JobResult {
+pub enum JobResult
+{
     Complete,
     Failed,
 }
 
-pub struct JobJuggler {
+pub struct JobJuggler
+{
     connection: PgConnection,
     job_queue: VecDeque<HJob>,
 }
 
 #[derive(Debug)]
-pub struct JobJugglerError {
+pub struct JobJugglerError
+{
     desc: String,
 }
 
-impl JobJuggler {
-    pub fn new() -> Self {
+impl JobJuggler
+{
+    pub fn new() -> Self
+    {
         JobJuggler {
             connection: dbtools::get_db_conn_requestless().unwrap(),
             job_queue: VecDeque::new(),
         }
     }
 
-    pub fn initialize(&mut self) -> Result<(), JobJugglerError> {
+    pub fn initialize(&mut self) -> Result<(), JobJugglerError>
+    {
         // Gets a max of 4 pending jobs (some of them have large amounts of data,
         // so we don't want to store too much in ram) and puts them into the queue.
         // TODO: Automatically mark jobs that are "running" as failed - again see
@@ -79,7 +85,8 @@ impl JobJuggler {
         Ok(())
     }
 
-    pub fn juggle(mut self) -> ! {
+    pub fn juggle(mut self) -> !
+    {
         use std::time::Duration;
         // Reset status of queued jobs
         ctrlc::set_handler(|| {
@@ -121,7 +128,8 @@ impl JobJuggler {
         }
     }
 
-    fn check_for_new_job(&mut self) {
+    fn check_for_new_job(&mut self)
+    {
         let new_job: Result<HJob, _> = horus_jobs
             .filter(job_status.eq(JobStatus::Waiting as i32))
             .filter(priority.ne(JobPriority::DoNotProcess as i32))
@@ -143,7 +151,8 @@ impl JobJuggler {
     }
 
     /// Resets all jobs to waiting status in the event of SIGTERM
-    fn shutdown() {
+    fn shutdown()
+    {
         let conn = dbtools::get_db_conn_requestless().unwrap();
         diesel::update(horus_jobs.filter(job_status.eq(JobStatus::Queued as i32)))
             .set(job_status.eq(JobStatus::Waiting as i32))
@@ -151,7 +160,8 @@ impl JobJuggler {
             .unwrap();
     }
 
-    fn match_job_type(job: HJob) -> impl ExecutableJob + LoggableJob {
+    fn match_job_type(job: HJob) -> impl ExecutableJob + LoggableJob
+    {
         use models::job_structures::*;
 
         let d = job.job_data.unwrap();
@@ -167,7 +177,8 @@ impl JobJuggler {
 /// then asynchronously uploads the data of the job, so you can
 /// use this in a request to make sure the job gets queued without
 /// waiting for the data to be sent to the database.
-pub fn enqueue_job(job: NewJob) -> Result<(), JobJugglerError> {
+pub fn enqueue_job(job: NewJob) -> Result<(), JobJugglerError>
+{
     use schema::horus_jobs::dsl::*;
 
     let conn = dbtools::get_db_conn_requestless().unwrap();
@@ -213,14 +224,18 @@ pub fn enqueue_job(job: NewJob) -> Result<(), JobJugglerError> {
     Ok(())
 }
 
-impl fmt::Display for JobJugglerError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl fmt::Display for JobJugglerError
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+    {
         write!(f, "{}", self.desc)
     }
 }
 
-impl JobJugglerError {
-    pub fn new(d: String) -> Self {
+impl JobJugglerError
+{
+    pub fn new(d: String) -> Self
+    {
         JobJugglerError { desc: d }
     }
 }

@@ -18,7 +18,7 @@ pub use self::session_token::SessionToken;
 pub use self::auth_token::AuthToken;
 pub use self::license::License;
 pub use self::license_key::LicenseKey;
-pub use self::user::User;
+pub use self::user::{PublicUser, User};
 pub use self::himage::HImage;
 pub use self::hvideo::HVideo;
 pub use self::hpaste::HPaste;

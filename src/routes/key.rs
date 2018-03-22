@@ -1,25 +1,27 @@
 /// API routes for handling keys.
-use diesel::{ self, prelude::* };
-use chrono::{Date, NaiveDate, Duration, Local};
-use rand::{ self, Rng };
+use diesel::{self, prelude::*};
+use chrono::{Date, Duration, Local, NaiveDate};
+use rand::{self, Rng};
 use rocket_contrib::Json;
 
-use ::DbConn;
-use ::schema;
-use ::models::{License, LicenseKey};
-use ::schema::horus_license_keys::dsl::*;
-use ::schema::horus_licenses::dsl::*;
+use DbConn;
+use schema;
+use models::{License, LicenseKey};
+use schema::horus_license_keys::dsl::*;
+use schema::horus_licenses::dsl::*;
 
 // TODO: Temporary - will be secured
 // Not currently mounted.
 #[post("/issue/<uid>")]
-pub fn issue(uid: i32) -> Json<(License, LicenseKey)> {
+pub fn issue(uid: i32) -> Json<(License, LicenseKey)>
+{
     Json(issue_license_with_key(uid, 3, 3).unwrap())
 }
 
 /// Endpoint: Check API Key
 #[get("/<apikey>/validity-check")]
-pub fn validity_check(apikey: String, conn: DbConn) -> Result<Json<LicenseKey>, String> {
+pub fn validity_check(apikey: String, conn: DbConn) -> Result<Json<LicenseKey>, String>
+{
     use schema::horus_license_keys::dsl::*;
 
     let today: NaiveDate = Local::today().naive_local();
@@ -41,7 +43,8 @@ pub fn issue_license_with_key(
     owner_id: i32,
     l_type: i16,
     priv_lvl: i16,
-) -> Result<(License, LicenseKey), ()> {
+) -> Result<(License, LicenseKey), ()>
+{
     // key owner license_type
     let conn = super::super::dbtools::get_db_conn_requestless().unwrap();
 

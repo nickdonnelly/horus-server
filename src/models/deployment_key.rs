@@ -1,16 +1,19 @@
 use super::LicenseKey;
-use ::schema::deployment_keys;
+use schema::deployment_keys;
 
 #[derive(Insertable, Queryable, Serialize, Deserialize, AsChangeset, Debug)]
 #[table_name = "deployment_keys"]
-pub struct DeploymentKey {
+pub struct DeploymentKey
+{
     key: String,
     pub deployments: i32,
     pub license_key: String,
 }
 
-impl DeploymentKey {
-    pub fn new(key_hash: String, lkey: &LicenseKey) -> Self {
+impl DeploymentKey
+{
+    pub fn new(key_hash: String, lkey: &LicenseKey) -> Self
+    {
         Self {
             key: key_hash,
             license_key: lkey.key.clone(),
@@ -18,7 +21,8 @@ impl DeploymentKey {
         }
     }
 
-    pub fn hash(&self) -> String {
+    pub fn hash(&self) -> String
+    {
         self.key.clone()
     }
 }

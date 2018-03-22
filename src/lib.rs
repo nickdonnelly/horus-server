@@ -31,7 +31,7 @@ extern crate rocket_contrib;
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 
-pub mod schema; 
+pub mod schema;
 
 pub mod forms; // Modification forms for models
 pub mod models;
@@ -50,3 +50,26 @@ static AWS_SECRET: &'static str = dotenv!("AWS_SECRET");
 // Database pooling definitions
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub struct DbConn(pub r2d2::PooledConnection<ConnectionManager<PgConnection>>);
+
+/// Note, this is NOT a `tests` module but a `test` module. It contains a runner for setup/teardown.
+pub mod test {
+    use std::panic;
+
+    pub fn run_test<T, U, V>(test: T, setup: U, teardown: V) -> ()
+        where T: FnOnce() -> () + panic::UnwindSafe,
+              U: FnOnce() -> (),
+              V: FnOnce() -> ()
+
+    {
+        setup();
+
+        let result = panic::catch_unwind(|| {
+            test()
+        });
+
+        teardown();
+
+        assert!(result.is_ok());
+    }
+
+}

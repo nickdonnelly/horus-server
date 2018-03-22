@@ -3,19 +3,18 @@ extern crate base64;
 use std::io::prelude::*;
 use std::path::Path;
 
-use chrono::{ Local, NaiveDateTime };
-use diesel::{ self, prelude::* };
+use chrono::{Local, NaiveDateTime};
+use diesel::{self, prelude::*};
 use rocket::response::{status, Failure, NamedFile};
 use rocket::data::Data;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
 
-use ::DbConn;
-use ::dbtools;
-use ::{contexts, conv};
-use ::models::{HVideo, LicenseKey, SessionToken};
-use ::forms::HVideoChangesetForm;
-
+use DbConn;
+use dbtools;
+use {contexts, conv};
+use models::{HVideo, LicenseKey, SessionToken};
+use forms::HVideoChangesetForm;
 
 fn new_vid(
     vid_data: Data,
@@ -23,7 +22,8 @@ fn new_vid(
     exp: Option<NaiveDateTime>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+) -> Result<status::Created<()>, Failure>
+{
     use schema::horus_videos;
     let iid = dbtools::get_random_char_id(8);
     let pathstr = dbtools::get_path_video(&iid);
@@ -72,11 +72,9 @@ fn new_vid(
 }
 
 #[post("/new", format = "video/webm", data = "<vid_data>")]
-pub fn new(
-    vid_data: Data,
-    apikey: LicenseKey,
-    conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+pub fn new(vid_data: Data, apikey: LicenseKey, conn: DbConn)
+    -> Result<status::Created<()>, Failure>
+{
     new_vid(vid_data, String::from("Horus Video"), None, apikey, conn)
 }
 
@@ -90,7 +88,8 @@ pub fn new_exp(
     expd: Option<usize>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+) -> Result<status::Created<()>, Failure>
+{
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
@@ -120,7 +119,8 @@ pub fn new_titled(
     expd: Option<usize>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+) -> Result<status::Created<()>, Failure>
+{
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
@@ -138,7 +138,8 @@ pub fn list(
     page: u32,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<Json<Vec<HVideo>>, Failure> {
+) -> Result<Json<Vec<HVideo>>, Failure>
+{
     use schema::horus_videos::dsl::*;
 
     if !apikey.belongs_to(uid) {
@@ -166,7 +167,8 @@ pub fn delete_sessionless(
     vid_id: String,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure> {
+) -> Result<status::Custom<()>, Failure>
+{
     use schema::horus_videos::dsl::*;
 
     let video = horus_videos.find(&vid_id).get_result::<HVideo>(&*conn);
@@ -189,7 +191,8 @@ pub fn delete(
     vid_id: String,
     session: SessionToken,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure> {
+) -> Result<status::Custom<()>, Failure>
+{
     use schema::horus_videos::dsl::*;
     let video = horus_videos.find(&vid_id).get_result::<HVideo>(&*conn);
 
@@ -206,7 +209,8 @@ pub fn delete(
     delete_internal(video, conn)
 }
 
-fn delete_internal(video: HVideo, conn: DbConn) -> Result<status::Custom<()>, Failure> {
+fn delete_internal(video: HVideo, conn: DbConn) -> Result<status::Custom<()>, Failure>
+{
     let s3result = dbtools::delete_s3_object(&video.filepath);
 
     if s3result.is_err() {
@@ -232,7 +236,8 @@ pub fn update(
     updated_values: Json<HVideoChangesetForm>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Accepted<()>, Failure> {
+) -> Result<status::Accepted<()>, Failure>
+{
     use schema::horus_videos::dsl::*;
 
     let vid = horus_videos.filter(id.eq(&vid_id)).first::<HVideo>(&*conn);
@@ -263,7 +268,8 @@ pub fn update(
 }
 
 #[get("/full/<vid_id>")]
-pub fn full(vid_id: String, conn: DbConn) -> Option<NamedFile> {
+pub fn full(vid_id: String, conn: DbConn) -> Option<NamedFile>
+{
     use schema::horus_videos::dsl::*;
     let video = horus_videos.find(vid_id).get_result::<HVideo>(&*conn);
 
@@ -276,7 +282,8 @@ pub fn full(vid_id: String, conn: DbConn) -> Option<NamedFile> {
 }
 
 #[get("/<vid_id>")]
-pub fn show(vid_id: String, conn: DbConn) -> Option<Template> {
+pub fn show(vid_id: String, conn: DbConn) -> Option<Template>
+{
     use schema::horus_videos::dsl::*;
     let video = horus_videos.find(&vid_id).get_result::<HVideo>(&*conn);
 

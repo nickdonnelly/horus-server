@@ -2,27 +2,29 @@ use std::path::{Path, PathBuf};
 use std::io::Read;
 
 use diesel;
-use chrono::{ Local, NaiveDateTime };
-#[allow(unused_imports)] use diesel::prelude::*;
+use chrono::{Local, NaiveDateTime};
+#[allow(unused_imports)]
+use diesel::prelude::*;
 use rocket::request::Request;
 use rocket::response::{status, Failure, NamedFile, Responder, Response};
 use rocket::http::{ContentType, Status};
 use rocket::data::Data;
 use rocket_contrib::{Json, Template};
 
-use ::models::{HFile, LicenseKey, SessionToken};
-use ::DbConn;
-use ::{conv, dbtools};
-use ::fields::FileName;
+use models::{HFile, LicenseKey, SessionToken};
+use DbConn;
+use {conv, dbtools};
+use fields::FileName;
 
-
-pub struct DownloadableFile {
+pub struct DownloadableFile
+{
     pub afile: NamedFile,
     pub name: FileName,
 }
 
 #[get("/<file_id>")]
-pub fn get(file_id: String, conn: DbConn) -> Option<Template> {
+pub fn get(file_id: String, conn: DbConn) -> Option<Template>
+{
     use schema::horus_files::dsl::*;
 
     let hfile = horus_files.find(&file_id).get_result::<HFile>(&*conn);
@@ -44,7 +46,8 @@ pub fn list(
     page: u32,
     session: SessionToken,
     conn: DbConn,
-) -> Result<Json<Vec<HFile>>, Failure> {
+) -> Result<Json<Vec<HFile>>, Failure>
+{
     use schema::horus_files::dsl::*;
 
     if session.uid != uid {
@@ -72,7 +75,8 @@ pub fn new(
     file_name: FileName,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+) -> Result<status::Created<()>, Failure>
+{
     new_file(file_data, file_name, None, apikey, conn)
 }
 
@@ -84,7 +88,8 @@ pub fn new_exp(
     expd: Option<usize>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+) -> Result<status::Created<()>, Failure>
+{
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
@@ -101,7 +106,8 @@ pub fn new_file(
     expire_time: Option<NaiveDateTime>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+) -> Result<status::Created<()>, Failure>
+{
     use schema::horus_files;
     let fid: String = dbtools::get_random_char_id(8);
     let pathstr = dbtools::get_path_file(&fid);
@@ -145,7 +151,8 @@ pub fn delete(
     file_id: String,
     session: SessionToken,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure> {
+) -> Result<status::Custom<()>, Failure>
+{
     use schema::horus_files::dsl::*;
     let hfile = horus_files.find(&file_id).get_result::<HFile>(&*conn);
     if hfile.is_err() {
@@ -165,7 +172,8 @@ pub fn delete_sessionless(
     file_id: String,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure> {
+) -> Result<status::Custom<()>, Failure>
+{
     use schema::horus_files::dsl::*;
     let hfile = horus_files.find(&file_id).get_result::<HFile>(&*conn);
     if hfile.is_err() {
@@ -180,7 +188,8 @@ pub fn delete_sessionless(
     delete_internal(hfile, conn)
 }
 
-fn delete_internal(hfile: HFile, conn: DbConn) -> Result<status::Custom<()>, Failure> {
+fn delete_internal(hfile: HFile, conn: DbConn) -> Result<status::Custom<()>, Failure>
+{
     let s3result = dbtools::delete_s3_object(&hfile.filepath);
 
     if s3result.is_err() {
@@ -199,8 +208,10 @@ fn delete_internal(hfile: HFile, conn: DbConn) -> Result<status::Custom<()>, Fai
     Ok(status::Custom(Status::Ok, ()))
 }
 
-impl Responder<'static> for DownloadableFile {
-    fn respond_to(self, _: &Request) -> Result<Response<'static>, Status> {
+impl Responder<'static> for DownloadableFile
+{
+    fn respond_to(self, _: &Request) -> Result<Response<'static>, Status>
+    {
         let mut response = Response::new();
         if let Some(ext) = self.afile.path().extension() {
             let ext_string = ext.to_string_lossy().to_lowercase();
@@ -221,6 +232,7 @@ impl Responder<'static> for DownloadableFile {
 // This is not to do with files as user-uploaded bits. This
 // just serves the static assets for the manage page.
 #[get("/<file..>")]
-fn static_asset(file: PathBuf) -> Option<NamedFile> {
+fn static_asset(file: PathBuf) -> Option<NamedFile>
+{
     NamedFile::open(Path::new("static/").join(file)).ok()
 }

@@ -1,17 +1,18 @@
-use diesel::{ self, prelude::* };
+use diesel::{self, prelude::*};
 use rocket::response::{status, Failure};
 use rocket::http::Status;
 use rocket_contrib::Json;
 use rocket_contrib::Template;
 
-use ::DbConn;
-use ::{contexts, conv};
-use ::models::{HPaste, LicenseKey, SessionToken};
-use ::forms::{HNewPasteForm, HPasteChangesetForm};
-use ::schema::horus_pastes::dsl::*;
+use DbConn;
+use {contexts, conv};
+use models::{HPaste, LicenseKey, SessionToken};
+use forms::{HNewPasteForm, HPasteChangesetForm};
+use schema::horus_pastes::dsl::*;
 
 #[get("/<paste_id>")]
-pub fn show(paste_id: String, conn: DbConn) -> Option<Template> {
+pub fn show(paste_id: String, conn: DbConn) -> Option<Template>
+{
     let paste = horus_pastes.find(paste_id).first::<HPaste>(&*conn);
 
     if paste.is_err() {
@@ -37,7 +38,8 @@ pub fn list(
     page: u32,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<Json<Vec<HPaste>>, Failure> {
+) -> Result<Json<Vec<HPaste>>, Failure>
+{
     if !apikey.belongs_to(uid) {
         return Err(Failure(Status::Unauthorized));
     }
@@ -66,7 +68,8 @@ pub fn new(
     paste: Json<HNewPasteForm>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+) -> Result<status::Created<()>, Failure>
+{
     use schema::horus_pastes;
 
     let paste_form_data = paste.into_inner();
@@ -89,7 +92,8 @@ pub fn new(
     ))
 }
 
-fn delete_internal(paste: HPaste, conn: DbConn) -> Result<status::Custom<()>, Failure> {
+fn delete_internal(paste: HPaste, conn: DbConn) -> Result<status::Custom<()>, Failure>
+{
     let result = diesel::delete(&paste).execute(&*conn);
 
     if result.is_err() {
@@ -108,7 +112,8 @@ pub fn delete(
     paste_id: String,
     session: SessionToken,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure> {
+) -> Result<status::Custom<()>, Failure>
+{
     let paste = horus_pastes.find(paste_id).get_result::<HPaste>(&*conn);
 
     if paste.is_err() {
@@ -129,7 +134,8 @@ pub fn delete_sessionless(
     paste_id: String,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure> {
+) -> Result<status::Custom<()>, Failure>
+{
     let paste = horus_pastes.find(paste_id).get_result::<HPaste>(&*conn);
 
     if paste.is_err() {
@@ -151,7 +157,8 @@ pub fn update(
     updated_values: Json<HPasteChangesetForm>,
     session: SessionToken,
     conn: DbConn,
-) -> Result<status::Accepted<()>, Failure> {
+) -> Result<status::Accepted<()>, Failure>
+{
     let paste = horus_pastes
         .filter(id.eq(&paste_id))
         .first::<HPaste>(&*conn);

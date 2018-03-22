@@ -7,15 +7,16 @@ use rocket::{Outcome, State};
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
 
-use ::models::{DeploymentKey, HPaste, LicenseKey, SessionToken};
-use ::forms::HNewPasteForm;
-use ::{ Pool, dbtools };
-use ::{fields::{ self, FileName }, DbConn};
+use models::{DeploymentKey, HPaste, LicenseKey, SessionToken};
+use forms::HNewPasteForm;
+use {dbtools, Pool};
+use {DbConn, fields::{self, FileName}};
 
 /// Returns a NaiveDateTime given a duration consisting of a string
 /// that contains the `type` (`days`, `hours`, or `minutes`) and a value
 /// that represents the number of `type`.
-pub fn get_dt_from_duration(_type: String, _value: isize) -> Result<NaiveDateTime, String> {
+pub fn get_dt_from_duration(_type: String, _value: isize) -> Result<NaiveDateTime, String>
+{
     if _value <= 0 {
         return Err(format!("Value must be at least 1!"));
     }
@@ -36,10 +37,12 @@ pub fn get_dt_from_duration(_type: String, _value: isize) -> Result<NaiveDateTim
     Ok(cur_time.naive_utc())
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for FileName {
+impl<'a, 'r> FromRequest<'a, 'r> for FileName
+{
     type Error = String;
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<FileName, Self::Error> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<FileName, Self::Error>
+    {
         let headers = request.headers();
 
         if !headers.contains("Content-Disposition") {
@@ -66,10 +69,12 @@ impl<'a, 'r> FromRequest<'a, 'r> for FileName {
     }
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for DeploymentKey {
+impl<'a, 'r> FromRequest<'a, 'r> for DeploymentKey
+{
     type Error = String;
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<DeploymentKey, Self::Error> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<DeploymentKey, Self::Error>
+    {
         use schema::deployment_keys::dsl::*;
         use schema;
         use super::routes;
@@ -118,20 +123,29 @@ impl<'a, 'r> FromRequest<'a, 'r> for DeploymentKey {
     }
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for SessionToken {
+impl<'a, 'r> FromRequest<'a, 'r> for SessionToken
+{
     type Error = String;
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<SessionToken, Self::Error> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<SessionToken, Self::Error>
+    {
         use schema::session_tokens::dsl::*;
 
-        let val = String::from(
-            request
-                .cookies()
-                .get_private("horus_session")
-                .unwrap()
-                .value(),
-        );
-        let conn = dbtools::get_db_conn_requestless().unwrap();
+        let cookie = request.cookies().get_private("horus_session");
+
+        if cookie.is_none() {
+            return Outcome::Forward(());
+        }
+
+        let val = String::from(cookie.unwrap().value());
+
+        let conn = dbtools::get_db_conn_requestless();
+
+        if conn.is_err() {
+            return Outcome::Forward(());
+        }
+
+        let conn = conn.unwrap();
 
         let stoken = session_tokens
             .filter(token.eq(val))
@@ -146,10 +160,12 @@ impl<'a, 'r> FromRequest<'a, 'r> for SessionToken {
 }
 
 // LicenseKey
-impl<'a, 'r> FromRequest<'a, 'r> for LicenseKey {
+impl<'a, 'r> FromRequest<'a, 'r> for LicenseKey
+{
     type Error = String;
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<LicenseKey, Self::Error> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<LicenseKey, Self::Error>
+    {
         use schema::horus_license_keys::dsl::*;
 
         // Bad key outcome, here to prevent re-typing
@@ -194,10 +210,12 @@ impl<'a, 'r> FromRequest<'a, 'r> for LicenseKey {
     }
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
+impl<'a, 'r> FromRequest<'a, 'r> for DbConn
+{
     type Error = ();
 
-    fn from_request(request: &'a Request<'r>) -> request::Outcome<DbConn, ()> {
+    fn from_request(request: &'a Request<'r>) -> request::Outcome<DbConn, ()>
+    {
         let pool = request.guard::<State<Pool>>().unwrap();
         match pool.get() {
             Ok(conn) => Outcome::Success(DbConn(conn)),
@@ -206,8 +224,10 @@ impl<'a, 'r> FromRequest<'a, 'r> for DbConn {
     }
 }
 
-impl Into<HPaste> for HNewPasteForm {
-    fn into(self) -> HPaste {
+impl Into<HPaste> for HNewPasteForm
+{
+    fn into(self) -> HPaste
+    {
         let _id = dbtools::get_random_char_id(8);
         let _date: DateTime<Local> = Local::now();
         HPaste {

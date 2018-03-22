@@ -1,7 +1,8 @@
-use ::models::{HFile, HImage, HPaste, HVideo};
+use models::{HFile, HImage, HPaste, HVideo};
 
 #[derive(Serialize)]
-pub struct ImageList {
+pub struct ImageList
+{
     pub title: String,
     pub page_title: String,
     pub editable: bool,
@@ -9,7 +10,8 @@ pub struct ImageList {
 }
 
 #[derive(Serialize)]
-pub struct VideoList {
+pub struct VideoList
+{
     pub title: String,
     pub page_title: String,
     pub editable: bool,
@@ -17,7 +19,8 @@ pub struct VideoList {
 }
 
 #[derive(Serialize)]
-pub struct PasteList {
+pub struct PasteList
+{
     pub title: String,
     pub page_title: String,
     pub pastes: Vec<HPaste>,
@@ -25,7 +28,8 @@ pub struct PasteList {
 }
 
 #[derive(Serialize)]
-pub struct FileList {
+pub struct FileList
+{
     pub title: String,
     pub page_title: String,
     pub files: Vec<HFile>,
@@ -33,7 +37,8 @@ pub struct FileList {
 }
 
 #[derive(Serialize)]
-pub struct ManageImage {
+pub struct ManageImage
+{
     pub id: String,
     pub title: String,
     pub page_title: String,
@@ -41,7 +46,8 @@ pub struct ManageImage {
 }
 
 #[derive(Serialize)]
-pub struct ManageVideo {
+pub struct ManageVideo
+{
     pub id: String,
     pub title: String,
     pub page_title: String,
@@ -49,7 +55,8 @@ pub struct ManageVideo {
 }
 
 #[derive(Serialize)]
-pub struct ManagePaste {
+pub struct ManagePaste
+{
     pub id: String,
     pub title: String,
     pub page_title: String,
@@ -58,19 +65,22 @@ pub struct ManagePaste {
 }
 
 #[derive(Serialize)]
-pub struct ShowPaste {
+pub struct ShowPaste
+{
     pub item: HPaste,
     pub meta_tag: Option<String>,
 }
 
 #[derive(Serialize)]
-pub struct ShowVideo {
+pub struct ShowVideo
+{
     pub item: HVideo,
     pub meta_tag: Option<String>,
 }
 
 #[derive(Serialize)]
-pub struct ShowImage {
+pub struct ShowImage
+{
     pub item: HImage,
     pub meta_tag: Option<String>,
 }

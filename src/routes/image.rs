@@ -3,22 +3,23 @@ extern crate base64;
 use std::path::Path;
 use std::io::Read;
 
-use chrono::{ Local, NaiveDateTime };
-#[allow(unused_imports)] use diesel::{ self, prelude::* };
+use chrono::{Local, NaiveDateTime};
+#[allow(unused_imports)]
+use diesel::{self, prelude::*};
 use rocket::response::{status, Failure, NamedFile};
 use rocket::data::Data;
 use rocket::http::Status;
 use rocket_contrib::{Json, Template};
 
-use ::DbConn;
-use ::dbtools;
-use ::{contexts, conv};
-use ::models::{HImage, LicenseKey, SessionToken};
-use ::forms::HImageChangesetForm;
-
+use DbConn;
+use dbtools;
+use {contexts, conv};
+use models::{HImage, LicenseKey, SessionToken};
+use forms::HImageChangesetForm;
 
 #[get("/<image_id>")]
-pub fn show(image_id: String, conn: DbConn) -> Option<Template> {
+pub fn show(image_id: String, conn: DbConn) -> Option<Template>
+{
     use schema::horus_images::dsl::*;
 
     let image = horus_images.find(&image_id).get_result::<HImage>(&*conn);
@@ -39,7 +40,8 @@ pub fn show(image_id: String, conn: DbConn) -> Option<Template> {
 }
 
 #[get("/full/<image_id>")]
-pub fn full(image_id: String, conn: DbConn) -> Option<NamedFile> {
+pub fn full(image_id: String, conn: DbConn) -> Option<NamedFile>
+{
     use schema::horus_images::dsl::*;
     let image = horus_images.find(image_id).get_result::<HImage>(&*conn);
 
@@ -53,7 +55,8 @@ pub fn full(image_id: String, conn: DbConn) -> Option<NamedFile> {
 }
 
 #[get("/thumb/<image_id>")]
-pub fn thumb(image_id: String, conn: DbConn) -> Option<NamedFile> {
+pub fn thumb(image_id: String, conn: DbConn) -> Option<NamedFile>
+{
     full(image_id, conn)
 }
 
@@ -65,7 +68,8 @@ pub fn list(
     page: u32,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<Json<Vec<HImage>>, Failure> {
+) -> Result<Json<Vec<HImage>>, Failure>
+{
     use schema::horus_images::dsl::*;
 
     if !apikey.belongs_to(uid) {
@@ -91,7 +95,8 @@ pub fn delete(
     image_id: String,
     session: SessionToken,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure> {
+) -> Result<status::Custom<()>, Failure>
+{
     use schema::horus_images::dsl::*;
 
     let image = horus_images.find(&image_id).get_result::<HImage>(&*conn);
@@ -114,7 +119,8 @@ pub fn delete_sessionless(
     image_id: String,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure> {
+) -> Result<status::Custom<()>, Failure>
+{
     use schema::horus_images::dsl::*;
 
     let image = horus_images.find(&image_id).get_result::<HImage>(&*conn);
@@ -132,7 +138,8 @@ pub fn delete_sessionless(
     delete_internal(image, conn)
 }
 
-fn delete_internal(image: HImage, conn: DbConn) -> Result<status::Custom<()>, Failure> {
+fn delete_internal(image: HImage, conn: DbConn) -> Result<status::Custom<()>, Failure>
+{
     let s3result = dbtools::delete_s3_object(&image.filepath);
 
     if s3result.is_err() {
@@ -158,7 +165,8 @@ fn new_img(
     exp: Option<NaiveDateTime>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+) -> Result<status::Created<()>, Failure>
+{
     use schema::horus_images;
     let iid: String = dbtools::get_random_char_id(8);
 
@@ -209,11 +217,9 @@ fn new_img(
 }
 
 #[post("/new", format = "image/png", data = "<img_data>")]
-pub fn new(
-    img_data: Data,
-    apikey: LicenseKey,
-    conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+pub fn new(img_data: Data, apikey: LicenseKey, conn: DbConn)
+    -> Result<status::Created<()>, Failure>
+{
     new_img(img_data, String::from("Horus Image"), None, apikey, conn)
 }
 
@@ -227,7 +233,8 @@ pub fn new_exp(
     expd: Option<usize>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+) -> Result<status::Created<()>, Failure>
+{
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
@@ -257,7 +264,8 @@ pub fn new_titled(
     expd: Option<usize>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure> {
+) -> Result<status::Created<()>, Failure>
+{
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
@@ -275,7 +283,8 @@ pub fn update(
     updated_values: Json<HImageChangesetForm>,
     apikey: LicenseKey,
     conn: DbConn,
-) -> Result<status::Accepted<()>, Failure> {
+) -> Result<status::Accepted<()>, Failure>
+{
     use schema::horus_images::dsl::*;
 
     let img = horus_images

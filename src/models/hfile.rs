@@ -1,10 +1,11 @@
 use chrono::NaiveDateTime;
 
-use ::schema::horus_files;
+use schema::horus_files;
 
 #[derive(Queryable, Serialize, Identifiable, Insertable, AsChangeset)]
 #[table_name = "horus_files"]
-pub struct HFile {
+pub struct HFile
+{
     pub id: String,
     pub owner: i32,
     pub filename: String,

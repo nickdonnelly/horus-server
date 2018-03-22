@@ -7,12 +7,13 @@ use diesel::row::Row;
 use diesel::sql_types::Integer;
 use diesel::deserialize::FromSqlRow;
 
-use ::schema::horus_jobs;
+use schema::horus_jobs;
 use super::User;
 
 #[repr(i16)]
 #[derive(Serialize, Deserialize)]
-pub enum JobStatus {
+pub enum JobStatus
+{
     Waiting = 0,
     Queued = 1,
     Failed = 2,
@@ -20,7 +21,8 @@ pub enum JobStatus {
     Complete = 10,
 }
 
-pub enum JobPriority {
+pub enum JobPriority
+{
     DoNotProcess = -1, // the job isn't done being inserted.
     Normal = 0,        // normal jobs made by users
     Elevated = 1,      // jobs that are time dependent but not crucial
@@ -34,7 +36,8 @@ pub enum JobPriority {
          Insertable, AsChangeset)]
 #[table_name = "horus_jobs"]
 #[belongs_to(User, foreign_key = "owner")]
-pub struct HJob {
+pub struct HJob
+{
     pub id: i32,
     pub owner: i32,
     pub job_status: i32,
@@ -47,15 +50,18 @@ pub struct HJob {
 
 #[derive(Insertable)]
 #[table_name = "horus_jobs"]
-pub struct NewJob {
+pub struct NewJob
+{
     owner: i32,
     job_name: String,
     pub job_data: Option<Vec<u8>>,
     pub priority: i32,
 }
 
-impl NewJob {
-    pub fn new(uid: i32, name: String, data: Option<Vec<u8>>, priority: JobPriority) -> Self {
+impl NewJob
+{
+    pub fn new(uid: i32, name: String, data: Option<Vec<u8>>, priority: JobPriority) -> Self
+    {
         NewJob {
             owner: uid,
             job_name: name,
@@ -66,7 +72,8 @@ impl NewJob {
 
     /// Return an instance of self without the data (used for quick insert
     /// without the data being present).
-    pub fn without_data(&self) -> NewJob {
+    pub fn without_data(&self) -> NewJob
+    {
         NewJob {
             owner: self.owner,
             job_name: self.job_name.clone(),
@@ -76,8 +83,10 @@ impl NewJob {
     }
 }
 
-impl FromSqlRow<Integer, Pg> for JobStatus {
-    fn build_from_row<R: Row<Pg>>(row: &mut R) -> Result<Self, Box<Error + Send + Sync>> {
+impl FromSqlRow<Integer, Pg> for JobStatus
+{
+    fn build_from_row<R: Row<Pg>>(row: &mut R) -> Result<Self, Box<Error + Send + Sync>>
+    {
         match i16::build_from_row(row)? {
             0 => Ok(JobStatus::Waiting),
             1 => Ok(JobStatus::Queued),

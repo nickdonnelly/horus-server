@@ -1,10 +1,11 @@
 use chrono::NaiveDateTime;
 
-use ::schema::horus_videos;
+use schema::horus_videos;
 
 #[derive(AsChangeset, Queryable, Serialize, Identifiable, Insertable)]
 #[table_name = "horus_videos"]
-pub struct HVideo {
+pub struct HVideo
+{
     pub id: String,
     pub title: Option<String>,
     pub owner: i32,

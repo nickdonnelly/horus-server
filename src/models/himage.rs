@@ -1,10 +1,11 @@
 use chrono::NaiveDateTime;
 
-use ::schema::horus_images;
+use schema::horus_images;
 
 #[derive(AsChangeset, Queryable, Serialize, Identifiable, Insertable)]
 #[table_name = "horus_images"]
-pub struct HImage {
+pub struct HImage
+{
     pub id: String,
     pub title: Option<String>,
     pub owner: i32,

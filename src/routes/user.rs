@@ -1,24 +1,42 @@
-use diesel::{ self, prelude::* };
+use diesel::{self, prelude::*};
 use rocket::response::Failure;
 use rocket::response::status;
 use rocket::http::Status;
 use rocket_contrib::Json;
 
-use ::DbConn;
-use ::models::{LicenseKey, User};
-use ::forms::UserForm;
-use ::schema::horus_users::dsl::*;
+use DbConn;
+use models::{LicenseKey, PublicUser, SessionToken, User};
+use forms::UserForm;
+use schema::horus_users::dsl::*;
 
 // Option usage allows us to automatically 404 if the record is not found
 // by just returning "None".
-#[get("/<uid>")]
-pub fn show(uid: i32, conn: DbConn) -> Option<Json<User>> {
-    let user = horus_users.find(uid).first(&*conn);
+#[get("/<uid>", rank = 2)]
+pub fn show(uid: i32, conn: DbConn) -> Option<Json<PublicUser>>
+{
+    let user = horus_users.find(uid).first::<User>(&*conn);
 
     if user.is_err() {
         return None;
     }
-    Some(Json(user.unwrap()))
+
+    Some(Json(user.unwrap().without_sensitive_attributes()))
+}
+
+#[get("/<uid>", rank = 1)]
+pub fn show_privileged(uid: i32, sess: SessionToken, conn: DbConn) -> Option<Json<User>>
+{
+    let user = horus_users.find(uid).first::<User>(&*conn);
+
+    if user.is_err() {
+        return None;
+    }
+
+    if sess.uid == uid {
+        Some(Json(user.unwrap()))
+    } else {
+        None
+    }
 }
 
 #[put("/<uid>", format = "application/json", data = "<updated_values>")]
@@ -27,7 +45,8 @@ pub fn update(
     apikey: LicenseKey,
     updated_values: Json<UserForm>,
     conn: DbConn,
-) -> Result<status::Accepted<()>, Failure> {
+) -> Result<status::Accepted<()>, Failure>
+{
     if !apikey.belongs_to(uid) {
         return Err(Failure(Status::Unauthorized));
     }
@@ -46,7 +65,8 @@ pub fn update(
 }
 
 #[delete("/<uid>")]
-pub fn delete(uid: i32, apikey: LicenseKey, conn: DbConn) -> Result<status::Custom<()>, Failure> {
+pub fn delete(uid: i32, apikey: LicenseKey, conn: DbConn) -> Result<status::Custom<()>, Failure>
+{
     if !apikey.belongs_to(uid) {
         return Err(Failure(Status::Unauthorized));
     }
@@ -62,4 +82,91 @@ pub fn delete(uid: i32, apikey: LicenseKey, conn: DbConn) -> Result<status::Cust
     }
 
     Ok(status::Custom(Status::Ok, ()))
+}
+
+#[cfg(test)]
+mod tests
+{
+    use std::panic;
+
+    use rocket::{self, http::{ContentType, Status}, local::Client};
+    use rocket_contrib::Json;
+    use diesel::{self, connection::SimpleConnection};
+
+    use super::*;
+    use ::test::run_test;
+
+    #[test]
+    fn does_show()
+    {
+        run(|| {
+            let client = get_client();
+            let req = client.get("/999");
+            let response = req.dispatch();
+
+            assert!(response.status() == Status::Ok, "Wrong status code!");
+            assert_eq!(response.content_type(), Some(ContentType::JSON));
+        });
+    }
+
+    #[test]
+    fn not_found_show()
+    {
+        run(|| {
+            let client = get_client();
+            let req = client.get("/9999");
+            let response = req.dispatch();
+            assert!(response.status() == Status::NotFound);
+        });
+    }
+
+    #[test]
+    fn does_show_privileged()
+    {
+        // TODO: Make a way to generate stub tokens that are valid for a single request
+        // for testing purposes.
+    }
+
+    #[test]
+    fn does_update()
+    {
+
+    }
+
+    #[test]
+    fn does_delete()
+    {
+
+    }
+
+    fn run<T>(test: T) -> ()
+        where T: FnOnce() -> () + panic::UnwindSafe
+    {
+        run_test(test, setup_db, unsetup_db);
+    }
+
+    fn setup_db()
+    {
+        let conn = ::dbtools::get_db_conn_requestless().unwrap();
+        let setup_sql = "INSERT INTO horus_users(id, first_name, last_name, email) \
+            VALUES(999, 'test', 'user', 'testuser@example.com');";
+        conn.batch_execute(setup_sql).unwrap();
+    }
+
+    fn unsetup_db() 
+    {
+        let conn = ::dbtools::get_db_conn_requestless().unwrap();
+        let unsetup_sql = "DELETE FROM horus_users WHERE id = 999;";
+        conn.batch_execute(unsetup_sql).unwrap();
+    }
+
+    fn get_client() -> Client
+    {
+        let rocket = rocket::ignite()
+            .mount("/", routes![show, show_privileged, update, delete])
+            .manage(::dbtools::init_pool());
+
+        Client::new(rocket).expect("valid rocket instance")
+    }
+
 }

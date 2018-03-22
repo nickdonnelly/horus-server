@@ -1,14 +1,14 @@
 use std::boxed::Box;
 
-use diesel::{ self, prelude::* };
+use diesel::{self, prelude::*};
 use diesel::pg::PgConnection;
 
 use job_juggler::{ExecutableJob, JobResult, LoggableJob};
 
-
 #[derive(Serialize, Deserialize, LoggableJob)]
 #[LogName = "log_data"]
-pub struct Deployment {
+pub struct Deployment
+{
     pub deployment_package: Vec<u8>,
     pub deployment_key_hash: String,
     pub version_string: String,
@@ -16,8 +16,10 @@ pub struct Deployment {
     pub log_data: String,
 }
 
-impl Deployment {
-    pub fn new(package: Vec<u8>, dkey_hash: String, s_version: String, s_platform: String) -> Self {
+impl Deployment
+{
+    pub fn new(package: Vec<u8>, dkey_hash: String, s_version: String, s_platform: String) -> Self
+    {
         Deployment {
             deployment_package: package,
             deployment_key_hash: dkey_hash,
@@ -28,8 +30,10 @@ impl Deployment {
     }
 }
 
-impl ExecutableJob for Deployment {
-    fn execute(mut self, conn: &PgConnection) -> (Box<Self>, JobResult) {
+impl ExecutableJob for Deployment
+{
+    fn execute(mut self, conn: &PgConnection) -> (Box<Self>, JobResult)
+    {
         use dbtools;
         use models::{HorusVersion, NewHorusVersion};
 
