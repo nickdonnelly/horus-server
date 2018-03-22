@@ -10,7 +10,7 @@ pub struct User
     pub email: String,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PublicUser
 {
     pub id: i32,
