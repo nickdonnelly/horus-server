@@ -89,12 +89,15 @@ mod tests
 {
     use std::panic;
 
-    use rocket::{self, http::{ContentType, Status}, local::Client};
+    use rocket::{self, http::{Header, ContentType, Status}, local::Client};
     use rocket_contrib::Json;
     use diesel::{self, connection::SimpleConnection};
 
     use super::*;
     use ::test::run_test;
+
+    // Exactly 128 characters.
+    const TOKEN_STR: &'static str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
     #[test]
     fn does_show()
@@ -148,16 +151,23 @@ mod tests
     fn setup_db()
     {
         let conn = ::dbtools::get_db_conn_requestless().unwrap();
-        let setup_sql = "INSERT INTO horus_users(id, first_name, last_name, email) \
-            VALUES(999, 'test', 'user', 'testuser@example.com');";
-        conn.batch_execute(setup_sql).unwrap();
+        let mut setup_sql = String::from("INSERT INTO horus_users(id, first_name, last_name, email) \
+            VALUES(999, 'test', 'user', 'testuser@example.com') ON CONFLICT DO NOTHING;");
+
+        setup_sql.push_str("INSERT INTO session_tokens(uid, token) VALUES(999, '");
+        setup_sql.push_str(TOKEN_STR);
+        setup_sql.push_str("') ON CONFLICT DO NOTHING;");
+
+        conn.batch_execute(&setup_sql).unwrap();
     }
 
     fn unsetup_db() 
     {
         let conn = ::dbtools::get_db_conn_requestless().unwrap();
-        let unsetup_sql = "DELETE FROM horus_users WHERE id = 999;";
-        conn.batch_execute(unsetup_sql).unwrap();
+        let mut unsetup_sql = String::from("DELETE FROM session_tokens WHERE uid = 999;");
+        unsetup_sql.push_str("DELETE FROM horus_users WHERE id = 999;");
+
+        conn.batch_execute(&unsetup_sql).unwrap();
     }
 
     fn get_client() -> Client
