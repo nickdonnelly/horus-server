@@ -123,7 +123,7 @@ fn unsetup_db()
 {
     let conn = horus_server::dbtools::get_db_conn_requestless().unwrap();
     // No need to delete everything, a user delete cascades.
-    let mut unsetup_sql = sql_delete_user();
+    let unsetup_sql = sql_delete_user();
 
     conn.batch_execute(&unsetup_sql).unwrap();
 }

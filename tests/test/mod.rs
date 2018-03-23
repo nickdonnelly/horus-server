@@ -17,4 +17,3 @@ where
 
     assert!(result.is_ok());
 }
-

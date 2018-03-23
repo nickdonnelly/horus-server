@@ -18,6 +18,7 @@ pub fn show(paste_id: String, conn: DbConn) -> Option<Template>
     if paste.is_err() {
         return None;
     }
+
     let paste = paste.unwrap();
     let mut metatag = String::from("<meta property=\"og:type\" content=\"article\" />");
     metatag += "<meta property=\"article:published_time\" content=\"";
