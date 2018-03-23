@@ -86,5 +86,4 @@ pub fn delete(uid: i32, apikey: LicenseKey, conn: DbConn) -> Result<status::Cust
 
 #[cfg(test)]
 mod tests
-{
-}
+{}
