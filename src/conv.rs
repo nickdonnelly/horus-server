@@ -131,6 +131,8 @@ impl<'a, 'r> FromRequest<'a, 'r> for SessionToken
     {
         use schema::session_tokens::dsl::*;
 
+        // TODO: When LocalRequest gets a private_cookie method, undo this being
+        // different for tests and just make it always get_private;
         let cookie = request.cookies().get_private("horus_session");
 
         if cookie.is_none() {

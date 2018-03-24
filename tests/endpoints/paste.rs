@@ -1,6 +1,6 @@
 use std::panic;
 
-use rocket::{self, http::{ContentType, Header, Status}, local::Client};
+use rocket::{self, http::{ContentType, Cookie, Header, Status}, local::Client};
 use rocket_contrib::Json;
 use diesel::connection::SimpleConnection;
 use serde_json;
@@ -103,6 +103,33 @@ fn deletes_correctly()
             "Got bad status:: expected 404 NOT FOUND, got {}", res.status());
 
     });
+}
+
+#[test]
+fn updates_correctly()
+{
+    /* TODO: Uncomment this when private_cookie is added.
+    run(||{
+        let body = format!(
+            r#"{{"id":"{id}", "paste_data": "new_data", "duration_type": "days", "duration_val": -1}}"#,
+            id = PASTE_ID);
+        let client = get_client();
+        let req = client.put(String::from("/") + PASTE_ID)
+            .header(Header::new("x-api-key", API_KEY))
+            .header(Header::new("content-type", "application/json"))
+            .private_cookie(Cookie::new("horus_session", TOKEN_STR))
+            .body(body);
+        let response = req.dispatch();
+
+        assert_eq!(response.status(), Status::Accepted);
+
+        let req = client.get(String::from("/") + PASTE_ID);
+        let mut response = req.dispatch();
+
+        assert_eq!(response.status(), Status::Ok);
+        assert!(response.body_string().unwrap().contains("new_data"));
+    });
+    */
 }
 
 fn run<T>(test: T) -> ()
