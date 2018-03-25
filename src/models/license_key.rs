@@ -2,7 +2,6 @@ use diesel::prelude::*;
 use chrono::NaiveDate;
 
 use schema::horus_license_keys;
-use fields::{ PrivilegeLevel, Authentication };
 use models::License;
 use dbtools;
 
@@ -50,14 +49,4 @@ impl LicenseKey
     }
 }
 
-/*
-impl Authentication for LicenseKey {
-    fn get_privilege_level(&self) -> PrivilegeLevel
-    {
-        match self.privilege_level.unwrap()
-        {
-            // TODO
-        }
-    }
-}
-*/
+

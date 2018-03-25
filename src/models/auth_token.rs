@@ -10,4 +10,5 @@ pub struct AuthToken
     pub uid: i32,
     pub token: String,
     pub expires: Option<NaiveDateTime>,
+    pub privilege_level: i32,
 }

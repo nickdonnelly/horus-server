@@ -6,6 +6,7 @@ use rocket_contrib::Template;
 
 use DbConn;
 use {contexts, conv};
+use fields::Authentication;
 use models::{HPaste, LicenseKey, SessionToken};
 use forms::{HNewPasteForm, HPasteChangesetForm};
 use schema::horus_pastes::dsl::*;
@@ -37,11 +38,11 @@ pub fn show(paste_id: String, conn: DbConn) -> Option<Template>
 pub fn list(
     uid: i32,
     page: u32,
-    apikey: LicenseKey,
-    conn: DbConn,
-) -> Result<Json<Vec<HPaste>>, Failure>
+    apikey: Authentication,
+    conn: DbConn) 
+    -> Result<Json<Vec<HPaste>>, Failure>
 {
-    if !apikey.belongs_to(uid) {
+    if !apikey.get_userid() == uid {
         return Err(Failure(Status::Unauthorized));
     }
 

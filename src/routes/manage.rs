@@ -28,6 +28,7 @@ pub fn request_auth_url(apikey: LicenseKey, conn: DbConn)
     -> Result<status::Custom<String>, Failure>
 {
     use schema::auth_tokens::dsl::*;
+    use fields::{ FromInt, PrivilegeLevel };
 
     let _uid = apikey.get_owner();
     let usertoken = auth_tokens.find(_uid).get_result::<AuthToken>(&*conn);
@@ -35,7 +36,7 @@ pub fn request_auth_url(apikey: LicenseKey, conn: DbConn)
 
     if usertoken.is_err() {
         // They don't have a token yet
-        let usertoken = AuthToken::new(_uid);
+        let usertoken = AuthToken::new(_uid, PrivilegeLevel::from_int(apikey.privilege_level as i32));
 
         let insert_result = diesel::insert_into(schema::auth_tokens::table)
             .values(&usertoken)
