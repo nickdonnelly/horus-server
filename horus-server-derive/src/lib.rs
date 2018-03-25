@@ -14,6 +14,15 @@ pub fn loggable_job(input: TokenStream) -> TokenStream
     gen.into()
 }
 
+#[proc_macro_derive(FromInt)]
+pub fn from_int(input: TokenStream) -> TokenStream
+{
+    let syntax_tree = syn::parse::<DeriveInput>(input).unwrap();
+    let gen = impl_from_int(&syntax_tree);
+    gen.into()
+}
+
+
 fn impl_loggable_job(tree: &syn::DeriveInput) -> quote::Tokens
 {
     const LOG_NAME_ATTR: &'static str = "LogName";
@@ -57,3 +66,58 @@ fn impl_loggable_job(tree: &syn::DeriveInput) -> quote::Tokens
     }
 }
 
+fn impl_from_int(tree: &syn::DeriveInput) -> quote::Tokens
+{
+    if let syn::Data::Enum(ref _enum) = tree.data {
+        let name = &tree.ident;
+        let variants = &_enum.variants; 
+
+        let match_i32 = match_i32(&name, variants);
+        
+        quote! {
+            impl FromInt for #name {
+                fn from_int(i: i32) -> Self
+                {
+                    match i {
+                        #(#match_i32)*
+                        _ => unreachable!()
+                    }
+                }
+            }
+        }
+        
+    } else {
+        panic!("FromInt is only implemented for enums!");
+    }
+}
+
+fn match_i32(
+    name: &syn::Ident, 
+    variants: &syn::punctuated::Punctuated<syn::Variant, syn::token::Comma>) 
+    -> Vec<quote::Tokens>
+{
+    use quote::ToTokens;
+
+    let mut tokens: Vec<quote::Tokens> = Vec::new();
+
+    for (_index, variant) in variants.iter().enumerate() {
+        let ident = &variant.ident;
+        match &variant.discriminant {
+            &Some((_, syn::Expr::Lit(ref lit))) => {
+                match lit.lit {
+                    syn::Lit::Int(ref lint) => {
+                        let lint_tokens = lint.into_tokens();
+                        let t = quote!{
+                            #lint_tokens => #name::#ident,
+                        };
+                        tokens.push(t);
+                    },
+                    _ => panic!("Enum variants must be literal integers!")
+                }
+            },
+            _ => panic!("Enum variants must be literal integers!")
+        }
+    }
+
+    tokens
+}

@@ -17,9 +17,46 @@ const EMAIL_REGEX: &str = r"^[^@]+@[^@]+\.[^@]+$";
 
 pub struct FileName(pub String);
 
+pub trait FromInt
+{
+    fn from_int(i: i32) -> Self;
+}
+
 pub trait Validatable
 {
     fn validate_fields(&self) -> Result<(), Vec<String>>;
+}
+
+#[derive(FromInt)]
+pub enum PrivilegeLevel
+{
+    User = 0,
+    Admin = 1,
+    System = 900,
+    God = 901
+}
+
+pub enum PrivilegeEnvironment
+{
+    World,
+    Test
+}
+
+pub trait Authentication 
+{
+    /// Get the privilege level associated with the authenticatee
+    fn get_privilege_level(&self) -> PrivilegeLevel;
+    
+    /// Get the userid of the authenticatee. In the case of `System`,
+    /// this should be -1, in the case of `God`, this should be -999.
+    fn get_userid(&self) -> i32;
+
+    /// Only override this if you need a test environment.
+    fn get_environment() -> PrivilegeEnvironment
+    {
+        PrivilegeEnvironment::World     
+    }
+
 }
 
 impl Validatable for UserForm
@@ -84,38 +121,7 @@ pub fn is_valid_api_key(key: &str) -> bool
     true
 }
 
-impl LicenseKey
-{
-    pub fn belongs_to(&self, uid: i32) -> bool
-    {
-        use super::schema::horus_licenses::dsl::*;
 
-        let conn = dbtools::get_db_conn_requestless().unwrap();
-        let license = horus_licenses
-            .filter(key.eq(&self.key))
-            .first::<License>(&conn);
-
-        if license.is_err() {
-            return false;
-        }
-
-        let license = license.unwrap();
-
-        return license.owner == uid;
-    }
-
-    /// This function assumes the LicenseKey object is valid and in the db.
-    pub fn get_owner(&self) -> i32
-    {
-        use super::schema::horus_licenses::dsl::*;
-        let conn = dbtools::get_db_conn_requestless().unwrap();
-        let license = horus_licenses
-            .filter(key.eq(&self.key))
-            .first::<License>(&conn)
-            .unwrap();
-        license.owner
-    }
-}
 
 impl AuthToken
 {

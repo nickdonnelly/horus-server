@@ -206,11 +206,8 @@ pub fn verify_key(
 /// database object.
 pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey), ()>
 {
-    if l_key.privilege_level.is_none() {
-        return Err(());
-    }
-
-    if l_key.privilege_level.unwrap() < 3 {
+    // TODO fix this comaprison to use PrivilegeLevel
+    if l_key.privilege_level < 3 {
         return Err(());
     }
 

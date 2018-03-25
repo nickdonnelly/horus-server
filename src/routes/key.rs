@@ -61,7 +61,7 @@ pub fn issue_license_with_key(
     };
     let l_key = LicenseKey {
         key: keystr.clone(),
-        privilege_level: Some(priv_lvl),
+        privilege_level: priv_lvl,
         issued_on: issued.naive_utc(),
         valid_until: expires_on.naive_utc(),
     };
