@@ -38,18 +38,13 @@ fn not_found_show()
     });
 }
 
-/*  FIXME:
- *  This can't be used as a test until the latest version of rocket gains support for
- *  the private_cookie method. This is currently in 0.4.0-dev whereas we are currently
- *  on 0.3.6
 #[test]
 fn does_show_privileged()
 {
-    use rocket::http::Cookie;
     run(||{
         let client = get_client();
-        let req = client.get("/999")
-            .private_cookie(Cookie::new("horus_session", TOKEN_STR));
+        let req = client.get("/me")
+            .header(auth_header());
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);
@@ -62,7 +57,7 @@ fn does_show_privileged()
         assert_eq!(user.email, "testuser@example.com");
 
     });
-}*/
+}
 
 #[test]
 fn does_update()
@@ -71,7 +66,7 @@ fn does_update()
         let client = get_client();
         let req = client
             .put("/999")
-            .header(Header::new("x-api-key", API_KEY))
+            .header(api_key_header())
             .header(Header::new("content-type", "application/json"))
             .body("{\"first_name\":\"test1\"}");
         let response = req.dispatch();
@@ -87,7 +82,7 @@ fn does_delete()
         let client = get_client();
         let req = client
             .delete("/999")
-            .header(Header::new("x-api-key", API_KEY));
+            .header(api_key_header());
         let response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);

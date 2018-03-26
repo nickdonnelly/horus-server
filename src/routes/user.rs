@@ -5,7 +5,8 @@ use rocket::http::Status;
 use rocket_contrib::Json;
 
 use DbConn;
-use models::{LicenseKey, PublicUser, SessionToken, User};
+use models::{LicenseKey, PublicUser, User};
+use fields::Authentication;
 use forms::UserForm;
 use schema::horus_users::dsl::*;
 
@@ -23,20 +24,16 @@ pub fn show(uid: i32, conn: DbConn) -> Option<Json<PublicUser>>
     Some(Json(user.unwrap().without_sensitive_attributes()))
 }
 
-#[get("/<uid>", rank = 1)]
-pub fn show_privileged(uid: i32, sess: SessionToken, conn: DbConn) -> Option<Json<User>>
+#[get("/me", rank = 1)]
+pub fn show_privileged(auth: Authentication, conn: DbConn) -> Option<Json<User>>
 {
-    let user = horus_users.find(uid).first::<User>(&*conn);
+    let user = horus_users.find(auth.get_userid()).first::<User>(&*conn);
 
     if user.is_err() {
         return None;
     }
 
-    if sess.uid == uid {
-        Some(Json(user.unwrap()))
-    } else {
-        None
-    }
+    Some(Json(user.unwrap()))
 }
 
 #[put("/<uid>", format = "application/json", data = "<updated_values>")]
