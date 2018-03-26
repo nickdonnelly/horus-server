@@ -68,7 +68,7 @@ pub fn list(
 #[post("/new", format = "application/json", data = "<paste>")]
 pub fn new(
     paste: Json<HNewPasteForm>,
-    apikey: LicenseKey,
+    apikey: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
@@ -76,7 +76,7 @@ pub fn new(
 
     let paste_form_data = paste.into_inner();
     let mut paste: HPaste = paste_form_data.into();
-    paste.owner = apikey.get_owner();
+    paste.owner = apikey.get_userid();
 
     let result = diesel::insert_into(horus_pastes::table)
         .values(&paste)
@@ -157,7 +157,7 @@ pub fn delete_sessionless(
 pub fn update(
     paste_id: String,
     updated_values: Json<HPasteChangesetForm>,
-    session: SessionToken,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Accepted<()>, Failure>
 {
@@ -170,7 +170,7 @@ pub fn update(
     }
     let mut paste = paste.unwrap();
 
-    if session.uid != paste.owner {
+    if auth.get_userid() != paste.owner {
         return Err(Failure(Status::Unauthorized));
     }
 

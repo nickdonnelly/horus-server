@@ -7,6 +7,7 @@ use rocket_contrib::Template;
 
 use DbConn;
 use models::{AuthToken, HFile, HImage, HPaste, HVideo, LicenseKey, SessionToken, User};
+use fields::Authentication;
 use contexts::{FileList, ImageList, PasteList, VideoList};
 use contexts::{ManageImage, ManagePaste, ManageVideo};
 use schema;
@@ -111,10 +112,11 @@ pub fn request_auth_cookie(
 }
 
 #[get("/account")]
-pub fn my_account(apikey: LicenseKey, conn: DbConn) -> Option<Template>
+// TODO
+pub fn my_account(auth: Authentication, conn: DbConn) -> Option<Template>
 {
     use schema::horus_users::dsl::*;
-    let uid = apikey.get_owner();
+    let uid = auth.get_userid();
 
     let user = horus_users.filter(id.eq(&uid)).first::<User>(&*conn);
 
@@ -125,12 +127,12 @@ pub fn my_account(apikey: LicenseKey, conn: DbConn) -> Option<Template>
 }
 
 #[get("/images/<page>")]
-pub fn my_images(page: u32, session: SessionToken, conn: DbConn) -> Option<Template>
+pub fn my_images(page: u32, auth: Authentication, conn: DbConn) -> Option<Template>
 {
     use schema::horus_images::dsl::*;
     use schema::horus_users::dsl::*;
     let images = horus_images
-        .filter(owner.eq(&session.uid))
+        .filter(owner.eq(auth.get_userid()))
         .order(date_added.desc())
         .limit(24)
         .offset((page * 24) as i64)
@@ -138,7 +140,7 @@ pub fn my_images(page: u32, session: SessionToken, conn: DbConn) -> Option<Templ
 
     let images = images.unwrap();
     let name = horus_users
-        .find(&session.uid)
+        .find(auth.get_userid())
         .get_result::<User>(&*conn)
         .unwrap()
         .first_name;
@@ -157,13 +159,13 @@ pub fn my_images(page: u32, session: SessionToken, conn: DbConn) -> Option<Templ
 }
 
 #[get("/files/<page>")]
-pub fn my_files(page: u32, session: SessionToken, conn: DbConn) -> Option<Template>
+pub fn my_files(page: u32, auth: Authentication, conn: DbConn) -> Option<Template>
 {
     use schema::horus_files::dsl::*;
     use schema::horus_users::dsl::*;
 
     let files = horus_files
-        .filter(owner.eq(&session.uid))
+        .filter(owner.eq(auth.get_userid()))
         .limit(24)
         .order(date_added.desc())
         .offset((page * 24) as i64)
@@ -176,7 +178,7 @@ pub fn my_files(page: u32, session: SessionToken, conn: DbConn) -> Option<Templa
     let files = files.unwrap();
 
     let name = horus_users
-        .find(&session.uid)
+        .find(auth.get_userid())
         .get_result::<User>(&*conn)
         .unwrap()
         .first_name;
@@ -195,13 +197,13 @@ pub fn my_files(page: u32, session: SessionToken, conn: DbConn) -> Option<Templa
 }
 
 #[get("/pastes/<page>")]
-pub fn my_pastes(page: u32, session: SessionToken, conn: DbConn) -> Option<Template>
+pub fn my_pastes(page: u32, auth: Authentication, conn: DbConn) -> Option<Template>
 {
     use schema::horus_pastes::dsl::*;
     use schema::horus_users::dsl::*;
 
     let pastes = horus_pastes
-        .filter(owner.eq(&session.uid))
+        .filter(owner.eq(auth.get_userid()))
         .limit(24)
         .order(date_added.desc())
         .offset((page * 24) as i64)
@@ -214,7 +216,7 @@ pub fn my_pastes(page: u32, session: SessionToken, conn: DbConn) -> Option<Templ
     let pastes = pastes.unwrap();
 
     let name = horus_users
-        .find(&session.uid)
+        .find(auth.get_userid())
         .get_result::<User>(&*conn)
         .unwrap()
         .first_name;
@@ -233,13 +235,13 @@ pub fn my_pastes(page: u32, session: SessionToken, conn: DbConn) -> Option<Templ
 }
 
 #[get("/videos/<page>")]
-pub fn my_videos(page: u32, session: SessionToken, conn: DbConn) -> Option<Template>
+pub fn my_videos(page: u32, auth: Authentication, conn: DbConn) -> Option<Template>
 {
     use schema::horus_videos::dsl::*;
     use schema::horus_users::dsl::*;
 
     let videos = horus_videos
-        .filter(owner.eq(&session.uid))
+        .filter(owner.eq(auth.get_userid()))
         .order(date_added.desc())
         .limit(8)
         .offset((page * 24) as i64)
@@ -247,7 +249,7 @@ pub fn my_videos(page: u32, session: SessionToken, conn: DbConn) -> Option<Templ
 
     let videos = videos.unwrap();
     let name = horus_users
-        .find(&session.uid)
+        .find(auth.get_userid())
         .get_result::<User>(&*conn)
         .unwrap()
         .first_name;
@@ -265,7 +267,7 @@ pub fn my_videos(page: u32, session: SessionToken, conn: DbConn) -> Option<Templ
 }
 
 #[get("/video/<video_id>")]
-pub fn video(video_id: String, conn: DbConn, session: SessionToken) -> Option<Template>
+pub fn video(video_id: String, conn: DbConn, auth: Authentication) -> Option<Template>
 {
     use schema::horus_videos::dsl::*;
     let video = horus_videos.find(video_id).get_result::<HVideo>(&*conn);
@@ -275,7 +277,7 @@ pub fn video(video_id: String, conn: DbConn, session: SessionToken) -> Option<Te
     }
     let video = video.unwrap();
 
-    if session.uid != video.owner {
+    if auth.get_userid() != video.owner {
         return None;
     }
 
@@ -296,7 +298,7 @@ pub fn video(video_id: String, conn: DbConn, session: SessionToken) -> Option<Te
 }
 
 #[get("/image/<image_id>")]
-pub fn image(image_id: String, conn: DbConn, session: SessionToken) -> Option<Template>
+pub fn image(image_id: String, conn: DbConn, auth: Authentication) -> Option<Template>
 {
     use schema::horus_images::dsl::*;
     let image = horus_images.find(image_id).get_result::<HImage>(&*conn);
@@ -306,7 +308,7 @@ pub fn image(image_id: String, conn: DbConn, session: SessionToken) -> Option<Te
     }
     let image = image.unwrap();
 
-    if session.uid != image.owner {
+    if auth.get_userid() != image.owner {
         return None;
     }
 
@@ -327,7 +329,7 @@ pub fn image(image_id: String, conn: DbConn, session: SessionToken) -> Option<Te
 }
 
 #[get("/paste/<paste_id>")]
-pub fn paste(paste_id: String, conn: DbConn, session: SessionToken) -> Option<Template>
+pub fn paste(paste_id: String, conn: DbConn, auth: Authentication) -> Option<Template>
 {
     use schema::horus_pastes::dsl::*;
     let paste = horus_pastes.find(paste_id).get_result::<HPaste>(&*conn);
@@ -337,7 +339,7 @@ pub fn paste(paste_id: String, conn: DbConn, session: SessionToken) -> Option<Te
     }
     let paste = paste.unwrap();
 
-    if paste.owner != session.uid {
+    if auth.get_userid() != paste.owner {
         return None;
     }
 

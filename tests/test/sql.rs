@@ -1,3 +1,5 @@
+use rocket::http::Header;
+
 // Constants for dummy data
 pub const USER_ID: i32 = 999;
 pub const USER_FNAME: &'static str = "test";
@@ -11,8 +13,22 @@ pub const API_KEY: &'static str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 pub const PASTE_ID: &'static str = "abcdefg";
 pub const PASTE_DATA: &'static str = "paste_data_123 paste data lalala";
 
-/// Insertions
 
+/// Helpers
+
+/// Returns a header for test authentication
+pub fn auth_header<'a>() -> Header<'a>
+{
+    Header::new("x-api-test", USER_ID.to_string() + "/0")
+}
+
+/// Returns a header for test api key.
+pub fn api_key_header<'a>() -> Header<'a>
+{
+    Header::new("x-api-key", API_KEY)
+}
+
+/// Insertions
 pub fn sql_insert_user() -> String
 {
     format!(

@@ -34,7 +34,7 @@ fn does_list()
         url.push_str(USER_ID.to_string().as_str());
         url.push_str("/list/0");
         let req = client.get(url.as_str())
-            .header(Header::new("x-api-key", API_KEY));
+            .header(api_key_header());
         let mut response = req.dispatch();
         
         assert_eq!(response.status(), Status::Ok, 
@@ -57,7 +57,7 @@ fn creates_new()
         let body = r#"{"is_expiry":false, "paste_data":"test_paste","title":"Example Title"}"#;
         let client = get_client();
         let req = client.post("/new")
-            .header(Header::new("x-api-key", API_KEY))
+            .header(api_key_header())
             .header(Header::new("content-type", "application/json"))
             .body(body);
         let res = req.dispatch();
@@ -90,7 +90,7 @@ fn deletes_correctly()
     run(||{
         let client = get_client();
         let req = client.delete(String::from("/") + PASTE_ID)
-            .header(Header::new("x-api-key", API_KEY));
+            .header(api_key_header());
         let res = req.dispatch();
 
         assert_eq!(res.status(), Status::Ok,
@@ -108,16 +108,14 @@ fn deletes_correctly()
 #[test]
 fn updates_correctly()
 {
-    /* TODO: Uncomment this when private_cookie is added.
     run(||{
         let body = format!(
             r#"{{"id":"{id}", "paste_data": "new_data", "duration_type": "days", "duration_val": -1}}"#,
             id = PASTE_ID);
         let client = get_client();
         let req = client.put(String::from("/") + PASTE_ID)
-            .header(Header::new("x-api-key", API_KEY))
+            .header(Header::new("x-api-test", USER_ID.to_string() + "/1"))
             .header(Header::new("content-type", "application/json"))
-            .private_cookie(Cookie::new("horus_session", TOKEN_STR))
             .body(body);
         let response = req.dispatch();
 
@@ -129,7 +127,6 @@ fn updates_correctly()
         assert_eq!(response.status(), Status::Ok);
         assert!(response.body_string().unwrap().contains("new_data"));
     });
-    */
 }
 
 fn run<T>(test: T) -> ()
