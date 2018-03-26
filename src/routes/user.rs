@@ -12,7 +12,7 @@ use schema::horus_users::dsl::*;
 
 // Option usage allows us to automatically 404 if the record is not found
 // by just returning "None".
-#[get("/<uid>", rank = 2)]
+#[get("/<uid>")]
 pub fn show(uid: i32, conn: DbConn) -> Option<Json<PublicUser>>
 {
     let user = horus_users.find(uid).first::<User>(&*conn);
@@ -24,7 +24,7 @@ pub fn show(uid: i32, conn: DbConn) -> Option<Json<PublicUser>>
     Some(Json(user.unwrap().without_sensitive_attributes()))
 }
 
-#[get("/me", rank = 1)]
+#[get("/me")]
 pub fn show_privileged(auth: Authentication, conn: DbConn) -> Option<Json<User>>
 {
     let user = horus_users.find(auth.get_userid()).first::<User>(&*conn);
