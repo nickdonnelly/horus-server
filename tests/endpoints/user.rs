@@ -41,10 +41,9 @@ fn not_found_show()
 #[test]
 fn does_show_privileged()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/me")
-            .header(auth_header());
+        let req = client.get("/me").header(auth_header());
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);
@@ -55,7 +54,6 @@ fn does_show_privileged()
         assert_eq!(user.first_name, "test");
         assert_eq!(user.last_name, Some("user".to_string()));
         assert_eq!(user.email, "testuser@example.com");
-
     });
 }
 
@@ -80,9 +78,7 @@ fn does_delete()
 {
     run(|| {
         let client = get_client();
-        let req = client
-            .delete("/999")
-            .header(api_key_header());
+        let req = client.delete("/999").header(api_key_header());
         let response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);

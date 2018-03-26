@@ -39,12 +39,12 @@ pub fn show_privileged(auth: Authentication, conn: DbConn) -> Option<Json<User>>
 #[put("/<uid>", format = "application/json", data = "<updated_values>")]
 pub fn update(
     uid: i32,
-    apikey: LicenseKey,
+    auth: Authentication,
     updated_values: Json<UserForm>,
     conn: DbConn,
 ) -> Result<status::Accepted<()>, Failure>
 {
-    if !apikey.belongs_to(uid) {
+    if auth.get_userid() != uid {
         return Err(Failure(Status::Unauthorized));
     }
 
@@ -61,6 +61,7 @@ pub fn update(
     Ok(status::Accepted(None))
 }
 
+// NOTE: Keep this is apikey: have the user enter it in a modal to delete their account.
 #[delete("/<uid>")]
 pub fn delete(uid: i32, apikey: LicenseKey, conn: DbConn) -> Result<status::Custom<()>, Failure>
 {
@@ -80,7 +81,3 @@ pub fn delete(uid: i32, apikey: LicenseKey, conn: DbConn) -> Result<status::Cust
 
     Ok(status::Custom(Status::Ok, ()))
 }
-
-#[cfg(test)]
-mod tests
-{}

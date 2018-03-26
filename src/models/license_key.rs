@@ -20,7 +20,7 @@ impl LicenseKey
 {
     pub fn belongs_to(&self, uid: i32) -> bool
     {
-        use ::schema::horus_licenses::dsl::*;
+        use schema::horus_licenses::dsl::*;
 
         let conn = dbtools::get_db_conn_requestless().unwrap();
         let license = horus_licenses
@@ -33,13 +33,13 @@ impl LicenseKey
 
         let license = license.unwrap();
 
-        return license.owner == uid;
+        license.owner == uid
     }
 
     /// This function assumes the LicenseKey object is valid and in the db.
     pub fn get_owner(&self) -> i32
     {
-        use ::schema::horus_licenses::dsl::*;
+        use schema::horus_licenses::dsl::*;
         let conn = dbtools::get_db_conn_requestless().unwrap();
         let license = horus_licenses
             .filter(key.eq(&self.key))
@@ -48,5 +48,3 @@ impl LicenseKey
         license.owner
     }
 }
-
-

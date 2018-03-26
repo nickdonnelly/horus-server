@@ -11,5 +11,5 @@ pub struct SessionToken
     pub token: String,
     pub use_count: Option<i32>,
     pub expires: Option<NaiveDateTime>,
-    pub privilege_level: i32
+    pub privilege_level: i32,
 }

@@ -13,6 +13,8 @@ pub const API_KEY: &'static str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 pub const PASTE_ID: &'static str = "abcdefg";
 pub const PASTE_DATA: &'static str = "paste_data_123 paste data lalala";
 
+pub const VIDEO_ID: &'static str = "defghij";
+pub const VIDEO_PATH: &'static str = "/live/videos/defghij.webm";
 
 /// Helpers
 
@@ -61,8 +63,20 @@ pub fn sql_insert_session() -> String
 /// Requires the calling of sql_insert_user first.
 pub fn sql_insert_paste() -> String
 {
-    format!("INSERT INTO horus_pastes(id, paste_data, owner) values('{}', '{}', {}) ON CONFLICT DO NOTHING;",
+    format!(
+        "INSERT INTO horus_pastes(id, paste_data, owner) \
+         values('{}', '{}', {}) ON CONFLICT DO NOTHING;",
         PASTE_ID, PASTE_DATA, USER_ID
+    )
+}
+
+/// Requires the callong of sql_insert_user first.
+pub fn sql_insert_video() -> String
+{
+    format!(
+        "INSERT INTO horus_videos(id, owner, filepath) \
+         values ('{}', {}, '{}') ON CONFLICT DO NOTHING;",
+        VIDEO_ID, USER_ID, VIDEO_PATH
     )
 }
 

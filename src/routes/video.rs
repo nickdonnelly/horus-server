@@ -15,12 +15,13 @@ use dbtools;
 use {contexts, conv};
 use models::{HVideo, LicenseKey, SessionToken};
 use forms::HVideoChangesetForm;
+use fields::Authentication;
 
 fn new_vid(
     vid_data: Data,
     title: String,
     exp: Option<NaiveDateTime>,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
@@ -31,7 +32,7 @@ fn new_vid(
     let video = HVideo {
         id: iid.clone(),
         title: Some(title),
-        owner: apikey.get_owner(),
+        owner: auth.get_userid(),
         filepath: pathstr.clone(),
         date_added: Local::now().naive_utc(),
         is_expiry: exp.is_some(),
@@ -40,10 +41,15 @@ fn new_vid(
 
     let vid_data: Vec<u8> = vid_data.open().bytes().map(|x| x.unwrap()).collect();
 
+    if vid_data.len() < 23 {
+        return Err(Failure(Status::BadRequest));
+    }
+
     // 1 more character due too "webm" vs "png"
     let vid_data_decoded = base64::decode(&vid_data[23..]);
 
     if vid_data_decoded.is_err() {
+        eprintln!("Couldn't decode webm data: {}", vid_data_decoded.err().unwrap());
         return Err(Failure(Status::BadRequest));
     }
 
@@ -61,7 +67,7 @@ fn new_vid(
 
     if result.is_err() {
         return Err(Failure(Status::InternalServerError));
-    }
+    } 
 
     let result = result.unwrap();
 
@@ -72,10 +78,10 @@ fn new_vid(
 }
 
 #[post("/new", format = "video/webm", data = "<vid_data>")]
-pub fn new(vid_data: Data, apikey: LicenseKey, conn: DbConn)
+pub fn new(vid_data: Data, auth: Authentication, conn: DbConn)
     -> Result<status::Created<()>, Failure>
 {
-    new_vid(vid_data, String::from("Horus Video"), None, apikey, conn)
+    new_vid(vid_data, String::from("Horus Video"), None, auth, conn)
 }
 
 /// <vid_data> The base64 video data.
@@ -86,7 +92,7 @@ pub fn new_exp(
     vid_data: Data,
     expt: Option<String>,
     expd: Option<usize>,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
@@ -99,11 +105,11 @@ pub fn new_exp(
             vid_data,
             String::from("Horus Video"),
             Some(exp.unwrap()),
-            apikey,
+            auth,
             conn,
         )
     } else {
-        new_vid(vid_data, String::from("Horus Video"), None, apikey, conn)
+        new_vid(vid_data, String::from("Horus Video"), None, auth, conn)
     }
 }
 
@@ -117,7 +123,7 @@ pub fn new_titled(
     title: String,
     expt: Option<String>,
     expd: Option<usize>,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
@@ -126,9 +132,9 @@ pub fn new_titled(
         if exp.is_err() {
             return Err(Failure(Status::BadRequest));
         }
-        new_vid(vid_data, title, Some(exp.unwrap()), apikey, conn)
+        new_vid(vid_data, title, Some(exp.unwrap()), auth, conn)
     } else {
-        new_vid(vid_data, title, None, apikey, conn)
+        new_vid(vid_data, title, None, auth, conn)
     }
 }
 
@@ -136,14 +142,14 @@ pub fn new_titled(
 pub fn list(
     uid: i32,
     page: u32,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<Json<Vec<HVideo>>, Failure>
 {
     use schema::horus_videos::dsl::*;
 
-    if !apikey.belongs_to(uid) {
-        println!("Unauthorized video list attempt by key: {}", apikey.key);
+    if auth.get_userid() != uid {
+        println!("Unauthorized video list attempt by auth with userid: {}", auth.get_userid());
         return Err(Failure(Status::Unauthorized));
     }
 
@@ -162,34 +168,10 @@ pub fn list(
     Ok(Json(videos.unwrap()))
 }
 
-#[delete("/<vid_id>", rank = 2)]
-pub fn delete_sessionless(
-    vid_id: String,
-    apikey: LicenseKey,
-    conn: DbConn,
-) -> Result<status::Custom<()>, Failure>
-{
-    use schema::horus_videos::dsl::*;
-
-    let video = horus_videos.find(&vid_id).get_result::<HVideo>(&*conn);
-
-    if video.is_err() {
-        return Err(Failure(Status::NotFound));
-    }
-
-    let video = video.unwrap();
-
-    if !apikey.belongs_to(video.owner) {
-        return Err(Failure(Status::Unauthorized));
-    }
-
-    delete_internal(video, conn)
-}
-
 #[delete("/<vid_id>")]
 pub fn delete(
     vid_id: String,
-    session: SessionToken,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Custom<()>, Failure>
 {
@@ -202,7 +184,7 @@ pub fn delete(
 
     let video = video.unwrap();
 
-    if session.uid != video.owner {
+    if auth.get_userid() != video.owner {
         return Err(Failure(Status::Unauthorized));
     }
 
@@ -234,7 +216,7 @@ fn delete_internal(video: HVideo, conn: DbConn) -> Result<status::Custom<()>, Fa
 pub fn update(
     vid_id: String,
     updated_values: Json<HVideoChangesetForm>,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Accepted<()>, Failure>
 {
@@ -248,7 +230,7 @@ pub fn update(
 
     let mut vid = vid.unwrap();
 
-    if !apikey.belongs_to(vid.owner) {
+    if auth.get_userid() != vid.owner {
         return Err(Failure(Status::Unauthorized));
     }
 

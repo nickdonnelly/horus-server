@@ -23,13 +23,12 @@ fn main()
         .mount("/user", routes![user::show, user::update])
         .mount("/key", routes![key::validity_check])
         .mount("/paste", routes![paste::new, paste::update, paste::list, 
-                                 paste::delete_sessionless, paste::delete,
-                                 paste::show])
+                                 paste::show, paste::delete])
         .mount("/image", routes![image::new, image::new_exp, image::new_titled, image::show,
                                  image::update, image::delete, image::delete_sessionless,
                                  image::list, image::full, image::thumb])
         .mount("/video", routes![video::new, video::new_titled, video::show, video::delete,
-                                 video::update, video::delete_sessionless, video::full,
+                                 video::update, video::full,
                                  video::list, video::new_exp])
         .mount("/file", routes![files::get, files::delete, files::delete_sessionless,
                                 files::list, files::new, files::new_exp])

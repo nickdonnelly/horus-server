@@ -7,7 +7,7 @@ use rocket_contrib::Template;
 use DbConn;
 use {contexts, conv};
 use fields::Authentication;
-use models::{HPaste, LicenseKey, SessionToken};
+use models::HPaste;
 use forms::{HNewPasteForm, HPasteChangesetForm};
 use schema::horus_pastes::dsl::*;
 
@@ -38,11 +38,11 @@ pub fn show(paste_id: String, conn: DbConn) -> Option<Template>
 pub fn list(
     uid: i32,
     page: u32,
-    apikey: Authentication,
-    conn: DbConn) 
-    -> Result<Json<Vec<HPaste>>, Failure>
+    auth: Authentication,
+    conn: DbConn,
+) -> Result<Json<Vec<HPaste>>, Failure>
 {
-    if !apikey.get_userid() == uid {
+    if auth.get_userid() != uid {
         return Err(Failure(Status::Unauthorized));
     }
 
@@ -68,7 +68,7 @@ pub fn list(
 #[post("/new", format = "application/json", data = "<paste>")]
 pub fn new(
     paste: Json<HNewPasteForm>,
-    apikey: Authentication,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
@@ -76,7 +76,7 @@ pub fn new(
 
     let paste_form_data = paste.into_inner();
     let mut paste: HPaste = paste_form_data.into();
-    paste.owner = apikey.get_userid();
+    paste.owner = auth.get_userid();
 
     let result = diesel::insert_into(horus_pastes::table)
         .values(&paste)
@@ -112,7 +112,7 @@ fn delete_internal(paste: HPaste, conn: DbConn) -> Result<status::Custom<()>, Fa
 #[delete("/<paste_id>")]
 pub fn delete(
     paste_id: String,
-    session: SessionToken,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Custom<()>, Failure>
 {
@@ -124,29 +124,7 @@ pub fn delete(
 
     let paste = paste.unwrap();
 
-    if session.uid != paste.owner {
-        return Err(Failure(Status::Unauthorized));
-    }
-
-    delete_internal(paste, conn)
-}
-
-#[delete("/<paste_id>", rank = 2)]
-pub fn delete_sessionless(
-    paste_id: String,
-    apikey: LicenseKey,
-    conn: DbConn,
-) -> Result<status::Custom<()>, Failure>
-{
-    let paste = horus_pastes.find(paste_id).get_result::<HPaste>(&*conn);
-
-    if paste.is_err() {
-        return Err(Failure(Status::NotFound));
-    }
-
-    let paste = paste.unwrap();
-
-    if !apikey.belongs_to(paste.owner) {
+    if auth.get_userid() != paste.owner {
         return Err(Failure(Status::Unauthorized));
     }
 

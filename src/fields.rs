@@ -1,8 +1,8 @@
 extern crate regex;
 
 use chrono::Local;
-use rocket::request::{ self, FromRequest };
-use rocket::{ Outcome, Request };
+use rocket::request::{self, FromRequest};
+use rocket::{Outcome, Request};
 use diesel::{self, prelude::*};
 use self::regex::Regex;
 
@@ -36,31 +36,35 @@ pub enum PrivilegeLevel
     User = 0,
     Admin = 1,
     System = 900,
-    God = 901
+    God = 901,
 }
 
 #[derive(Clone)]
 pub enum PrivilegeEnvironment
 {
     World,
-    Test
+    Test,
 }
 
-pub struct Authentication 
+pub struct Authentication
 {
     priv_lvl: PrivilegeLevel,
     userid: i32,
-    environment: PrivilegeEnvironment
+    environment: PrivilegeEnvironment,
 }
 
-impl Authentication 
+impl Authentication
 {
-    fn new(userid: i32, privileges: PrivilegeLevel, environment: PrivilegeEnvironment) -> Authentication
+    fn new(
+        userid: i32,
+        privileges: PrivilegeLevel,
+        environment: PrivilegeEnvironment,
+    ) -> Authentication
     {
         Self {
             priv_lvl: privileges,
             userid: userid,
-            environment: environment
+            environment: environment,
         }
     }
 
@@ -69,10 +73,13 @@ impl Authentication
     fn new_test_auth(user_id: i32, privilege_level: PrivilegeLevel) -> Authentication
     {
         if ROCKET_ENV != "dev" && ROCKET_ENV != "development" {
-            panic!("Attempt to gain test authentication without proper environment! \
-                Environment was {}.", ROCKET_ENV);
+            panic!(
+                "Attempt to gain test authentication without proper environment! \
+                 Environment was {}.",
+                ROCKET_ENV
+            );
         }
-        
+
         Authentication::new(user_id, privilege_level, PrivilegeEnvironment::Test)
     }
 
@@ -81,7 +88,7 @@ impl Authentication
     {
         self.priv_lvl.clone()
     }
-    
+
     /// Get the userid of the authenticatee. In the case of `System`,
     /// this should be -1, in the case of `God`, this should be -999.
     pub fn get_userid(&self) -> i32
@@ -96,7 +103,8 @@ impl Authentication
     }
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for Authentication {
+impl<'a, 'r> FromRequest<'a, 'r> for Authentication
+{
     type Error = String;
 
     fn from_request(request: &'a Request<'r>) -> request::Outcome<Self, Self::Error>
@@ -106,16 +114,20 @@ impl<'a, 'r> FromRequest<'a, 'r> for Authentication {
         // Check for a session
         let session_outcome = SessionToken::from_request(request);
         if let Outcome::Success(sesskey) = session_outcome {
-            return Outcome::Success(
-                Authentication::new(sesskey.uid, PrivilegeLevel::from_int(sesskey.privilege_level as i32), PrivilegeEnvironment::World)
-            );
+            return Outcome::Success(Authentication::new(
+                sesskey.uid,
+                PrivilegeLevel::from_int(sesskey.privilege_level as i32),
+                PrivilegeEnvironment::World,
+            ));
         }
 
         let license_key_outcome = LicenseKey::from_request(request);
         if let Outcome::Success(lkey) = license_key_outcome {
-            return Outcome::Success(
-                Authentication::new(lkey.get_owner(), PrivilegeLevel::from_int(lkey.privilege_level as i32), PrivilegeEnvironment::World)
-            );
+            return Outcome::Success(Authentication::new(
+                lkey.get_owner(),
+                PrivilegeLevel::from_int(lkey.privilege_level as i32),
+                PrivilegeEnvironment::World,
+            ));
         }
 
         // Try test last to reduce overhead in cases with valid auth
@@ -128,8 +140,8 @@ impl<'a, 'r> FromRequest<'a, 'r> for Authentication {
                     return Outcome::Success(Authentication::new_test_auth(uid, priv_lvl));
                 }
             }
-        }           
-        
+        }
+
         // Not authed.
         return Outcome::Failure((Status::Unauthorized, String::from("Not authorized!")));
     }
@@ -197,8 +209,6 @@ pub fn is_valid_api_key(key: &str) -> bool
     true
 }
 
-
-
 impl AuthToken
 {
     pub fn new(uid: i32, priv_lvl: PrivilegeLevel) -> Self
@@ -207,7 +217,7 @@ impl AuthToken
             uid: uid,
             token: dbtools::get_random_char_id(128),
             expires: None, // use db default
-            privilege_level: priv_lvl as i32
+            privilege_level: priv_lvl as i32,
         }
     }
 
@@ -219,7 +229,7 @@ impl AuthToken
             uid: self.uid,
             token: new_token,
             expires: None,
-            privilege_level: self.privilege_level
+            privilege_level: self.privilege_level,
         }
     }
 }
@@ -272,7 +282,7 @@ impl SessionToken
             token: dbtools::get_random_char_id(128),
             use_count: None,
             expires: None,
-            privilege_level: at.privilege_level
+            privilege_level: at.privilege_level,
         };
         let conn = dbtools::get_db_conn_requestless();
         if conn.is_err() {
