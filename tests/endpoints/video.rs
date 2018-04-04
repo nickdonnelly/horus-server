@@ -78,21 +78,24 @@ fn deletes()
 #[test]
 fn updates()
 {
-    let client = get_client();
-    let body = format!(r#"{{ "title": "{title}", "duration_type":"hours", "duration_val":1 }}"#, title="new_title");
-    let req = client.put(String::from("/") + VIDEO_ID)
-        .header(auth_header())
-        .header(Header::new("content-type", "application/json"))
-        .body(body);
-    let response = req.dispatch();
+    run(||{
+        let client = get_client();
+        let body = 
+            format!(r#"{{ "title":"newtitle", "duration_type":"hours", "duration_val":1 }}"#);
+        let req = client.put(String::from("/") + VIDEO_ID)
+            .header(auth_header())
+            .header(Header::new("content-type", "application/json"))
+            .body(body);
+        let response = req.dispatch();
 
-    assert_eq!(response.status(), Status::Accepted);
+        assert_eq!(response.status(), Status::Accepted);
 
-    let req = client.get(String::from("/") + VIDEO_ID);
-    let mut response = req.dispatch();
+        let req = client.get(String::from("/") + VIDEO_ID);
+        let mut response = req.dispatch();
 
-    assert_eq!(response.status(), Status::Ok);
-    assert!(response.body_string().unwrap().contains("new_title"));
+        assert_eq!(response.status(), Status::Ok);
+        assert!(response.body_string().unwrap().contains("newtitle"));
+    });
 }
 
 #[test]

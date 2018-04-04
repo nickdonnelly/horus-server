@@ -157,7 +157,7 @@ fn updates_correctly()
         let client = get_client();
         let req = client
             .put(String::from("/") + PASTE_ID)
-            .header(Header::new("x-api-test", USER_ID.to_string() + "/1"))
+            .header(api_key_header())
             .header(Header::new("content-type", "application/json"))
             .body(body);
         let response = req.dispatch();

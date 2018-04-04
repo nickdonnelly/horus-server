@@ -242,6 +242,10 @@ pub fn update(
         vid.expiration_time = Some(dt.unwrap());
     }
 
+    if let Some(t) = vid_update.title {
+        vid.title = Some(t);
+    }
+
     let result = vid.save_changes::<HVideo>(&*conn);
     match result {
         Ok(_) => Ok(status::Accepted(None)),
