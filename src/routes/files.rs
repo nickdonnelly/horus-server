@@ -11,7 +11,8 @@ use rocket::http::{ContentType, Status};
 use rocket::data::Data;
 use rocket_contrib::{Json, Template};
 
-use models::{HFile, LicenseKey, SessionToken};
+use models::HFile;
+use fields::{PrivilegeLevel, Authentication};
 use DbConn;
 use {conv, dbtools};
 use fields::FileName;
@@ -44,13 +45,13 @@ pub fn get(file_id: String, conn: DbConn) -> Option<Template>
 pub fn list(
     uid: i32,
     page: u32,
-    session: SessionToken,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<Json<Vec<HFile>>, Failure>
 {
     use schema::horus_files::dsl::*;
 
-    if session.uid != uid {
+    if auth.get_userid() != uid && auth.get_privilege_level() == PrivilegeLevel::User {
         return Err(Failure(Status::Unauthorized));
     }
 
@@ -73,11 +74,11 @@ pub fn list(
 pub fn new(
     file_data: Data,
     file_name: FileName,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
-    new_file(file_data, file_name, None, apikey, conn)
+    new_file(file_data, file_name, None, auth, conn)
 }
 
 #[post("/new/<expt>/<expd>", format = "application/octet-stream", data = "<file_data>")]
@@ -86,7 +87,7 @@ pub fn new_exp(
     file_name: FileName,
     expt: Option<String>,
     expd: Option<usize>,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
@@ -95,16 +96,16 @@ pub fn new_exp(
         if exp.is_err() {
             return Err(Failure(Status::BadRequest));
         }
-        new_file(file_data, file_name, Some(exp.unwrap()), apikey, conn)
+        new_file(file_data, file_name, Some(exp.unwrap()), auth, conn)
     } else {
-        new_file(file_data, file_name, None, apikey, conn)
+        new_file(file_data, file_name, None, auth, conn)
     }
 }
 pub fn new_file(
     file_data: Data,
     file_name: FileName,
     expire_time: Option<NaiveDateTime>,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
@@ -114,7 +115,7 @@ pub fn new_file(
 
     let hfile = HFile {
         id: fid.clone(),
-        owner: apikey.get_owner(),
+        owner: auth.get_userid(),
         filename: file_name.0,
         filepath: pathstr.clone(),
         date_added: Local::now().naive_utc(),
@@ -149,7 +150,7 @@ pub fn new_file(
 #[delete("/<file_id>")]
 pub fn delete(
     file_id: String,
-    session: SessionToken,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Custom<()>, Failure>
 {
@@ -160,28 +161,7 @@ pub fn delete(
     }
     let hfile = hfile.unwrap();
 
-    if session.uid != hfile.owner {
-        return Err(Failure(Status::Unauthorized));
-    }
-
-    delete_internal(hfile, conn)
-}
-
-#[delete("/<file_id>", rank = 2)]
-pub fn delete_sessionless(
-    file_id: String,
-    apikey: LicenseKey,
-    conn: DbConn,
-) -> Result<status::Custom<()>, Failure>
-{
-    use schema::horus_files::dsl::*;
-    let hfile = horus_files.find(&file_id).get_result::<HFile>(&*conn);
-    if hfile.is_err() {
-        return Err(Failure(Status::NotFound));
-    }
-    let hfile = hfile.unwrap();
-
-    if !apikey.belongs_to(hfile.owner) {
+    if auth.get_userid() != hfile.owner {
         return Err(Failure(Status::Unauthorized));
     }
 

@@ -41,13 +41,13 @@ impl LicenseKey
     {
         use schema::horus_licenses::dsl::*;
         let conn = dbtools::get_db_conn_requestless().unwrap();
-        let license = horus_licenses.filter(key.eq(&self.key))
+        let license = horus_licenses
+            .filter(key.eq(&self.key))
             .first::<License>(&conn);
-        
-        match license {
-            Err(e) => { panic!("LicenseKey::get_owner() error: {}", e) },
-            Ok(l) => return l.owner
-        }
 
+        match license {
+            Err(e) => panic!("LicenseKey::get_owner() error: {}", e),
+            Ok(l) => return l.owner,
+        }
     }
 }

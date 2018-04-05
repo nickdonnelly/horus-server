@@ -14,7 +14,8 @@ use rocket_contrib::{Json, Template};
 use DbConn;
 use dbtools;
 use {contexts, conv};
-use models::{HImage, LicenseKey, SessionToken};
+use models::HImage;
+use fields::{Authentication, PrivilegeLevel};
 use forms::HImageChangesetForm;
 
 #[get("/<image_id>")]
@@ -66,13 +67,13 @@ pub fn thumb(image_id: String, conn: DbConn) -> Option<NamedFile>
 pub fn list(
     uid: i32,
     page: u32,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<Json<Vec<HImage>>, Failure>
 {
     use schema::horus_images::dsl::*;
 
-    if !apikey.belongs_to(uid) {
+    if auth.get_userid() != uid && auth.get_privilege_level() == PrivilegeLevel::User {
         return Err(Failure(Status::Unauthorized));
     }
 
@@ -93,7 +94,7 @@ pub fn list(
 #[delete("/<image_id>")]
 pub fn delete(
     image_id: String,
-    session: SessionToken,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Custom<()>, Failure>
 {
@@ -107,31 +108,7 @@ pub fn delete(
 
     let image = image.unwrap();
 
-    if session.uid != image.owner {
-        return Err(Failure(Status::Unauthorized));
-    }
-
-    delete_internal(image, conn)
-}
-
-#[delete("/<image_id>", rank = 2)]
-pub fn delete_sessionless(
-    image_id: String,
-    apikey: LicenseKey,
-    conn: DbConn,
-) -> Result<status::Custom<()>, Failure>
-{
-    use schema::horus_images::dsl::*;
-
-    let image = horus_images.find(&image_id).get_result::<HImage>(&*conn);
-
-    if image.is_err() {
-        return Err(Failure(Status::NotFound));
-    }
-
-    let image = image.unwrap();
-
-    if !apikey.belongs_to(image.owner) {
+    if auth.get_userid() != image.owner {
         return Err(Failure(Status::Unauthorized));
     }
 
@@ -163,7 +140,7 @@ fn new_img(
     img_data: Data,
     title: String,
     exp: Option<NaiveDateTime>,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
@@ -175,7 +152,7 @@ fn new_img(
     let image = HImage {
         id: iid.clone(),
         title: Some(title),
-        owner: apikey.get_owner(),
+        owner: auth.get_userid(),
         filepath: pathstr.clone(),
         date_added: Local::now().naive_utc(),
         is_expiry: exp.is_some(),
@@ -217,10 +194,10 @@ fn new_img(
 }
 
 #[post("/new", format = "image/png", data = "<img_data>")]
-pub fn new(img_data: Data, apikey: LicenseKey, conn: DbConn)
+pub fn new(img_data: Data, auth: Authentication, conn: DbConn)
     -> Result<status::Created<()>, Failure>
 {
-    new_img(img_data, String::from("Horus Image"), None, apikey, conn)
+    new_img(img_data, String::from("Horus Image"), None, auth, conn)
 }
 
 /// <img_data> The base64 video data.
@@ -231,7 +208,7 @@ pub fn new_exp(
     img_data: Data,
     expt: Option<String>,
     expd: Option<usize>,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
@@ -244,11 +221,11 @@ pub fn new_exp(
             img_data,
             String::from("Horus Image"),
             Some(exp.unwrap()),
-            apikey,
+            auth,
             conn,
         )
     } else {
-        new_img(img_data, String::from("Horus Image"), None, apikey, conn)
+        new_img(img_data, String::from("Horus Image"), None, auth, conn)
     }
 }
 
@@ -262,7 +239,7 @@ pub fn new_titled(
     title: String,
     expt: Option<String>,
     expd: Option<usize>,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Created<()>, Failure>
 {
@@ -271,9 +248,9 @@ pub fn new_titled(
         if exp.is_err() {
             return Err(Failure(Status::BadRequest));
         }
-        new_img(img_data, title, Some(exp.unwrap()), apikey, conn)
+        new_img(img_data, title, Some(exp.unwrap()), auth, conn)
     } else {
-        new_img(img_data, title, None, apikey, conn)
+        new_img(img_data, title, None, auth, conn)
     }
 }
 
@@ -281,7 +258,7 @@ pub fn new_titled(
 pub fn update(
     image_id: String,
     updated_values: Json<HImageChangesetForm>,
-    apikey: LicenseKey,
+    auth: Authentication,
     conn: DbConn,
 ) -> Result<status::Accepted<()>, Failure>
 {
@@ -296,7 +273,7 @@ pub fn update(
     }
     let mut img = img.unwrap();
 
-    if !apikey.belongs_to(img.owner) {
+    if auth.get_userid() != img.owner {
         return Err(Failure(Status::Unauthorized));
     }
 
@@ -306,6 +283,10 @@ pub fn update(
     if !dt.is_err() {
         img.is_expiry = true;
         img.expiration_time = Some(dt.unwrap());
+    }
+
+    if let Some(_) = img_update.title {
+        img.title = img_update.title;
     }
 
     let result = img.save_changes::<HImage>(&*conn);

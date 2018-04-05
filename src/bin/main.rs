@@ -25,12 +25,12 @@ fn main()
         .mount("/paste", routes![paste::new, paste::update, paste::list, 
                                  paste::show, paste::delete])
         .mount("/image", routes![image::new, image::new_exp, image::new_titled, image::show,
-                                 image::update, image::delete, image::delete_sessionless,
+                                 image::update, image::delete,
                                  image::list, image::full, image::thumb])
         .mount("/video", routes![video::new, video::new_titled, video::show, video::delete,
                                  video::update, video::full,
                                  video::list, video::new_exp])
-        .mount("/file", routes![files::get, files::delete, files::delete_sessionless,
+        .mount("/file", routes![files::get, files::delete,
                                 files::list, files::new, files::new_exp])
         .mount("/manage", routes![manage::image, manage::video, manage::paste,
                                   manage::my_images, manage::my_images_pageless,

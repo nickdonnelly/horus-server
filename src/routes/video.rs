@@ -13,7 +13,7 @@ use rocket_contrib::{Json, Template};
 use DbConn;
 use dbtools;
 use {contexts, conv};
-use models::{HVideo, LicenseKey, SessionToken};
+use models::HVideo;
 use forms::HVideoChangesetForm;
 use fields::Authentication;
 
@@ -49,7 +49,10 @@ fn new_vid(
     let vid_data_decoded = base64::decode(&vid_data[23..]);
 
     if vid_data_decoded.is_err() {
-        eprintln!("Couldn't decode webm data: {}", vid_data_decoded.err().unwrap());
+        eprintln!(
+            "Couldn't decode webm data: {}",
+            vid_data_decoded.err().unwrap()
+        );
         return Err(Failure(Status::BadRequest));
     }
 
@@ -67,7 +70,7 @@ fn new_vid(
 
     if result.is_err() {
         return Err(Failure(Status::InternalServerError));
-    } 
+    }
 
     let result = result.unwrap();
 
@@ -78,8 +81,11 @@ fn new_vid(
 }
 
 #[post("/new", format = "video/webm", data = "<vid_data>")]
-pub fn new(vid_data: Data, auth: Authentication, conn: DbConn)
-    -> Result<status::Created<()>, Failure>
+pub fn new(
+    vid_data: Data,
+    auth: Authentication,
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure>
 {
     new_vid(vid_data, String::from("Horus Video"), None, auth, conn)
 }
@@ -117,6 +123,8 @@ pub fn new_exp(
 /// <title> The title of the image, required.
 /// <expt> The expiration type 'minutes', 'hours', or 'days', optional.
 /// <expd> The expiration duration, required if expt present.
+// TODO: change /expt/expd to ?<exp> of type Expiration which we can use #[derive(FromForm)] on.
+// Do this for all of the resources.
 #[post("/new/<title>/<expt>/<expd>", format = "video/webm", data = "<vid_data>")]
 pub fn new_titled(
     vid_data: Data,
@@ -149,7 +157,10 @@ pub fn list(
     use schema::horus_videos::dsl::*;
 
     if auth.get_userid() != uid {
-        println!("Unauthorized video list attempt by auth with userid: {}", auth.get_userid());
+        println!(
+            "Unauthorized video list attempt by auth with userid: {}",
+            auth.get_userid()
+        );
         return Err(Failure(Status::Unauthorized));
     }
 

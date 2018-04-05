@@ -16,6 +16,13 @@ pub const PASTE_DATA: &'static str = "paste_data_123 paste data lalala";
 pub const VIDEO_ID: &'static str = "defghij";
 pub const VIDEO_PATH: &'static str = "/live/videos/defghij.webm";
 
+pub const IMAGE_ID: &'static str = "hijklm";
+pub const IMAGE_PATH: &'static str = "/live/images/hijklm.png";
+
+pub const FILE_ID: &'static str = "asdfgh";
+pub const FILE_NAME: &'static str = "hijklm.txt";
+pub const FILE_PATH: &'static str = "/live/files/hijklm.txt";
+
 /// Helpers
 
 /// Returns a header for test authentication
@@ -70,13 +77,33 @@ pub fn sql_insert_paste() -> String
     )
 }
 
-/// Requires the callong of sql_insert_user first.
+/// Requires the calling of sql_insert_user first.
 pub fn sql_insert_video() -> String
 {
     format!(
         "INSERT INTO horus_videos(id, owner, filepath) \
          values ('{}', {}, '{}') ON CONFLICT DO NOTHING;",
         VIDEO_ID, USER_ID, VIDEO_PATH
+    )
+}
+
+/// Requires the calling of sql_insert_user first.
+pub fn sql_insert_image() -> String
+{
+    format!(
+        "INSERT INTO horus_images(id, owner, filepath) \
+            values ('{}', {}, '{}') ON CONFLICT DO NOTHING;",
+            IMAGE_ID, USER_ID, IMAGE_PATH
+    )
+}
+
+/// Requires the calling of sql_insert_user first.
+pub fn sql_insert_file() -> String
+{
+    format!(
+        "INSERT INTO horus_files(id, owner, filename, filepath) \
+            values ('{}', {}, '{}', '{}') ON CONFLICT DO NOTHING;",
+            FILE_ID, USER_ID, FILE_NAME, FILE_PATH
     )
 }
 

@@ -30,7 +30,7 @@ pub trait Validatable
     fn validate_fields(&self) -> Result<(), Vec<String>>;
 }
 
-#[derive(FromInt, Clone)]
+#[derive(FromInt, Clone, PartialEq)]
 pub enum PrivilegeLevel
 {
     User = 0,
