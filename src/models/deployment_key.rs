@@ -25,4 +25,21 @@ impl DeploymentKey
     {
         self.key.clone()
     }
+
+    pub fn get_owner(&self) -> i32
+    {
+        use dbtools::get_db_conn_requestless;
+        use models::License;
+        use diesel::prelude::*;
+
+        let conn = get_db_conn_requestless().unwrap();
+        let license = ::schema::horus_licenses::dsl::horus_licenses
+            .filter(::schema::horus_licenses::dsl::key.eq(&self.license_key))
+            .first::<License>(&conn);
+
+        match license {
+            Err(e) => panic!("DeploymentKey::get_owner() error: {}", e),
+            Ok(license) => return license.owner
+        }
+    }
 }

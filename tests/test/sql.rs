@@ -1,4 +1,7 @@
+extern crate bcrypt;
+
 use rocket::http::Header;
+use self::bcrypt::{DEFAULT_COST, hash};
 
 // Constants for dummy data
 pub const USER_ID: i32 = 999;
@@ -8,6 +11,9 @@ pub const USER_EMAIL: &'static str = "testuser@example.com";
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 pub const TOKEN_STR: &'static str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+#[cfg_attr(rustfmt, rustfmt_skip)]
+pub const DEPKEY: &'static str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+pub const DEPKEY_HASH: &'static str = "$2y$12$QDrb7qbHfUhOL2PShTLHJe0VdFXRdnHcj3cJeBemDklzkTpyaw3Je";
 pub const API_KEY: &'static str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 pub const PASTE_ID: &'static str = "abcdefg";
@@ -37,6 +43,12 @@ pub fn api_key_header<'a>() -> Header<'a>
     Header::new("x-api-key", API_KEY)
 }
 
+/// Returns a header for a test deployment key
+pub fn depkey_header<'a>() -> Header<'a>
+{
+    Header::new("x-deployment-key", DEPKEY)
+}
+
 /// Insertions
 pub fn sql_insert_user() -> String
 {
@@ -55,6 +67,15 @@ pub fn sql_insert_license() -> String
          values('{key}', now(), now() + interval '7 days') ON CONFLICT DO NOTHING; \
          INSERT INTO horus_licenses(key, owner) values('{key}', 999) ON CONFLICT DO NOTHING;",
         key = API_KEY
+    )
+}
+
+/// requires the calling of sql_insert_user first.
+pub fn sql_insert_depkey() -> String
+{
+    format!(
+        "INSERT INTO deployment_keys(key, license_key) values('{}', '{}') ON CONFLICT DO NOTHING;",
+        DEPKEY_HASH, API_KEY
     )
 }
 

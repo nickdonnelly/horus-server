@@ -39,10 +39,9 @@ fn main()
                                   manage::my_pastes, manage::my_pastes_pageless,
                                   manage::request_auth_cookie, manage::request_auth_url,
                                   manage::base_redirect])
-        .mount("/meta", routes![meta::get_version, meta::get_latest_session,
-                                meta::get_latest, meta::changelogs])
+        .mount("/meta", routes![meta::changelogs])
         .mount("/dist", routes![dist::deploy, dist::enable_deployment, dist::get_version,
-                                dist::get_latest, dist::get_latest_sess, dist::version_legacy])
+                                dist::get_latest, dist::version_legacy])
         .mount("/static", routes![files::static_asset])
         //.mount("/admin", routes![jobs::list_jobs, jobs::job_status])
         .mount("/", routes![favicon, verify_ssl])

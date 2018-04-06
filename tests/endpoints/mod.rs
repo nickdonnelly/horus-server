@@ -5,3 +5,4 @@ mod video;
 mod image;
 mod files;
 mod manage;
+mod dist;

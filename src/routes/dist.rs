@@ -10,7 +10,8 @@ use rocket::response::{status, Failure, Redirect};
 
 use {dbtools, DbConn};
 use schema::{self, deployment_keys::dsl::*};
-use models::{DeploymentKey, HorusVersion, JobPriority, LicenseKey, NewJob, SessionToken};
+use fields::{Authentication, PrivilegeLevel};
+use models::{DeploymentKey, HorusVersion, JobPriority, LicenseKey, NewJob};
 use models::job_structures::{self, Deployment};
 use job_juggler;
 
@@ -48,20 +49,8 @@ pub fn get_version(plat: Option<String>, conn: DbConn) -> Result<String, status:
     Ok(version.version_string())
 }
 
-#[get("/latest/<plat>", rank = 1)]
-pub fn get_latest(plat: String, conn: DbConn, _apikey: LicenseKey) -> Result<Redirect, Failure>
-{
-    _get_latest(plat, conn)
-}
-
-#[get("/latest/<plat>", rank = 2)]
-pub fn get_latest_sess(plat: String, conn: DbConn, _sess: SessionToken)
-    -> Result<Redirect, Failure>
-{
-    _get_latest(plat, conn)
-}
-
-fn _get_latest(plat: String, conn: DbConn) -> Result<Redirect, Failure>
+#[get("/latest/<plat>")]
+pub fn get_latest(plat: String, conn: DbConn, _auth: Authentication) -> Result<Redirect, Failure>
 {
     use schema::horus_versions::dsl::*;
 
@@ -83,6 +72,7 @@ fn _get_latest(plat: String, conn: DbConn) -> Result<Redirect, Failure>
         let url = url.unwrap();
         Ok(Redirect::to(&url))
     }
+
 }
 
 #[post("/deploy/publish/<platform>/<version_s>")]
@@ -132,8 +122,7 @@ pub fn deploy(
     platform: String,
     version: String,
     update_package: Data,
-    lkey: LicenseKey,
-    depkey: DeploymentKey,
+    depkey: DeploymentKey, // encompasses license key
 ) -> Result<status::Custom<String>, Failure>
 {
     use std::io::Read;
@@ -151,7 +140,7 @@ pub fn deploy(
 
     // Create job with file data.
     let new_job = NewJob::new(
-        lkey.get_owner(),
+        depkey.get_owner(),
         "deployment:deploy:".to_string() + &platform,
         Some(deployment_data),
         JobPriority::System,
@@ -206,8 +195,7 @@ pub fn verify_key(
 /// database object.
 pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey), ()>
 {
-    // TODO fix this comaprison to use PrivilegeLevel
-    if l_key.privilege_level < 3 {
+    if l_key.privilege_level < PrivilegeLevel::System as i16 {
         return Err(());
     }
 
