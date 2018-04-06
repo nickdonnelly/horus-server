@@ -1,7 +1,4 @@
-extern crate bcrypt;
-
 use rocket::http::Header;
-use self::bcrypt::{DEFAULT_COST, hash};
 
 // Constants for dummy data
 pub const USER_ID: i32 = 999;

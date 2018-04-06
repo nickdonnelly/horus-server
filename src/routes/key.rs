@@ -1,21 +1,29 @@
 /// API routes for handling keys.
 use diesel::{self, prelude::*};
-use chrono::{Date, Duration, Local, NaiveDate};
+use chrono::{Date, Duration, Local};
 use rand::{self, Rng};
+use rocket::{response::{status, Failure}, http::Status};
 use rocket_contrib::Json;
 
 use DbConn;
 use schema;
 use models::{License, LicenseKey};
+use fields::{PrivilegeLevel, Authentication};
 use schema::horus_license_keys::dsl::*;
 use schema::horus_licenses::dsl::*;
 
-// TODO: Temporary - will be secured
 // Not currently mounted.
 #[post("/issue/<uid>")]
-pub fn issue(uid: i32) -> Json<(License, LicenseKey)>
+pub fn issue(uid: i32, auth: Authentication) -> Result<status::Created<Json<(License, LicenseKey)>>, Failure>
 {
-    Json(issue_license_with_key(uid, 3, 3).unwrap())
+    if auth.get_privilege_level() == PrivilegeLevel::User {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    Ok(status::Created("".to_string(),
+            Some(Json(issue_license_with_key(uid, 3, PrivilegeLevel::User as i16).unwrap()))
+        )
+    )
 }
 
 /// Endpoint: Check API Key
@@ -24,12 +32,9 @@ pub fn validity_check(apikey: String, conn: DbConn) -> Result<Json<LicenseKey>, 
 {
     use schema::horus_license_keys::dsl::*;
 
-    let today: NaiveDate = Local::today().naive_local();
-
     let _key = horus_license_keys
         .filter(key.eq(&apikey))
-        .filter(valid_until.ge(&today))
-        .first(&*conn);
+        .first::<LicenseKey>(&*conn);
 
     if _key.is_err() {
         return Err(String::from("invalid"));

@@ -1,7 +1,6 @@
 use std::panic;
 
 use rocket::{self, http::{ContentType, Header, Status}, local::Client};
-use rocket_contrib::Json;
 use diesel::connection::SimpleConnection;
 
 use horus_server::{self, routes::manage::*};

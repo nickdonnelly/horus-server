@@ -6,3 +6,4 @@ mod image;
 mod files;
 mod manage;
 mod dist;
+mod key;
