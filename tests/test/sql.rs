@@ -10,7 +10,8 @@ pub const USER_EMAIL: &'static str = "testuser@example.com";
 pub const TOKEN_STR: &'static str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 #[cfg_attr(rustfmt, rustfmt_skip)]
 pub const DEPKEY: &'static str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-pub const DEPKEY_HASH: &'static str = "$2y$12$QDrb7qbHfUhOL2PShTLHJe0VdFXRdnHcj3cJeBemDklzkTpyaw3Je";
+pub const DEPKEY_HASH: &'static str =
+    "$2y$12$QDrb7qbHfUhOL2PShTLHJe0VdFXRdnHcj3cJeBemDklzkTpyaw3Je";
 pub const API_KEY: &'static str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 pub const PASTE_ID: &'static str = "abcdefg";
@@ -85,9 +86,9 @@ pub fn sql_insert_job() -> String
 {
     format!(
         "INSERT INTO horus_jobs(id, owner, job_name, job_status, job_data) \
-            values({}, {}, '{}', {}, '{}') \
-            ON CONFLICT DO NOTHING;", JOB_ID, USER_ID, JOB_NAME, JOB_STATUS, JOB_DATA
-
+         values({}, {}, '{}', {}, '{}') \
+         ON CONFLICT DO NOTHING;",
+        JOB_ID, USER_ID, JOB_NAME, JOB_STATUS, JOB_DATA
     )
 }
 
@@ -125,8 +126,8 @@ pub fn sql_insert_image() -> String
 {
     format!(
         "INSERT INTO horus_images(id, owner, filepath) \
-            values ('{}', {}, '{}') ON CONFLICT DO NOTHING;",
-            IMAGE_ID, USER_ID, IMAGE_PATH
+         values ('{}', {}, '{}') ON CONFLICT DO NOTHING;",
+        IMAGE_ID, USER_ID, IMAGE_PATH
     )
 }
 
@@ -135,8 +136,8 @@ pub fn sql_insert_file() -> String
 {
     format!(
         "INSERT INTO horus_files(id, owner, filename, filepath) \
-            values ('{}', {}, '{}', '{}') ON CONFLICT DO NOTHING;",
-            FILE_ID, USER_ID, FILE_NAME, FILE_PATH
+         values ('{}', {}, '{}', '{}') ON CONFLICT DO NOTHING;",
+        FILE_ID, USER_ID, FILE_NAME, FILE_PATH
     )
 }
 

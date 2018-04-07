@@ -10,21 +10,27 @@ use test::{run_test, sql::*};
 #[test]
 fn issue()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.post("/key/issue/999")
+        let req = client
+            .post("/key/issue/999")
             .header(Header::new("x-api-test", USER_ID.to_string() + "/1")); // higher priv
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Created);
-        assert!(response.body_string().unwrap().contains(USER_ID.to_string().as_str()));
+        assert!(
+            response
+                .body_string()
+                .unwrap()
+                .contains(USER_ID.to_string().as_str())
+        );
     });
 }
 
 #[test]
 fn issue_fails()
 {
-    run(||{
+    run(|| {
         let client = get_client();
         let req = client.post("/key/issue/999");
         let response = req.dispatch();
@@ -36,7 +42,7 @@ fn issue_fails()
 #[test]
 fn validity_check()
 {
-    run(||{
+    run(|| {
         let client = get_client();
         let req = client.get(format!("/key/{}/validity-check", API_KEY));
         let mut response = req.dispatch();
@@ -50,7 +56,7 @@ fn validity_check()
 #[should_panic]
 fn validity_check_fails()
 {
-    run(||{
+    run(|| {
         let client = get_client();
         let req = client.get("/key/invalidkey/validity-check");
         let mut response = req.dispatch();

@@ -120,7 +120,7 @@ fn new_rejects_bad_data()
 #[test]
 fn test_show()
 {
-    run(||{
+    run(|| {
         let client = get_client();
         let req = client.get("/".to_string() + VIDEO_ID);
         let res = req.dispatch();

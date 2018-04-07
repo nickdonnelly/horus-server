@@ -11,8 +11,7 @@ fn my_pastes()
 {
     run(|| {
         let client = get_client();
-        let req = client.get("/manage/pastes/0")
-            .header(auth_header());
+        let req = client.get("/manage/pastes/0").header(auth_header());
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);
@@ -25,10 +24,9 @@ fn my_pastes()
 #[test]
 fn my_images()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/manage/images/0")
-            .header(auth_header());
+        let req = client.get("/manage/images/0").header(auth_header());
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);
@@ -39,10 +37,9 @@ fn my_images()
 #[test]
 fn my_videos()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/manage/videos/0")
-            .header(auth_header());
+        let req = client.get("/manage/videos/0").header(auth_header());
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);
@@ -53,10 +50,9 @@ fn my_videos()
 #[test]
 fn my_files()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/manage/files/0")
-            .header(auth_header());
+        let req = client.get("/manage/files/0").header(auth_header());
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);
@@ -65,11 +61,12 @@ fn my_files()
 }
 
 #[test]
-fn image() 
+fn image()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/manage/image/".to_string() + IMAGE_ID)
+        let req = client
+            .get("/manage/image/".to_string() + IMAGE_ID)
             .header(auth_header());
         let mut response = req.dispatch();
 
@@ -79,11 +76,12 @@ fn image()
 }
 
 #[test]
-fn video() 
+fn video()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/manage/video/".to_string() + VIDEO_ID)
+        let req = client
+            .get("/manage/video/".to_string() + VIDEO_ID)
             .header(auth_header());
         let mut response = req.dispatch();
 
@@ -93,11 +91,12 @@ fn video()
 }
 
 #[test]
-fn paste() 
+fn paste()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/manage/paste/".to_string() + PASTE_ID)
+        let req = client
+            .get("/manage/paste/".to_string() + PASTE_ID)
             .header(auth_header());
         let mut response = req.dispatch();
 
@@ -145,7 +144,9 @@ fn get_client() -> Client
         .attach(Template::fairing())
         .mount(
             "/manage",
-            routes![my_images, my_files, my_videos, my_pastes, video, image, paste],
+            routes![
+                my_images, my_files, my_videos, my_pastes, video, image, paste
+            ],
         )
         .manage(horus_server::dbtools::init_pool());
 

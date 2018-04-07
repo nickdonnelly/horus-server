@@ -6,13 +6,12 @@ use diesel::connection::SimpleConnection;
 use horus_server::{self, routes::image::*};
 use test::{run_test, sql::*};
 
-
 const B64_IMG: &'static str = include_str!("b64_img_data.txt");
 
 #[test]
 fn show()
 {
-    run(||{
+    run(|| {
         let client = get_client();
         let req = client.get("/image/".to_string() + IMAGE_ID);
         let res = req.dispatch();
@@ -24,9 +23,10 @@ fn show()
 #[test]
 fn new()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.post("/image/new")
+        let req = client
+            .post("/image/new")
             .header(auth_header())
             .header(Header::new("content-type", "image/png"))
             .body(B64_IMG);
@@ -46,16 +46,17 @@ fn new()
 #[test]
 fn new_titled_with_exp()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.post(format!("/image/new/{}/{}/{}", "test_title123", "days", 2))
+        let req = client
+            .post(format!("/image/new/{}/{}/{}", "test_title123", "days", 2))
             .header(auth_header())
             .header(Header::new("content-type", "image/png"))
             .body(B64_IMG);
         let response = req.dispatch();
 
         assert_eq!(response.status(), Status::Created);
-        
+
         let loc = response.headers().get_one("location").unwrap();
         let req = client.get(loc);
         let mut response = req.dispatch();
@@ -71,7 +72,8 @@ fn update()
     run(|| {
         let client = get_client();
         let changes = r#"{ "title": "newer_title", "duration_type": "hours", "duration_val": 1 }"#;
-        let req = client.put("/image/".to_string() + IMAGE_ID)
+        let req = client
+            .put("/image/".to_string() + IMAGE_ID)
             .header(auth_header())
             .header(Header::new("content-type", "application/json"))
             .body(changes);
@@ -81,7 +83,7 @@ fn update()
 
         let req = client.get("/image/".to_string() + IMAGE_ID);
         let mut response = req.dispatch();
-        
+
         assert_eq!(response.status(), Status::Ok);
         assert!(response.body_string().unwrap().contains("newer_title"));
     });
@@ -92,7 +94,8 @@ fn delete()
 {
     run(|| {
         let client = get_client();
-        let req = client.delete("/image/".to_string() + IMAGE_ID)
+        let req = client
+            .delete("/image/".to_string() + IMAGE_ID)
             .header(auth_header());
         let response = req.dispatch();
 
@@ -110,20 +113,26 @@ fn list()
 {
     run(|| {
         let client = get_client();
-        let req = client.post("/image/new")
+        let req = client
+            .post("/image/new")
             .header(auth_header())
             .header(Header::new("content-type", "image/png"))
             .body(B64_IMG);
-        let new_id = req.dispatch().headers().get_one("location").unwrap()
-            .trim_left_matches("/image/").to_string();
+        let new_id = req.dispatch()
+            .headers()
+            .get_one("location")
+            .unwrap()
+            .trim_left_matches("/image/")
+            .to_string();
 
-        let req = client.get(format!("/image/{}/list/0", USER_ID))
+        let req = client
+            .get(format!("/image/{}/list/0", USER_ID))
             .header(auth_header());
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);
         let bs = response.body_string().unwrap();
-        
+
         assert!(bs.contains(IMAGE_ID));
         assert!(bs.contains(&new_id));
     });

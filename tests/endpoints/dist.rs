@@ -21,7 +21,7 @@ fn legacy_redirect()
 #[test]
 fn version()
 {
-    run(||{
+    run(|| {
         let client = get_client();
         let req = client.get("/dist/version/win64");
         let response = req.dispatch();
@@ -42,17 +42,21 @@ fn version_can_fail()
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::BadRequest);
-        assert!(response.body_string().unwrap().contains("platform is correct?"));
+        assert!(
+            response
+                .body_string()
+                .unwrap()
+                .contains("platform is correct?")
+        );
     });
 }
 
 #[test]
 fn get_latest()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/dist/latest/linux")
-            .header(auth_header());
+        let req = client.get("/dist/latest/linux").header(auth_header());
         let response = req.dispatch();
 
         assert_eq!(response.status().class(), StatusClass::Redirection);
@@ -64,8 +68,7 @@ fn get_latest_can_fail()
 {
     run(|| {
         let client = get_client();
-        let req = client.get("/dist/latest/failure")
-            .header(auth_header());
+        let req = client.get("/dist/latest/failure").header(auth_header());
         let response = req.dispatch();
 
         assert_eq!(response.status(), Status::NotFound);
@@ -75,10 +78,11 @@ fn get_latest_can_fail()
 #[test]
 fn deploy()
 {
-    run(||{
+    run(|| {
         let client = get_client();
         let body = "test_body";
-        let req = client.post("/dist/deploy/new/linux/99.99.99")
+        let req = client
+            .post("/dist/deploy/new/linux/99.99.99")
             .header(Header::new("content-type", "application/octet-stream"))
             .header(api_key_header())
             .header(depkey_header())
@@ -86,7 +90,12 @@ fn deploy()
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Accepted);
-        assert!(response.body_string().unwrap().contains("queued for processing."));
+        assert!(
+            response
+                .body_string()
+                .unwrap()
+                .contains("queued for processing.")
+        );
     });
 }
 
@@ -126,7 +135,13 @@ fn get_client() -> Client
         .attach(Template::fairing())
         .mount(
             "/dist",
-            routes![version_legacy, get_version, get_latest, enable_deployment, deploy],
+            routes![
+                version_legacy,
+                get_version,
+                get_latest,
+                enable_deployment,
+                deploy
+            ],
         )
         .manage(horus_server::dbtools::init_pool());
 

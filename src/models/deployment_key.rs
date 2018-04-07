@@ -39,7 +39,7 @@ impl DeploymentKey
 
         match license {
             Err(e) => panic!("DeploymentKey::get_owner() error: {}", e),
-            Ok(license) => return license.owner
+            Ok(license) => return license.owner,
         }
     }
 }

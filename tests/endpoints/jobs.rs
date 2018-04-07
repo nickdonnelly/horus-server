@@ -11,9 +11,10 @@ use test::{run_test, sql::*};
 #[test]
 pub fn job_status()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/jobs/poll/".to_string() + &JOB_ID.to_string())
+        let req = client
+            .get("/jobs/poll/".to_string() + &JOB_ID.to_string())
             .header(auth_header());
         let mut response = req.dispatch();
 
@@ -26,10 +27,9 @@ pub fn job_status()
 #[test]
 pub fn job_status_not_exists()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/jobs/poll/235235")
-            .header(auth_header());
+        let req = client.get("/jobs/poll/235235").header(auth_header());
         let response = req.dispatch();
 
         assert_eq!(response.status(), Status::NotFound);
@@ -39,9 +39,10 @@ pub fn job_status_not_exists()
 #[test]
 pub fn list_current_jobs()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get("/jobs/active/".to_string() + &USER_ID.to_string())
+        let req = client
+            .get("/jobs/active/".to_string() + &USER_ID.to_string())
             .header(auth_header());
         let mut response = req.dispatch();
 
@@ -52,14 +53,18 @@ pub fn list_current_jobs()
 #[test]
 pub fn list_all_jobs()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.get(format!("/jobs/all/{}/0", USER_ID))
+        let req = client
+            .get(format!("/jobs/all/{}/0", USER_ID))
             .header(auth_header());
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);
-        assert_eq!(response.headers().get_one("content-type").unwrap(), "application/json");
+        assert_eq!(
+            response.headers().get_one("content-type").unwrap(),
+            "application/json"
+        );
         assert!(response.body_string().unwrap().contains(JOB_NAME));
     });
 }
@@ -69,8 +74,7 @@ pub fn denies_unauthed_user()
 {
     run(|| {
         let client = get_client();
-        let req = client.get("/jobs/all/123/0")
-            .header(auth_header());
+        let req = client.get("/jobs/all/123/0").header(auth_header());
         let response = req.dispatch();
         assert_eq!(response.status(), Status::Unauthorized);
     });
@@ -107,7 +111,10 @@ fn unsetup_db()
 fn get_client() -> Client
 {
     let rocket = rocket::ignite()
-        .mount("/jobs", routes![retrieve_job_status, list_active_jobs, list_all_jobs])
+        .mount(
+            "/jobs",
+            routes![retrieve_job_status, list_active_jobs, list_all_jobs],
+        )
         .manage(horus_server::dbtools::init_pool());
 
     Client::new(rocket).expect("valid rocket instance")

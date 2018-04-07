@@ -194,8 +194,11 @@ fn new_img(
 }
 
 #[post("/new", format = "image/png", data = "<img_data>")]
-pub fn new(img_data: Data, auth: Authentication, conn: DbConn)
-    -> Result<status::Created<()>, Failure>
+pub fn new(
+    img_data: Data,
+    auth: Authentication,
+    conn: DbConn,
+) -> Result<status::Created<()>, Failure>
 {
     new_img(img_data, String::from("Horus Image"), None, auth, conn)
 }

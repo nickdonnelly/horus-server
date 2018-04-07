@@ -6,7 +6,6 @@ use diesel::connection::SimpleConnection;
 use horus_server::{self, routes::files::*};
 use test::{run_test, sql::*};
 
-
 #[test]
 fn get()
 {
@@ -23,11 +22,12 @@ fn get()
 #[test]
 fn new()
 {
-    run(||{
+    run(|| {
         let client = get_client();
         let filecontent = "dummycontent";
         let new_fname = "filename123";
-        let req = client.post("/file/new")
+        let req = client
+            .post("/file/new")
             .header(auth_header())
             .header(Header::new("content-type", "application/octet-stream"))
             .header(Header::new("content-disposition", new_fname))
@@ -46,11 +46,12 @@ fn new()
 #[test]
 fn new_exp()
 {
-    run(||{
+    run(|| {
         let client = get_client();
         let filecontent = "dummycontent";
         let new_fname = "filename123";
-        let req = client.post("/file/new/hours/1")
+        let req = client
+            .post("/file/new/hours/1")
             .header(auth_header())
             .header(Header::new("content-type", "application/octet-stream"))
             .header(Header::new("content-disposition", new_fname))
@@ -71,12 +72,13 @@ fn delete()
 {
     run(|| {
         let client = get_client();
-        let req = client.delete("/file/".to_string() + FILE_ID)
+        let req = client
+            .delete("/file/".to_string() + FILE_ID)
             .header(auth_header());
         let response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);
-        
+
         let response = client.get("/file/".to_string() + FILE_ID).dispatch();
 
         assert_eq!(response.status(), Status::NotFound);
@@ -86,9 +88,10 @@ fn delete()
 #[test]
 fn list()
 {
-    run(||{
+    run(|| {
         let client = get_client();
-        let req = client.post("/file/new")
+        let req = client
+            .post("/file/new")
             .header(auth_header())
             .header(Header::new("content-disposition", "fileabc"))
             .header(Header::new("content-type", "application/octet-stream"));
@@ -96,14 +99,15 @@ fn list()
 
         assert_eq!(response.status(), Status::Created);
 
-        let req = client.get(format!("/file/{}/list/0", USER_ID))
+        let req = client
+            .get(format!("/file/{}/list/0", USER_ID))
             .header(auth_header());
         let mut response = req.dispatch();
 
         assert_eq!(response.status(), Status::Ok);
 
         let bs = response.body_string().unwrap();
-        
+
         assert!(bs.contains("fileabc"));
         assert!(bs.contains(FILE_NAME));
     });
@@ -142,10 +146,7 @@ fn get_client() -> Client
     use rocket_contrib::Template;
     let rocket = rocket::ignite()
         .attach(Template::fairing())
-        .mount(
-            "/file",
-            routes![get, list, new, new_exp, delete],
-        )
+        .mount("/file", routes![get, list, new, new_exp, delete])
         .manage(horus_server::dbtools::init_pool());
 
     Client::new(rocket).expect("valid rocket instance")

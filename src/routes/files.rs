@@ -12,7 +12,7 @@ use rocket::data::Data;
 use rocket_contrib::{Json, Template};
 
 use models::HFile;
-use fields::{PrivilegeLevel, Authentication};
+use fields::{Authentication, PrivilegeLevel};
 use DbConn;
 use {conv, dbtools};
 use fields::FileName;

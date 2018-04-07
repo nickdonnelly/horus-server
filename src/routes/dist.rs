@@ -72,7 +72,6 @@ pub fn get_latest(plat: String, conn: DbConn, _auth: Authentication) -> Result<R
         let url = url.unwrap();
         Ok(Redirect::to(&url))
     }
-
 }
 
 #[post("/deploy/publish/<platform>/<version_s>")]

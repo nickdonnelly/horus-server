@@ -2,28 +2,33 @@
 use diesel::{self, prelude::*};
 use chrono::{Date, Duration, Local};
 use rand::{self, Rng};
-use rocket::{response::{status, Failure}, http::Status};
+use rocket::{http::Status, response::{status, Failure}};
 use rocket_contrib::Json;
 
 use DbConn;
 use schema;
 use models::{License, LicenseKey};
-use fields::{PrivilegeLevel, Authentication};
+use fields::{Authentication, PrivilegeLevel};
 use schema::horus_license_keys::dsl::*;
 use schema::horus_licenses::dsl::*;
 
 // Not currently mounted.
 #[post("/issue/<uid>")]
-pub fn issue(uid: i32, auth: Authentication) -> Result<status::Created<Json<(License, LicenseKey)>>, Failure>
+pub fn issue(
+    uid: i32,
+    auth: Authentication,
+) -> Result<status::Created<Json<(License, LicenseKey)>>, Failure>
 {
     if auth.get_privilege_level() == PrivilegeLevel::User {
         return Err(Failure(Status::Unauthorized));
     }
 
-    Ok(status::Created("".to_string(),
-            Some(Json(issue_license_with_key(uid, 3, PrivilegeLevel::User as i16).unwrap()))
-        )
-    )
+    Ok(status::Created(
+        "".to_string(),
+        Some(Json(
+            issue_license_with_key(uid, 3, PrivilegeLevel::User as i16).unwrap(),
+        )),
+    ))
 }
 
 /// Endpoint: Check API Key
