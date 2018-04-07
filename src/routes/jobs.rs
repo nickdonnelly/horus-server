@@ -14,7 +14,7 @@ pub struct ListJob {id: i32, job_name: String, job_status: i32, priority: i32}
 
 // NONE OF THESE ARE IMPLEMENTED
 #[get("/active/<uid>")]
-pub fn list_jobs(uid: i32, auth: Authentication, conn: DbConn) 
+pub fn list_active_jobs(uid: i32, auth: Authentication, conn: DbConn) 
     -> Result<Json<Vec<ListJob>>, Failure>
 {
     if auth.get_userid() != uid && auth.get_privilege_level() == PrivilegeLevel::User {
@@ -49,6 +49,41 @@ pub fn list_jobs(uid: i32, auth: Authentication, conn: DbConn)
     }
 }
 
+#[get("/all/<uid>/<page>")]
+pub fn list_all_jobs(uid: i32, page: u32, auth: Authentication, conn: DbConn)
+    -> Result<Json<Vec<ListJob>>, Failure>
+{
+    if auth.get_userid() != uid && auth.get_privilege_level() == PrivilegeLevel::User {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    let user = horus_users.find(&uid).get_result::<User>(&*conn);
+    if user.is_err() {
+        return Err(Failure(Status::NotFound));
+    }
+    let user = user.unwrap();
+
+    let result = HJob::belonging_to(&user)
+       .select((::schema::horus_jobs::dsl::id, job_name, job_status, priority))
+       .offset((page * 24) as i64)
+       .limit(24)
+       .get_results::<(i32, String, i32, i32)>(&*conn);
+
+    match result {
+        Ok(values) => {
+            let values = values.iter().map(|&(id, ref name, status, _priority)| {
+                ListJob {
+                    id: id, job_name: name.clone(), job_status: status, priority: _priority
+                }
+            }).collect();
+
+            Ok(Json(values))
+        },
+        Err(_) => Err(Failure(Status::InternalServerError))
+    }
+
+
+}
 
 #[get("/poll/<job_id>")]
 pub fn retrieve_job_status(job_id: i32, auth: Authentication, conn: DbConn) 

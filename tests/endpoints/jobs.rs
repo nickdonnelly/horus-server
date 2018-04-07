@@ -52,10 +52,28 @@ pub fn list_current_jobs()
 #[test]
 pub fn list_all_jobs()
 {
-    //run(||{
-        //let client = get_client();
-        //let req = client.get("/jobs/all/
-    //});
+    run(||{
+        let client = get_client();
+        let req = client.get(format!("/jobs/all/{}/0", USER_ID))
+            .header(auth_header());
+        let mut response = req.dispatch();
+
+        assert_eq!(response.status(), Status::Ok);
+        assert_eq!(response.headers().get_one("content-type").unwrap(), "application/json");
+        assert!(response.body_string().unwrap().contains(JOB_NAME));
+    });
+}
+
+#[test]
+pub fn denies_unauthed_user()
+{
+    run(|| {
+        let client = get_client();
+        let req = client.get("/jobs/all/123/0")
+            .header(auth_header());
+        let response = req.dispatch();
+        assert_eq!(response.status(), Status::Unauthorized);
+    });
 }
 
 fn run<T>(test: T) -> ()
@@ -89,7 +107,7 @@ fn unsetup_db()
 fn get_client() -> Client
 {
     let rocket = rocket::ignite()
-        .mount("/jobs", routes![retrieve_job_status, list_jobs])
+        .mount("/jobs", routes![retrieve_job_status, list_active_jobs, list_all_jobs])
         .manage(horus_server::dbtools::init_pool());
 
     Client::new(rocket).expect("valid rocket instance")
