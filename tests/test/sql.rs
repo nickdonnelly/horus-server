@@ -19,6 +19,11 @@ pub const PASTE_DATA: &'static str = "paste_data_123 paste data lalala";
 pub const VIDEO_ID: &'static str = "defghij";
 pub const VIDEO_PATH: &'static str = "/live/videos/defghij.webm";
 
+pub const JOB_ID: i32 = 582;
+pub const JOB_NAME: &'static str = "test_job";
+pub const JOB_DATA: &'static str = "this_is_test_data";
+pub const JOB_STATUS: &'static str = "1";
+
 pub const IMAGE_ID: &'static str = "hijklm";
 pub const IMAGE_PATH: &'static str = "/live/images/hijklm.png";
 
@@ -73,6 +78,16 @@ pub fn sql_insert_depkey() -> String
     format!(
         "INSERT INTO deployment_keys(key, license_key) values('{}', '{}') ON CONFLICT DO NOTHING;",
         DEPKEY_HASH, API_KEY
+    )
+}
+
+pub fn sql_insert_job() -> String
+{
+    format!(
+        "INSERT INTO horus_jobs(id, owner, job_name, job_status, job_data) \
+            values({}, {}, '{}', {}, '{}') \
+            ON CONFLICT DO NOTHING;", JOB_ID, USER_ID, JOB_NAME, JOB_STATUS, JOB_DATA
+
     )
 }
 
