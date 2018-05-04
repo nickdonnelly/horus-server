@@ -192,10 +192,10 @@ pub fn verify_key(
 /// Issue a deployment key.
 /// Returns a tuple containing a plaintext deployment key and its corresponding
 /// database object.
-pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey), ()>
+pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey), String>
 {
     if l_key.privilege_level < PrivilegeLevel::System as i16 {
-        return Err(());
+        return Err("Privilege level of API key is too low to issue deployment key.".to_string());
     }
 
     let random_key: String = rand::thread_rng()
@@ -217,7 +217,7 @@ pub fn issue_deployment_key(l_key: LicenseKey) -> Result<(String, DeploymentKey)
         .get_result::<DeploymentKey>(&connection);
 
     if dep_key_result.is_err() {
-        return Err(());
+        return Err(format!("Database error {}.", dep_key_result.err().unwrap()));
     }
 
     let dep_key_result = dep_key_result.unwrap();
