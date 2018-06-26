@@ -1,6 +1,7 @@
 extern crate regex;
 
 use chrono::Local;
+use from_int::FromInt;
 use rocket::request::{self, FromRequest};
 use rocket::{Outcome, Request};
 use diesel::{self, prelude::*};
@@ -19,11 +20,6 @@ const EMAIL_REGEX: &str = r"^[^@]+@[^@]+\.[^@]+$";
 const ROCKET_ENV: &str = dotenv!("ROCKET_ENV");
 
 pub struct FileName(pub String);
-
-pub trait FromInt
-{
-    fn from_int(i: i32) -> Self;
-}
 
 pub trait Validatable
 {
@@ -116,7 +112,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Authentication
         if let Outcome::Success(sesskey) = session_outcome {
             return Outcome::Success(Authentication::new(
                 sesskey.uid,
-                PrivilegeLevel::from_int(sesskey.privilege_level as i32),
+                PrivilegeLevel::from_int(sesskey.privilege_level as i32).unwrap(),
                 PrivilegeEnvironment::World,
             ));
         }
@@ -125,7 +121,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Authentication
         if let Outcome::Success(lkey) = license_key_outcome {
             return Outcome::Success(Authentication::new(
                 lkey.get_owner(),
-                PrivilegeLevel::from_int(lkey.privilege_level as i32),
+                PrivilegeLevel::from_int(lkey.privilege_level as i32).unwrap(),
                 PrivilegeEnvironment::World,
             ));
         }
@@ -136,7 +132,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Authentication
                 let s: Vec<&str> = v.split("/").collect();
                 if s.len() == 2 {
                     let uid = s[0].parse::<i32>().unwrap();
-                    let priv_lvl = PrivilegeLevel::from_int(s[1].parse::<i32>().unwrap());
+                    let priv_lvl = PrivilegeLevel::from_int(s[1].parse::<i32>().unwrap()).unwrap();
                     return Outcome::Success(Authentication::new_test_auth(uid, priv_lvl));
                 }
             }

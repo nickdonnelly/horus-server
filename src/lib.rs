@@ -8,9 +8,6 @@ extern crate diesel;
 #[macro_use]
 extern crate diesel_infer_schema;
 
-#[macro_use]
-extern crate horus_server_derive;
-
 extern crate bincode;
 extern crate rand;
 extern crate serde;
@@ -27,6 +24,11 @@ extern crate rocket;
 #[allow(unused_imports)]
 #[macro_use]
 extern crate rocket_contrib;
+
+extern crate from_int;
+#[macro_use] extern crate from_int_derive;
+
+#[macro_use] extern crate horus_server_derive;
 
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
