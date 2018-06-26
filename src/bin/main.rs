@@ -37,6 +37,7 @@ fn main()
                                   manage::my_videos, manage::my_videos_pageless,
                                   manage::my_files, manage::my_files_pageless,
                                   manage::my_pastes, manage::my_pastes_pageless,
+                                  manage::my_account,
                                   manage::request_auth_cookie, manage::request_auth_url,
                                   manage::base_redirect])
         .mount("/meta", routes![meta::changelogs])

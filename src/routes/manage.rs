@@ -10,6 +10,7 @@ use models::{AuthToken, HFile, HImage, HPaste, HVideo, LicenseKey, SessionToken,
 use fields::Authentication;
 use contexts::{FileList, ImageList, PasteList, VideoList};
 use contexts::{ManageImage, ManagePaste, ManageVideo};
+use contexts::ShowAccount;
 use schema;
 use errors::AuthTokenError;
 
@@ -116,18 +117,42 @@ pub fn request_auth_cookie(
 }
 
 #[get("/account")]
-// TODO
 pub fn my_account(auth: Authentication, conn: DbConn) -> Option<Template>
 {
     use schema::horus_users::dsl::*;
+    use schema::horus_files::dsl::{horus_files, owner};
+    use schema::horus_images::dsl::horus_images;
+    use schema::horus_videos::dsl::horus_videos;
+    use schema::horus_pastes::dsl::horus_pastes;
+
     let uid = auth.get_userid();
 
     let user = horus_users.filter(id.eq(&uid)).first::<User>(&*conn);
 
-    match user {
-        Err(_) => None,
-        Ok(u) => Some(Template::render("manage_account", &u)),
+    if user.is_err() {
+        return None;
     }
+
+    let user = user.unwrap();
+    let resource_counts: i64 = 
+        horus_images.inner_join(horus_videos.on(schema::horus_videos::dsl::owner.eq(&uid)))
+                    .inner_join(horus_files.on(schema::horus_files::dsl::owner.eq(&uid)))
+                    .inner_join(horus_pastes.on(schema::horus_pastes::dsl::owner.eq(&uid)))
+                    //.filter(owner.eq(&uid))
+                    .count()
+                    .get_result::<i64>(&*conn)
+                    .unwrap();
+
+    let context = ShowAccount {
+        user_id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        privilege_level: auth.get_privilege_level().to_string(),
+        resource_count: resource_counts
+    };
+
+    Some(Template::render("manage_account", &context))
 }
 
 #[get("/images/<page>")]

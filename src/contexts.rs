@@ -84,3 +84,14 @@ pub struct ShowImage
     pub item: HImage,
     pub meta_tag: Option<String>,
 }
+
+#[derive(Serialize)]
+pub struct ShowAccount
+{
+    pub user_id: i32,
+    pub first_name: String,
+    pub last_name: Option<String>,
+    pub email: String,
+    pub privilege_level: String,
+    pub resource_count: i64,
+}

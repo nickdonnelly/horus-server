@@ -1,5 +1,7 @@
 extern crate regex;
 
+use std::{fmt, fmt::Display};
+
 use chrono::Local;
 use from_int::FromInt;
 use rocket::request::{self, FromRequest};
@@ -26,7 +28,7 @@ pub trait Validatable
     fn validate_fields(&self) -> Result<(), Vec<String>>;
 }
 
-#[derive(FromInt, Clone, PartialEq)]
+#[derive(FromInt, Clone, PartialEq, Debug)]
 pub enum PrivilegeLevel
 {
     User = 0,
@@ -266,6 +268,13 @@ impl AuthRequest
             return Err(AuthTokenError::ConsumeFailure);
         }
         Ok(st.unwrap())
+    }
+}
+
+impl Display for PrivilegeLevel {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result 
+    {
+        write!(f, "{:?}", self)
     }
 }
 
