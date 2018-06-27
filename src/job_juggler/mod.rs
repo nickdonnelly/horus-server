@@ -19,18 +19,13 @@ pub enum JobResult
 {
     Complete,
     Failed,
+    FailedWithReason(String)
 }
 
 pub struct JobJuggler
 {
     connection: PgConnection,
     job_queue: VecDeque<HJob>,
-}
-
-#[derive(Debug)]
-pub struct JobJugglerError
-{
-    desc: String,
 }
 
 impl JobJuggler
@@ -85,6 +80,7 @@ impl JobJuggler
         Ok(())
     }
 
+    /// The execution loop that completes jobs and queues new ones perpetually.
     pub fn juggle(mut self) -> !
     {
         use std::time::Duration;
@@ -111,13 +107,16 @@ impl JobJuggler
 
                 println!("Job finished with result {:?}", result);
 
-                let result = match result {
-                    JobResult::Complete => JobStatus::Complete,
-                    JobResult::Failed => JobStatus::Failed,
-                } as i32;
+                let (result, failure_reason) = Self::match_job_result(result);
+
+                let mut job_logs = done_job.logs();
+                if let Some(s) = failure_reason {
+                    job_logs.push_str("\n---\nJob failed for reason:\n");
+                    job_logs.push_str(&s);
+                }
 
                 diesel::update(horus_jobs.find(job_id))
-                    .set((logs.eq(done_job.logs()), job_status.eq(result)))
+                    .set((logs.eq(job_logs), job_status.eq(result)))
                     .execute(&self.connection)
                     .unwrap();
 
@@ -128,8 +127,10 @@ impl JobJuggler
         }
     }
 
+    /// Enqueues one more job if there is one available
     fn check_for_new_job(&mut self)
     {
+        // Get jobs that can be queued by priority, then oldest first
         let new_job: Result<HJob, _> = horus_jobs
             .filter(job_status.eq(JobStatus::Waiting as i32))
             .filter(priority.ne(JobPriority::DoNotProcess as i32))
@@ -137,6 +138,7 @@ impl JobJuggler
             .order(time_queued.asc()) // oldest first
             .first::<HJob>(&self.connection);
 
+        // Add to queue and set it to queued in the db so it doesn't get multiple queued.
         if new_job.is_ok() {
             let new_job = new_job.unwrap();
             print!("Enqueueing new job (id={})...", new_job.id);
@@ -160,15 +162,28 @@ impl JobJuggler
             .unwrap();
     }
 
+    /// Matches the job string to the correct type of deserialized job.
     fn match_job_type(job: HJob) -> impl ExecutableJob + LoggableJob
     {
         use models::job_structures::*;
 
-        let d = job.job_data.unwrap();
+        let data = job.job_data.unwrap();
         match job.job_name.as_str() {
             "deployment:deploy:win64" | "deployment:deploy:linux" | _ => {
-                debinarize::<Deployment>(d.as_slice()).unwrap()
+                debinarize::<Deployment>(data.as_slice()).unwrap()
             }
+        }
+    }
+
+    /// Returns the job status for the database given the job result.
+    /// If it was `JobResult::FailureWithReason`, the failure message is
+    /// included in the tuple (otherwise it is `None`).
+    fn match_job_result(result: JobResult) -> (i32, Option<String>)
+    {
+        match result {
+            JobResult::Complete => (JobStatus::Complete as i32, None),
+            JobResult::Failed => (JobStatus::Failed as i32, None),
+            JobResult::FailedWithReason(s) => (JobStatus::Failed as i32, Some(s))
         }
     }
 }
@@ -222,6 +237,13 @@ pub fn enqueue_job(job: NewJob) -> Result<(), JobJugglerError>
 
     // Our initial insert went fine
     Ok(())
+}
+
+
+#[derive(Debug)]
+pub struct JobJugglerError
+{
+    desc: String,
 }
 
 impl fmt::Display for JobJugglerError

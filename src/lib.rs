@@ -30,6 +30,11 @@ extern crate from_int;
 
 #[macro_use] extern crate horus_server_derive;
 
+
+// For tests
+#[cfg(test)]
+#[macro_use] extern crate pretty_assertions;
+
 use diesel::pg::PgConnection;
 use r2d2_diesel::ConnectionManager;
 

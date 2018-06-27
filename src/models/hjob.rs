@@ -27,9 +27,9 @@ pub enum JobPriority
     Normal = 0,        // normal jobs made by users
     Elevated = 1,      // jobs that are time dependent but not crucial
     High = 2,          // very important jobs
-    System = 3, // system level jobs like clearing caches and things that need to be done next.
+    System = 3,  // system level jobs like clearing caches and things that need to be done next.
     GodMode = 4, // Forcible override - shouldn't be used lightly.
-                // TODO: Directly insert godmode jobs into job queue instead of database.
+                 // TODO: Directly insert godmode jobs into job queue instead of database.
 }
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Identifiable, Queryable, Associations,
@@ -71,7 +71,7 @@ impl NewJob
     }
 
     /// Return an instance of self without the data (used for quick insert
-    /// without the data being present).
+    /// without the data being present). Also sets the priority to `JobPriority::DoNotProcess`.
     pub fn without_data(&self) -> NewJob
     {
         NewJob {

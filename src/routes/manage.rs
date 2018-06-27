@@ -120,7 +120,7 @@ pub fn request_auth_cookie(
 pub fn my_account(auth: Authentication, conn: DbConn) -> Option<Template>
 {
     use schema::horus_users::dsl::*;
-    use schema::horus_files::dsl::{horus_files, owner};
+    use schema::horus_files::dsl::horus_files;
     use schema::horus_images::dsl::horus_images;
     use schema::horus_videos::dsl::horus_videos;
     use schema::horus_pastes::dsl::horus_pastes;
@@ -138,7 +138,6 @@ pub fn my_account(auth: Authentication, conn: DbConn) -> Option<Template>
         horus_images.inner_join(horus_videos.on(schema::horus_videos::dsl::owner.eq(&uid)))
                     .inner_join(horus_files.on(schema::horus_files::dsl::owner.eq(&uid)))
                     .inner_join(horus_pastes.on(schema::horus_pastes::dsl::owner.eq(&uid)))
-                    //.filter(owner.eq(&uid))
                     .count()
                     .get_result::<i64>(&*conn)
                     .unwrap();
