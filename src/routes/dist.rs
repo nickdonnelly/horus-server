@@ -64,7 +64,7 @@ pub fn get_latest(plat: String, conn: DbConn, _auth: Authentication) -> Result<R
     }
 
     let ver = ver.unwrap();
-    let url = dbtools::get_s3_presigned_url(ver.aws_path());
+    let url = dbtools::s3::get_s3_presigned_url(ver.aws_path());
 
     if url.is_err() {
         Err(Failure(Status::ServiceUnavailable))

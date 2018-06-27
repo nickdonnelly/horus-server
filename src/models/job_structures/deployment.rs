@@ -51,7 +51,7 @@ impl ExecutableJob for Deployment
         &self.log(&tl);
 
         let s3_result =
-            dbtools::private_resource_to_s3_named(&s3_fname, &s3_path, &self.deployment_package);
+            dbtools::s3::private_resource_to_s3_named(&s3_fname, &s3_path, &self.deployment_package);
 
         if s3_result.is_err() {
             &self.log("Couldn't send data to S3...aborting deployment.");

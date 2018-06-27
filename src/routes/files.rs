@@ -127,7 +127,7 @@ pub fn new_file(
     let file_data: Vec<u8> = file_data.open().bytes().map(|x| x.unwrap()).collect();
 
     // No need to decode as we are getting raw bytes through an octet-stream, no base64
-    let s3result = dbtools::resource_to_s3_named(&hfile.filename, &pathstr, &file_data);
+    let s3result = dbtools::s3::resource_to_s3_named(&hfile.filename, &pathstr, &file_data);
 
     if s3result.is_err() {
         return Err(Failure(Status::ServiceUnavailable));
@@ -170,7 +170,7 @@ pub fn delete(
 
 fn delete_internal(hfile: HFile, conn: DbConn) -> Result<status::Custom<()>, Failure>
 {
-    let s3result = dbtools::delete_s3_object(&hfile.filepath);
+    let s3result = dbtools::s3::delete_s3_object(&hfile.filepath);
 
     if s3result.is_err() {
         return Err(Failure(Status::ServiceUnavailable));

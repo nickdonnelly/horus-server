@@ -29,6 +29,7 @@ pub fn show(image_id: String, conn: DbConn) -> Option<Template>
         return None;
     }
     let image = image.unwrap();
+    // Todo: Get this string programatically
     let mut metatag = String::from("<meta property=\"og:image\" content=\"https://s3.eu-central-1.amazonaws.com/horuscdn/live/images/");
     metatag += &image.id.clone();
     metatag += ".png\" />";
@@ -117,7 +118,7 @@ pub fn delete(
 
 fn delete_internal(image: HImage, conn: DbConn) -> Result<status::Custom<()>, Failure>
 {
-    let s3result = dbtools::delete_s3_object(&image.filepath);
+    let s3result = dbtools::s3::delete_s3_object(&image.filepath);
 
     if s3result.is_err() {
         return Err(Failure(Status::ServiceUnavailable));
@@ -171,7 +172,7 @@ fn new_img(
 
     let raw_img_data = raw_img_data.unwrap();
 
-    let s3result = dbtools::resource_to_s3(&pathstr, &raw_img_data);
+    let s3result = dbtools::s3::resource_to_s3(&pathstr, &raw_img_data);
 
     if s3result.is_err() {
         return Err(Failure(Status::ServiceUnavailable));

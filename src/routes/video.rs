@@ -58,7 +58,7 @@ fn new_vid(
 
     let vid_data_decoded = vid_data_decoded.unwrap();
 
-    let s3result = dbtools::resource_to_s3(&pathstr, &vid_data_decoded);
+    let s3result = dbtools::s3::resource_to_s3(&pathstr, &vid_data_decoded);
 
     if s3result.is_err() {
         return Err(Failure(Status::ServiceUnavailable));
@@ -204,7 +204,7 @@ pub fn delete(
 
 fn delete_internal(video: HVideo, conn: DbConn) -> Result<status::Custom<()>, Failure>
 {
-    let s3result = dbtools::delete_s3_object(&video.filepath);
+    let s3result = dbtools::s3::delete_s3_object(&video.filepath);
 
     if s3result.is_err() {
         return Err(Failure(Status::ServiceUnavailable));
