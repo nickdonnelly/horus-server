@@ -29,10 +29,18 @@ pub fn show(image_id: String, conn: DbConn) -> Option<Template>
         return None;
     }
     let image = image.unwrap();
+    let mut uri = String::from("https://s3.eu-central-1.amazonaws.com/horuscdn/live/images/");
+    uri += &image.id.clone();
+    uri += ".png";
+
     // Todo: Get this string programatically
-    let mut metatag = String::from("<meta property=\"og:image\" content=\"https://s3.eu-central-1.amazonaws.com/horuscdn/live/images/");
-    metatag += &image.id.clone();
-    metatag += ".png\" />";
+    // And add width/height numbers, title, etc.
+    let mut metatag = String::from("<meta property=\"og:image\" content=\"");
+    metatag += &uri;
+    metatag += "\" />";
+    metatag += "<link rel=\"image_src\" href=\"";
+    metatag += &uri;
+    metatag += "\" />";
 
     let context = contexts::ShowImage {
         item: image,
