@@ -1,5 +1,5 @@
-=== Horus Server
+# Horus Server
 
-== External Dependencies
-* Python
-  * AWS cli
+# External Dependencies
+- Python
+  - AWS cli
