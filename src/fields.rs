@@ -68,6 +68,7 @@ impl Authentication
 
     /// Used for testing purposes. Note that this will panic if the
     /// rocket environment is not dev or development.
+    #[cfg(test)]
     fn new_test_auth(user_id: i32, privilege_level: PrivilegeLevel) -> Authentication
     {
         if ROCKET_ENV != "dev" && ROCKET_ENV != "development" {
@@ -129,13 +130,16 @@ impl<'a, 'r> FromRequest<'a, 'r> for Authentication
         }
 
         // Try test last to reduce overhead in cases with valid auth
-        if ROCKET_ENV == "dev" || ROCKET_ENV == "development" {
-            if let Some(v) = request.headers().get_one("x-api-test") {
-                let s: Vec<&str> = v.split("/").collect();
-                if s.len() == 2 {
-                    let uid = s[0].parse::<i32>().unwrap();
-                    let priv_lvl = PrivilegeLevel::from_int(s[1].parse::<i32>().unwrap()).unwrap();
-                    return Outcome::Success(Authentication::new_test_auth(uid, priv_lvl));
+        #[cfg(test)]
+        {
+            if ROCKET_ENV == "dev" || ROCKET_ENV == "development" {
+                if let Some(v) = request.headers().get_one("x-api-test") {
+                    let s: Vec<&str> = v.split("/").collect();
+                    if s.len() == 2 {
+                        let uid = s[0].parse::<i32>().unwrap();
+                        let priv_lvl = PrivilegeLevel::from_int(s[1].parse::<i32>().unwrap()).unwrap();
+                        return Outcome::Success(Authentication::new_test_auth(uid, priv_lvl));
+                    }
                 }
             }
         }
