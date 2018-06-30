@@ -115,15 +115,20 @@ impl JobJuggler
                     job_logs.push_str(&s);
                 }
 
+                // Add the result and the logs
                 diesel::update(horus_jobs.find(job_id))
                     .set((logs.eq(job_logs), job_status.eq(result)))
                     .execute(&self.connection)
                     .unwrap();
+            }
 
-                // dont query too often
-                thread::sleep(Duration::from_millis(2500));
+            // Re-fill the queue if it's done
+            if self.job_queue.len() < 4 {
                 &mut self.check_for_new_job();
             }
+
+            // dont query too often
+            thread::sleep(Duration::from_millis(2500));
         }
     }
 
