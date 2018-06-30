@@ -5,8 +5,6 @@
 
 #[macro_use]
 extern crate diesel;
-#[macro_use]
-extern crate diesel_infer_schema;
 
 extern crate bincode;
 extern crate rand;
