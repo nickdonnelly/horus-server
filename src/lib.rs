@@ -1,4 +1,4 @@
-#![feature(custom_derive, plugin, conservative_impl_trait)]
+#![feature(custom_derive, plugin)]
 #![plugin(rocket_codegen)]
 #![plugin(dotenv_macros)]
 #![recursion_limit = "128"] // For diesel schema inference.
