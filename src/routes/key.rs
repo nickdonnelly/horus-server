@@ -68,7 +68,9 @@ pub fn issue_license_with_key(
         key: keystr.clone(),
         owner: owner_id,
         type_: Some(l_type),
+        resource_count: 0
     };
+
     let l_key = LicenseKey {
         key: keystr.clone(),
         privilege_level: priv_lvl,

@@ -6,6 +6,6 @@ pub struct License
 {
     pub key: String,
     pub owner: i32,
-    pub type_: Option<i16>, // This way we still match "type", which is
-                            // otherwise a rust-reserved keyword.
+    pub type_: Option<i16>, // Since "type" is a rust keyword, needed for diesel
+    pub resource_count: i32
 }

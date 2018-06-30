@@ -35,11 +35,11 @@ pub fn delete_s3_object(path: &str) -> Result<String, ()>
 pub fn resource_to_s3_named(filename: &str, path: &str, data: &Vec<u8>) -> Result<String, ()>
 {
     let mut bucket = get_bucket() ;
-    let mut dispositionstr = String::from("attachment; filename=\"");
-    dispositionstr += filename;
-    dispositionstr += "\"";
+    let mut disposition = String::from("attachment; filename=\"");
+    disposition += filename;
+    disposition += "\"";
     bucket.add_header("x-amz-acl", "public-read"); // this way we can serve it later
-    bucket.add_header("content-disposition", &dispositionstr);
+    bucket.add_header("content-disposition", &disposition);
 
     let (by, code) = bucket.put(&path, &data, "text/plain").unwrap();
 
@@ -58,12 +58,12 @@ pub fn private_resource_to_s3_named(
 ) -> Result<String, ()>
 {
     let mut bucket = get_bucket();
-    let mut dispositionstr = String::from("attachment; filename=\"");
-    dispositionstr += filename;
-    dispositionstr += "\"";
+    let mut disposition = String::from("attachment; filename=\"");
+    disposition += filename;
+    disposition += "\"";
     // Don't allow it to be read:
     bucket.add_header("x-amz-acl", "private");
-    bucket.add_header("content-disposition", &dispositionstr);
+    bucket.add_header("content-disposition", &disposition);
     let (_, code) = bucket
         .put(&path, &data, "application/octet-stream")
         .unwrap();

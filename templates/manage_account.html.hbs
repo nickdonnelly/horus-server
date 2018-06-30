@@ -1,12 +1,10 @@
 {{> header }}
 
 <ul>
-  <li>{{ first_name }}</li>
-  <li>{{ last_name }}</li>
-  <li>{{ user_id }}</li>
-  <li>{{ email }}</li>
-  <li>{{ resource_count }}</li>
-  <li>{{ privilege_level }}</li>
+  <li><strong>Name:</strong> {{ first_name }} {{ last_name }}</li>
+  <li><strong>Email:</strong> {{ email }}</li>
+  <li><strong>Uploads:</strong> {{ resource_count }}</li>
+  <li><strong>Privilege Level:</strong> {{ privilege_level }}</li>
 </ul>
 
 {{> footer }}

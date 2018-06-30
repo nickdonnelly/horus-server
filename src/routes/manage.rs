@@ -112,7 +112,6 @@ pub fn request_auth_cookie(
 
     cookies.remove_private(Cookie::named("horus_session"));
     cookies.add_private(scookie);
-    //cookies.add(Cookie::new("horus_session", token_result.token.clone()));
     Ok(Redirect::to(&redirect_url))
 }
 
@@ -120,10 +119,8 @@ pub fn request_auth_cookie(
 pub fn my_account(auth: Authentication, conn: DbConn) -> Option<Template>
 {
     use schema::horus_users::dsl::*;
-    use schema::horus_files::dsl::horus_files;
-    use schema::horus_images::dsl::horus_images;
-    use schema::horus_videos::dsl::horus_videos;
-    use schema::horus_pastes::dsl::horus_pastes;
+    use schema::horus_licenses::dsl::*;
+    use diesel::dsl::sum;
 
     let uid = auth.get_userid();
 
@@ -134,13 +131,11 @@ pub fn my_account(auth: Authentication, conn: DbConn) -> Option<Template>
     }
 
     let user = user.unwrap();
-    let resource_counts: i64 = 
-        horus_images.inner_join(horus_videos.on(schema::horus_videos::dsl::owner.eq(&uid)))
-                    .inner_join(horus_files.on(schema::horus_files::dsl::owner.eq(&uid)))
-                    .inner_join(horus_pastes.on(schema::horus_pastes::dsl::owner.eq(&uid)))
-                    .count()
-                    .get_result::<i64>(&*conn)
-                    .unwrap();
+    let resource_counts = horus_licenses.filter(owner.eq(user.id))
+        .select(sum(resource_count))
+        .first::<Option<i64>>(&*conn)
+        .unwrap();
+
 
     let context = ShowAccount {
         user_id: user.id,
@@ -148,7 +143,7 @@ pub fn my_account(auth: Authentication, conn: DbConn) -> Option<Template>
         last_name: user.last_name,
         email: user.email,
         privilege_level: auth.get_privilege_level().to_string(),
-        resource_count: resource_counts
+        resource_count: resource_counts.unwrap()
     };
 
     Some(Template::render("manage_account", &context))
