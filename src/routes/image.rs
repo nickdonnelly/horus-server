@@ -46,6 +46,7 @@ pub fn show(image_id: String, conn: DbConn) -> Option<Template>
         item: image,
         meta_tag: Some(metatag),
     };
+
     Some(Template::render("show_image", &context))
 }
 

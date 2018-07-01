@@ -46,6 +46,7 @@ fn main()
         .mount("/static", routes![files::static_asset])
         //.mount("/admin", routes![jobs::list_jobs, jobs::job_status])
         .mount("/", routes![favicon, verify_ssl])
+        .catch(errors![http_errors::not_found])
         .manage(self::dbtools::init_pool())
         .launch();
 }

@@ -10,6 +10,7 @@ pub mod video;
 pub mod paste;
 pub mod key;
 pub mod dist;
+pub mod http_errors;
 
 pub mod meta
 {
