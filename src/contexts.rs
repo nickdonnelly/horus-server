@@ -1,4 +1,4 @@
-use models::{HFile, HImage, HPaste, HVideo};
+use models::{HFile, FixedDateHImage, HPaste, HVideo};
 
 #[derive(Serialize)]
 pub struct ImageList
@@ -6,7 +6,7 @@ pub struct ImageList
     pub title: String,
     pub page_title: String,
     pub editable: bool,
-    pub images: Vec<HImage>,
+    pub images: Vec<FixedDateHImage>,
 }
 
 #[derive(Serialize)]
@@ -81,7 +81,7 @@ pub struct ShowVideo
 #[derive(Serialize)]
 pub struct ShowImage
 {
-    pub item: HImage,
+    pub item: FixedDateHImage,
     pub meta_tag: Option<String>,
 }
 

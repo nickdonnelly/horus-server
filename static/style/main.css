@@ -6,7 +6,8 @@ html {
   font-family: 'Courier', 'Courier New', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; }
 
 ul {
-  list-style-type: none; }
+  list-style-type: none;
+  font-size: 0; }
 
 table, th, td {
   border-collapse: collapse; }
@@ -34,11 +35,10 @@ table, th, td {
   background: #418548;
   display: inline-block; }
   .navitem a {
-    width: 100%;
-    height: 100%;
+    width: inherit;
+    height: inherit;
     color: #C7BC39;
     display: block;
-    text-align: center;
     padding: 1em;
     text-decoration: none; }
     .navitem a:hover {
@@ -71,13 +71,19 @@ table, th, td {
   -webkit-transition: all 0.2s ease-in-out;
   -o-transition: all 0.2s ease-in-out;
   transition: all 0.2s ease-in-out;
-  cursor: pointer; }
+  cursor: pointer;
+  text-decoration: none;
+  color: #CAF731; }
   .image:hover {
     opacity: 0.7; }
   .image figure {
-    background: #e6e6e6;
+    background: #7ECD66;
     width: 225px;
     height: 225px; }
+  .image figcaption {
+    display: block;
+    padding: 0.5em;
+    background: #2C434E; }
 
 figure {
   text-align: center;

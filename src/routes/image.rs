@@ -43,7 +43,7 @@ pub fn show(image_id: String, conn: DbConn) -> Option<Template>
     metatag += "\" />";
 
     let context = contexts::ShowImage {
-        item: image,
+        item: image.with_displayable_date(),
         meta_tag: Some(metatag),
     };
 

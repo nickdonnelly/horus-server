@@ -17,6 +17,7 @@ html
 
 ul
   list-style-type: none
+  font-size: 0
 
 table, th, td 
   border-collapse: collapse
@@ -43,11 +44,10 @@ table, th, td
   background: $nav-background
   display: inline-block
   a
-    width: 100%
-    height: 100%
+    width: inherit
+    height: inherit
     color: $nav-text
     display: block
-    text-align: center
     padding: 1em
     text-decoration: none
     &:hover
@@ -70,12 +70,18 @@ table, th, td
   margin: 5px
   transition: all 0.2s ease-in-out
   cursor: pointer
+  text-decoration: none
+  color: $lime
   &:hover
     opacity: 0.7
   figure
-    background: lighten(gray, 40%)
+    background: $olive
     width: 225px
     height: 225px
+  figcaption
+    display: block
+    padding: 0.5em 
+    background: $blue
 
 figure
   text-align: center

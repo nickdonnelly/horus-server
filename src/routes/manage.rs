@@ -161,7 +161,10 @@ pub fn my_images(page: u32, auth: Authentication, conn: DbConn) -> Option<Templa
         .offset((page * 24) as i64)
         .get_results::<HImage>(&*conn);
 
-    let images = images.unwrap();
+    let images = images.unwrap().iter().map(move |img|{
+        img.with_displayable_date()
+    }).collect();
+
     let name = horus_users
         .find(auth.get_userid())
         .get_result::<User>(&*conn)
