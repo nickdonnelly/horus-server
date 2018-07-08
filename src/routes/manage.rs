@@ -317,6 +317,8 @@ pub fn video(video_id: String, conn: DbConn, auth: Authentication) -> Option<Tem
         id: video.id,
         title: ititle.clone(),
         page_title: ititle,
+        is_expiry: video.is_expiry,
+        date_added: format!("{}", video.date_added),
         editable: true,
     };
 
@@ -332,22 +334,23 @@ pub fn image(image_id: String, conn: DbConn, auth: Authentication) -> Option<Tem
     if image.is_err() {
         return None;
     }
-    let image = image.unwrap();
+
+    let mut image = image.unwrap().with_displayable_date();
 
     if auth.get_userid() != image.owner {
         return None;
     }
 
-    let mut ititle = String::new();
     if image.title.is_none() {
-        ititle += "Horus Image";
-    } else {
-        ititle += image.title.unwrap().as_str()
+        image.title = Some("Horus Image".to_string())
     }
+
     let context = ManageImage {
         id: image.id,
-        title: ititle.clone(),
-        page_title: ititle.clone(),
+        title: image.title.clone().unwrap(),
+        page_title: image.title.clone().unwrap(),
+        is_expiry: image.is_expiry,
+        date_added: image.date_added,
         editable: true,
     };
 

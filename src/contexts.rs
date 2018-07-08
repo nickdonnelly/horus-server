@@ -43,6 +43,8 @@ pub struct ManageImage
     pub title: String,
     pub page_title: String,
     pub editable: bool,
+    pub date_added: String,
+    pub is_expiry: bool
 }
 
 #[derive(Serialize)]
@@ -52,6 +54,8 @@ pub struct ManageVideo
     pub title: String,
     pub page_title: String,
     pub editable: bool,
+    pub date_added: String,
+    pub is_expiry: bool
 }
 
 #[derive(Serialize)]

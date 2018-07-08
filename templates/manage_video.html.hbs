@@ -8,11 +8,11 @@
     <figcaption>
         <span>Uploaded on 23 May 2017</span>
         <br/>
-        <span>Expires never</span>
+        <span>Expires {{#if is_expiry }} {{ expiration_time }} {{ else }} Never {{/if }}</span>
         <br/>
         <ul class="img-options">
             <li><a href="#">Delete Image</a></li>
-            <li><a href="#">Password Protect</a></li>
+            <li id="img-pw" data-method="post" data-href="/video/{{ id }}"><a href="#">Password Protect</a></li>
             <li><a href="#">Change Expire Date</a></li>
             <li><a href="#">View Full Image</a></li>
         </ul>
