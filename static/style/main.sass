@@ -13,6 +13,7 @@ $nav-text: $yellow
 
 html
   font-family: 'Courier', 'Courier New', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
+  background: $olive
 
 ul
   list-style-type: none
@@ -133,9 +134,12 @@ figcaption
   tr
     user-select: none
     transition: all 0.2s ease-in-out
+    background: darken($green, 3%)
+    &:nth-child(even)
+      background: lighten($green, 3%)
     &:hover
       cursor: pointer
-      background: darken(white, 25%)
+      background: darken($olive, 6%)
   td
     border-top: 1px solid lightgray
     border-bottom: 1px solid lightgray
