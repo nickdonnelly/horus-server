@@ -238,3 +238,50 @@ main {
 
 .changelog li {
   line-height: 1.65em; }
+
+.popup {
+  position: absolute;
+  width: 400px;
+  height: 160px;
+  left: 50%;
+  top: 50%;
+  margin-left: -200px;
+  margin-top: -80px;
+  background: #517b8f;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  text-align: center;
+  border-radius: 0.5em;
+  -webkit-box-shadow: 0px 0px 8px 1px rgba(0, 0, 0, 0.75);
+  box-shadow: 0px 0px 8px 1px rgba(0, 0, 0, 0.75); }
+  .popup h1 {
+    color: black;
+    margin-bottom: 0.5em; }
+
+a.button {
+  background: #2C434E;
+  color: white;
+  display: inline-block;
+  padding: 0.6em 1em;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 0.25em; }
+
+input[type="password"], input[type="text"] {
+  padding: 0.6em 0.4em;
+  background: #2C434E;
+  color: white;
+  border: 1px solid #10191d;
+  border-radius: 2em;
+  text-align: center; }
