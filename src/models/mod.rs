@@ -1,4 +1,5 @@
 pub mod job_structures;
+pub mod traits;
 mod horus_version;
 mod deployment_key;
 mod session_token;

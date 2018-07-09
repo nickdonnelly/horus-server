@@ -8,6 +8,7 @@ extern crate diesel;
 
 extern crate bincode;
 extern crate rand;
+extern crate bcrypt;
 extern crate serde;
 #[allow(unused_extern_crates)]
 #[macro_use]

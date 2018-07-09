@@ -25,7 +25,7 @@ fn main()
         .mount("/paste", routes![paste::new, paste::update, paste::list, 
                                  paste::show, paste::delete])
         .mount("/image", routes![image::new, image::new_exp, image::new_titled, image::show,
-                                 image::update, image::delete,
+                                 image::update, image::delete, image::set_password, image::check_pw,
                                  image::list, image::full, image::thumb])
         .mount("/video", routes![video::new, video::new_titled, video::show, video::delete,
                                  video::update, video::full,

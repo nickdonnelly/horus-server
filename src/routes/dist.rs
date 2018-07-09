@@ -1,7 +1,5 @@
-extern crate bcrypt;
-
+use bcrypt::{hash, verify, DEFAULT_COST};
 use diesel::{self, prelude::*};
-use self::bcrypt::{hash, verify, DEFAULT_COST};
 use rand::{self, Rng};
 
 use rocket::http::Status;

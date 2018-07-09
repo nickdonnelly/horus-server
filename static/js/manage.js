@@ -52,7 +52,7 @@ $(document).ready(function(){
 
 function update_paste() {
     let title = $('.page-header').text();
-    var paste_data = $('.paste-data').innerText();
+    let paste_data = $('.paste-data').innerText();
 
     $.ajax($('.paste-data').attr('data-href'),
     {

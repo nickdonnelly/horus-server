@@ -159,15 +159,14 @@ fn new_img(
 
     let pathstr = dbtools::get_path_image(&iid);
 
-    let image = HImage {
-        id: iid.clone(),
-        title: Some(title),
-        owner: auth.get_userid(),
-        filepath: pathstr.clone(),
-        date_added: Local::now().naive_utc(),
-        is_expiry: exp.is_some(),
-        expiration_time: exp,
-    };
+    let image = HImage::new(iid.clone(),
+            Some(title),
+            auth.get_userid(),
+            pathstr.clone(),
+            Local::now().naive_utc(),
+            exp.is_some(),
+            exp);
+
     // SAVE THE FILE THEN INSERT DB
     let img_data: Vec<u8> = img_data.open().bytes().map(|x| x.unwrap()).collect();
 
@@ -307,5 +306,68 @@ pub fn update(
     match result {
         Ok(_) => Ok(status::Accepted(None)),
         Err(_) => Err(Failure(Status::InternalServerError)),
+    }
+}
+
+#[put("/<image_id>/password", format = "text/plain", data = "<submitted_password>")]
+pub fn set_password(
+    image_id: String, 
+    submitted_password: String,
+    auth: Authentication, 
+    conn: DbConn) 
+    -> Result<status::Accepted<()>, Failure>
+{
+    use models::traits::passwordable::Passwordable;
+    use schema::horus_images::dsl::*;
+
+    let img = horus_images.filter(id.eq(&image_id)).first::<HImage>(&*conn);
+
+    if img.is_err() {
+        return Err(Failure(Status::NotFound));
+    }
+
+    let img = img.unwrap();
+    
+    if img.owner != auth.get_userid() {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    println!("pw {} ", &submitted_password);
+    let result = if submitted_password == "" {
+        img.set_password(None, &*conn)
+    } else {
+        img.set_password(Some(submitted_password), &*conn)
+    };
+
+    match result {
+        Some(s) => { 
+            eprintln!("Error changing password: {}", s);
+            Err(Failure(Status::InternalServerError)) 
+        },
+        None => Ok(status::Accepted(None))
+    }
+}
+
+
+#[post("/<image_id>/password", format="text/plain", data="<submitted_password>")]
+pub fn check_pw(image_id: String,
+    submitted_password: String,
+    conn: DbConn) 
+    -> String
+{
+    use models::traits::passwordable::Passwordable;
+    use schema::horus_images::dsl::*;
+
+    let img = horus_images.filter(id.eq(&image_id)).first::<HImage>(&*conn);
+
+    if img.is_err() {
+        return "No".to_string();
+    }
+
+    let img = img.unwrap();
+
+    match img.check_password(submitted_password, &*conn) {
+        true => "Yes".to_string(),
+        false => "No".to_string()
     }
 }

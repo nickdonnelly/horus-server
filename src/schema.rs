@@ -37,6 +37,7 @@ table! {
         date_added -> Timestamp,
         is_expiry -> Bool,
         expiration_time -> Nullable<Timestamp>,
+        password -> Nullable<Varchar>,
     }
 }
 
