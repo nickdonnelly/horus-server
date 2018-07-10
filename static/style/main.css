@@ -264,7 +264,10 @@ main {
   text-align: center;
   border-radius: 0.5em;
   -webkit-box-shadow: 0px 0px 8px 1px rgba(0, 0, 0, 0.75);
-  box-shadow: 0px 0px 8px 1px rgba(0, 0, 0, 0.75); }
+  box-shadow: 0px 0px 8px 1px rgba(0, 0, 0, 0.75);
+  -webkit-transition: 0.2s all ease-in-out;
+  -o-transition: 0.2s all ease-in-out;
+  transition: 0.2s all ease-in-out; }
   .popup h1 {
     color: black;
     margin-bottom: 0.5em; }
@@ -276,7 +279,20 @@ a.button {
   padding: 0.6em 1em;
   text-align: center;
   text-decoration: none;
-  border-radius: 0.25em; }
+  border-radius: 0.25em;
+  -webkit-transition: 0.2s all ease-in-out;
+  -o-transition: 0.2s all ease-in-out;
+  transition: 0.2s all ease-in-out; }
+  a.button:hover {
+    background: white;
+    color: #2C434E; }
+
+.close-btn {
+  text-align: right;
+  position: absolute;
+  padding: 0.6em;
+  top: 0.25em;
+  right: 0.25em; }
 
 input[type="password"], input[type="text"] {
   padding: 0.6em 0.4em;

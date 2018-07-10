@@ -25,6 +25,13 @@ $(document).ready(function(){
     $('.paste-data').focusout(function(){
         update_paste();
     });
+
+
+    $('.close-btn').click(function(){
+        let toClose = this.closest(".popup");
+        toClose.style.opacity = 0;
+        setTimeout(() => { toClose.style.display = "none"; }, 200);
+    });
 });
 
 (function($){
@@ -68,3 +75,4 @@ function update_paste() {
     });
 
 };
+
