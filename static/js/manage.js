@@ -5,7 +5,6 @@ $(document).ready(function(){
         let locstr = '/manage/';
         locstr += $(this).attr('data-loc');
         locstr += '/0';
-        console.log(locstr);
         $.ajax($(this).attr("data-href"), 
             {
                 contentType: 'application/json',
@@ -13,6 +12,12 @@ $(document).ready(function(){
                 success: function(){ window.location.href = locstr;}
             }
         );
+    });
+
+    $('#img-pw').click(function(){
+        let pw_popup = document.getElementById("password-popup");
+        pw_popup.style.display = "flex";
+        pw_popup.style.opacity = 1;
     });
 
     $('.is_date').each(function() {

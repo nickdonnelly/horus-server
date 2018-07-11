@@ -261,6 +261,8 @@ main {
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;
+  display: none;
+  opacity: 0;
   text-align: center;
   border-radius: 0.5em;
   -webkit-box-shadow: 0px 0px 8px 1px rgba(0, 0, 0, 0.75);
