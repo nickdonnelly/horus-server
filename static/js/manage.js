@@ -20,6 +20,30 @@ $(document).ready(function(){
         pw_popup.style.opacity = 1;
     });
 
+    $('#password-submit').click(function(){
+        let password_field = document.getElementById("password-field");
+        if(password_field.value.length === 0){
+            password_field.classList.add("bad-input");
+            setTimeout(() => { password_field.classList.remove("bad-input"); }, 300);
+            return;
+        }
+
+        let elem = $('#img-pw');
+
+        $.ajax(elem.attr('data-href'),
+            {
+                method: elem.attr('data-method'),
+                contentType: 'text/plain',
+                data: password_field.value,
+                success: () => { 
+                    let e = document.getElementById('password-popup');
+                    e.style.opacity = 0;
+                    setTimeout(() => {e.style.display = "none";}, 200);
+                }
+            });
+
+    });
+
     $('.is_date').each(function() {
         let datestr = $(this).text();
         datestr = datestr.split(".")[0].replace("T", " ");

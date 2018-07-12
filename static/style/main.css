@@ -302,4 +302,10 @@ input[type="password"], input[type="text"] {
   color: white;
   border: 1px solid #10191d;
   border-radius: 2em;
-  text-align: center; }
+  text-align: center;
+  -webkit-transition: 0.2s all ease-in-out;
+  -o-transition: 0.2s all ease-in-out;
+  transition: 0.2s all ease-in-out; }
+
+.bad-input {
+  background: #ff6666 !important; }

@@ -1,6 +1,7 @@
 use bcrypt::{hash, verify, DEFAULT_COST};
 use diesel::pg::PgConnection;
 
+/// Trait for items that can have a password applied to them.
 pub trait Passwordable {
     /// Set the password on the object.
     /// The string contains an error if there is one.

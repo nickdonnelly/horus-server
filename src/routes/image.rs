@@ -332,7 +332,6 @@ pub fn set_password(
         return Err(Failure(Status::Unauthorized));
     }
 
-    println!("pw {} ", &submitted_password);
     let result = if submitted_password == "" {
         img.set_password(None, &*conn)
     } else {
