@@ -9,7 +9,11 @@
         </figure>
 
         <figcaption>
-            <strong>{{ title }}</strong><br/>
+            <div class="card-title">
+              {{#if password }}
+              <div class="padlock"><img src="https://s3.eu-central-1.amazonaws.com/horuscdn/padlock.png" /></div>
+              {{/if }}<strong>{{ title }}</strong><br/>
+            </div>
             Uploaded {{ date_added }} 
         </figcaption>
     </a>
