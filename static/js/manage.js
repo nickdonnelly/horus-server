@@ -36,9 +36,7 @@ $(document).ready(function(){
                 contentType: 'text/plain',
                 data: password_field.value,
                 success: () => { 
-                    let e = document.getElementById('password-popup');
-                    e.style.opacity = 0;
-                    setTimeout(() => {e.style.display = "none";}, 200);
+                    location.reload();
                 }
             });
 
