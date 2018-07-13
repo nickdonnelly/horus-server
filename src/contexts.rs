@@ -44,6 +44,7 @@ pub struct ManageImage
     pub page_title: String,
     pub editable: bool,
     pub date_added: String,
+    pub password: Option<String>,
     pub is_expiry: bool
 }
 

@@ -351,6 +351,7 @@ pub fn image(image_id: String, conn: DbConn, auth: Authentication) -> Option<Tem
         page_title: image.title.clone().unwrap(),
         is_expiry: image.is_expiry,
         date_added: image.date_added,
+        password: image.password,
         editable: true,
     };
 

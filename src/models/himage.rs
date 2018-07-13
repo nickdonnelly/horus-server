@@ -29,6 +29,7 @@ pub struct FixedDateHImage
     pub date_added: String,
     pub is_expiry: bool,
     pub expiration_time: Option<NaiveDateTime>,
+    pub password: Option<String>
 }
 
 impl HImage {
@@ -41,7 +42,8 @@ impl HImage {
             filepath: (&self).filepath.clone(),
             date_added: format!("{}", &self.date_added.format("%d %b %Y\nat %H:%M")),
             is_expiry: (&self).is_expiry,
-            expiration_time: (&self).expiration_time.clone()
+            expiration_time: (&self).expiration_time.clone(),
+            password: (&self).password.clone()
         }
     }
 

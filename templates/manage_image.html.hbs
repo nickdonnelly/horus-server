@@ -11,7 +11,7 @@
         <br/>
         <ul class="img-options">
             <li id="img-delete" data-loc="images" data-method="delete" data-href="/image/{{ id }}"><a href="#">Delete Image</a></li>
-            <li id="img-pw" data-method="put" data-href="/image/{{ id }}/password"><a href="#">Password Protect</a></li>
+            <li id="img-pw" data-method="put" data-href="/image/{{ id }}/password"><a href="#">{{#if password }} Change Password {{ else }} Add Password {{/if }}</a></li>
             <li id="img-expire" data-method="post" data-href="/image/{{ id }}"><a href="#">Change Expire Date</a></li>
             <li id="img-full"><a href="/image/{{ id }}">View Full Image</a></li>
         </ul>
