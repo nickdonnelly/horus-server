@@ -35,6 +35,9 @@ $(document).ready(function(){
                 method: elem.attr('data-method'),
                 contentType: 'text/plain',
                 data: password_field.value,
+                beforeSend: (xhr) => {
+                    xhr.setRequestHeader("horus-resource-type", elem.attr('data-type'));
+                },
                 success: () => { 
                     location.reload();
                 }

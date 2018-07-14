@@ -345,6 +345,12 @@ pub fn image(image_id: String, conn: DbConn, auth: Authentication) -> Option<Tem
         image.title = Some("Horus Image".to_string())
     }
 
+    let path = if image.password == None {
+        None
+    } else {
+        Some(::dbtools::s3::get_s3_presigned_url(image.filepath).unwrap())
+    };
+
     let context = ManageImage {
         id: image.id,
         title: image.title.clone().unwrap(),
@@ -352,6 +358,7 @@ pub fn image(image_id: String, conn: DbConn, auth: Authentication) -> Option<Tem
         is_expiry: image.is_expiry,
         date_added: image.date_added,
         password: image.password,
+        img_src: path,
         editable: true,
     };
 
