@@ -1,4 +1,23 @@
 </div>
+
+{{#if password }}
+
+<div class="password-box" id="password-box">
+  <h2>Who goes there?</h2>
+  <h3>Access to this resource requires a password:</h3>
+  <form id="password-form" data-id="{{ item.id }}">
+    <input type="password" id="password-field" />
+    <br>
+    <div class="submit-container">
+    <input type="submit" id="submission-btn" value="Submit" />
+      <div class="loader">
+        <img id="loader-img" src="data:image/gif;base64,R0lGODlhEAAQAPIAAB8ehxYYbRwbgBkaehYYbQAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADGwi6MjRiSenIm9hqPOvljAOBZGmeaKqubOu6CQAh+QQJCgAAACwAAAAAEAAQAAADHAi63A5ikCEek2TalftWmPZFU/WdaKqubOu+bwIAIfkECQoAAAAsAAAAABAAEAAAAxwIutz+UIlBhoiKkorB/p3GYVN1dWiqrmzrvmkCACH5BAkKAAAALAAAAAAQABAAAAMbCLrc/jDKycQgQ8xL8OzgBg6ThWlUqq5s604JACH5BAkKAAAALAAAAAAQABAAAAMbCLrc/jDKSautYpAhpibbBI7eOEzZ1l1s6yoJACH5BAkKAAAALAAAAAAQABAAAAMaCLrc/jDKSau9OOspBhnC5BHfRJ7iOXAe2CQAIfkECQoAAAAsAAAAABAAEAAAAxoIutz+MMpJ6xSDDDEz0dMnduJwZZulrmzbJAAh+QQJCgAAACwAAAAAEAAQAAADGwi63P4wRjHIEBJUYjP/2dZJlIVlaKqubOuyCQAh+QQJCgAAACwAAAAAEAAQAAADHAi63A5ikCEek2TalftWmPZFU/WdaKqubOu+bwIAOwAAAAAAAAAAAA==" alt="Please wait...">
+      </div>
+    </div>
+  </form>
+</div>
+
+{{/if }}
   
 <script src="/static/js/show.js"></script>
 </body>

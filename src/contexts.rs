@@ -87,6 +87,7 @@ pub struct ShowVideo
 #[derive(Serialize)]
 pub struct ShowImage
 {
+    pub password: bool,
     pub item: FixedDateHImage,
     pub meta_tag: Option<String>,
 }
