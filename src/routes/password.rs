@@ -87,7 +87,7 @@ pub fn set(
 
     match s3_result {
         Ok(()) => Ok(status::Accepted(None)),
-        Err(e) => Err(Failure(Status::InternalServerError))
+        Err(_) => Err(Failure(Status::InternalServerError))
     }
 }
 

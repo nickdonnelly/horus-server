@@ -383,17 +383,11 @@ pub fn file(file_id: String, conn: DbConn, auth: Authentication) -> Option<Templ
         return None;
     }
 
-    let mut file = file.unwrap();
+    let file = file.unwrap();
 
     if auth.get_userid() != file.owner {
         return None;
     }
-
-    let path = if file.password == None {
-        None
-    } else {
-        Some(::dbtools::s3::get_s3_presigned_url(file.filepath).unwrap())
-    };
 
     let context = ManageFile {
         id: file.id,
