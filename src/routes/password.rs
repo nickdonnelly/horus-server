@@ -1,0 +1,140 @@
+use std::boxed::Box;
+
+use diesel::{self, prelude::*};
+use diesel::pg::PgConnection;
+use rocket::request::{self, FromRequest, Request};
+use rocket::response::{Failure, status};
+use rocket::http::Status;
+use rocket::Outcome;
+
+use dbtools::s3;
+use fields::Authentication;
+use models::traits::passwordable::Passwordable;
+use DbConn;
+
+/// The list of types that can be passworded derived from a request header
+pub enum PasswordableResource {
+    Image,
+    Video,
+    File 
+}
+
+/// Returns a signed S3 link to the resource if the password is correct.
+#[post("/<res_id>", format="text/plain", data="<submitted_password>")]
+pub fn check(
+    res_type: PasswordableResource,
+    res_id: String,
+    submitted_password: String,
+    conn: DbConn) 
+    -> Result<status::Custom<String>, Failure>
+{
+    let resource = get_passwordable_resource_by_id(res_id, res_type, &*conn);
+
+    let resource = match resource {
+        Some(r) => r,
+        _       => return Err(Failure(Status::NotFound))
+    };
+
+    if resource.check_password(submitted_password, &*conn) {
+        // TODO: get s3 string
+        let signed_location = s3::get_s3_presigned_url(resource.get_s3_location());
+
+        match signed_location {
+            Ok(link) => Ok(status::Custom(Status::Ok, link)),
+            Err(_) => Err(Failure(Status::InternalServerError))
+        }
+    } else {
+        Err(Failure(Status::Unauthorized))
+    }
+}
+
+#[put("/<res_id>", format="text/plain", data="<submitted_password>")]
+pub fn set(
+    res_type: PasswordableResource,
+    res_id: String,
+    submitted_password: String,
+    auth: Authentication,
+    conn: DbConn)
+    -> Result<status::Accepted<()>, Failure>
+{
+    let resource = get_passwordable_resource_by_id(res_id.clone(), res_type, &*conn);
+    let mut resource = match resource {
+        Some(r) => r,
+        None => return Err(Failure(Status::NotFound))
+    };
+    
+    if resource.owner() != auth.get_userid() {
+        return Err(Failure(Status::Unauthorized));
+    }
+
+    let submitted_password: Option<String> = match submitted_password.as_str() {
+        "" => None,
+        other => Some(other.to_string())
+    };
+
+    let set_result = resource.set_password(submitted_password.clone(), &*conn);
+
+    if set_result.is_some() {
+        eprintln!("Error changing password for {}: {}", res_id, set_result.unwrap());
+        return Err(Failure(Status::InternalServerError));
+    }
+
+    let s3_result = if submitted_password == None {
+        s3::publicize_s3_resource(&resource.get_s3_location())
+    } else {
+        s3::privatize_s3_resource(&resource.get_s3_location())
+    };
+
+
+    match s3_result {
+        Ok(()) => Ok(status::Accepted(None)),
+        Err(e) => Err(Failure(Status::InternalServerError))
+    }
+}
+
+fn get_passwordable_resource_by_id(
+    res_id: String, 
+    res_type: PasswordableResource,
+    conn: &PgConnection)
+    -> Option<Box<dyn Passwordable>>
+{
+    match res_type {
+        PasswordableResource::Image => {
+            use ::schema::horus_images::dsl::*;
+            use ::models::HImage;
+            let img = horus_images.find(res_id).get_result::<HImage>(conn);
+            if img.is_err() { return None }
+            Some(Box::new(img.unwrap()))
+        },
+        PasswordableResource::Video => {
+            None
+        },
+        PasswordableResource::File => {
+            None
+        }
+    }
+}
+
+impl<'a, 'r> FromRequest<'a, 'r> for PasswordableResource {
+    type Error = ();
+
+    fn from_request(request: &'a Request<'r>) 
+        -> request::Outcome<PasswordableResource, Self::Error>
+    {
+        let header = request.headers().get_one("horus-resource-type");
+
+        if header.is_none() {
+            return Outcome::Failure((Status::BadRequest, ()));
+        }
+
+        let header = header.unwrap();
+
+        match header.to_lowercase().trim() {
+            "image" => Outcome::Success(PasswordableResource::Image),
+            "video" =>  Outcome::Success(PasswordableResource::Video),
+            "file" =>  Outcome::Success(PasswordableResource::File),
+            _ => Outcome::Failure((Status::BadRequest, ()))
+        }
+    }
+
+}

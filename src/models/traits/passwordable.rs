@@ -5,7 +5,7 @@ use diesel::pg::PgConnection;
 pub trait Passwordable {
     /// Set the password on the object.
     /// The string contains an error if there is one.
-    fn set_password(self, password: Option<String>, conn: &PgConnection) -> Option<String>;
+    fn set_password(&mut self, password: Option<String>, conn: &PgConnection) -> Option<String>;
 
     /// Get the hashed password from the database
     fn get_hashed_password(&self, conn: &PgConnection) -> Option<String>;
@@ -19,6 +19,14 @@ pub trait Passwordable {
             None => true
         }
     }
+
+    // TODO: Figure out how this will work for pastes
+    /// Gets the path of this resource on s3 
+    fn get_s3_location(&self) -> String;
+
+
+    /// Gets the owner of te object
+    fn owner(&self) -> i32;
 }
 
 /// If the password is not none, this will hash it and return it

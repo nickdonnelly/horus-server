@@ -1,6 +1,6 @@
 extern crate s3;
 
-use std::process;
+use std::process::{self, Command};
 
 use self::s3::bucket::Bucket;
 use self::s3::credentials::Credentials;
@@ -95,13 +95,42 @@ pub fn resource_to_s3(path: &str, data: &Vec<u8>) -> Result<String, ()>
     Ok(String::from_utf8(by).unwrap())
 }
 
+pub fn privatize_s3_resource(path: &str) -> Result<(), String>
+{
+    set_canned_acl(path, "private")
+}
+
+pub fn publicize_s3_resource(path: &str) -> Result<(), String>
+{
+    set_canned_acl(path, "public-read")
+}
+
+
+fn set_canned_acl(path: &str, acl: &str) -> Result<(), String>
+{
+    let cmd = Command::new("aws")
+        .arg("s3api")
+        .arg("put-object-acl")
+        .arg("--acl").arg(acl)
+        .arg("--key").arg(path)
+        .arg("--bucket").arg(BUCKET)
+        .output();
+
+    if cmd.is_err() {
+        Err(format!("{}", cmd.err().unwrap()))
+    } else {
+        Ok(())
+    }
+}
+
+
+
 /// Return a pre-signed URL, for a path starting at the root of the crate.
 pub fn get_s3_presigned_url(path: String) -> Result<String, String>
 {
-    use self::process::Command;
-
     // The string we pass into the cli to get the url
     let mut url_base = "s3://".to_string() + BUCKET;
+    if !path.starts_with("/") { url_base += "/"; }
     url_base += path.as_str();
 
     // Use the AWS CLI, as building the string manually is quite involved.

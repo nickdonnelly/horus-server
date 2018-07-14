@@ -70,7 +70,7 @@ impl HImage {
 }
 
 impl passwordable::Passwordable for HImage {
-    fn set_password(mut self, password: Option<String>, conn: &PgConnection) -> Option<String>
+    fn set_password(&mut self, password: Option<String>, conn: &PgConnection) -> Option<String>
     {
         use diesel::SaveChangesDsl;
         self.password = passwordable::retrieve_hashed(password);
@@ -88,5 +88,14 @@ impl passwordable::Passwordable for HImage {
         horus_images.find(&self.id).select(password).get_result::<Option<String>>(conn).unwrap()
     }
 
+    fn get_s3_location(&self) -> String
+    {
+        self.filepath.clone()
+    }
+
+    fn owner(&self) -> i32
+    {
+        self.owner
+    }
 }
 

@@ -25,7 +25,7 @@ fn main()
         .mount("/paste", routes![paste::new, paste::update, paste::list, 
                                  paste::show, paste::delete])
         .mount("/image", routes![image::new, image::new_exp, image::new_titled, image::show,
-                                 image::update, image::delete, image::set_password, image::check_pw,
+                                 image::update, image::delete,
                                  image::list, image::full, image::thumb])
         .mount("/video", routes![video::new, video::new_titled, video::show, video::delete,
                                  video::update, video::full,
@@ -40,6 +40,7 @@ fn main()
                                   manage::my_account,
                                   manage::request_auth_cookie, manage::request_auth_url,
                                   manage::base_redirect])
+        .mount("/password", routes![password::check, password::set])
         .mount("/meta", routes![meta::changelogs])
         .mount("/dist", routes![dist::deploy, dist::enable_deployment, dist::get_version,
                                 dist::get_latest, dist::version_legacy])
