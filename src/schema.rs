@@ -25,6 +25,7 @@ table! {
         is_expiry -> Bool,
         expiration_time -> Nullable<Timestamp>,
         download_counter -> Nullable<Int4>,
+        password -> Nullable<Varchar>,
     }
 }
 
@@ -115,6 +116,7 @@ table! {
         date_added -> Timestamp,
         is_expiry -> Bool,
         expiration_time -> Nullable<Timestamp>,
+        password -> Nullable<Varchar>,
     }
 }
 

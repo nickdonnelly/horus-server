@@ -1,6 +1,6 @@
 extern crate s3;
 
-use std::process::{self, Command};
+use std::process::Command;
 
 use self::s3::bucket::Bucket;
 use self::s3::credentials::Credentials;

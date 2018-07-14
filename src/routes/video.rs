@@ -37,6 +37,7 @@ fn new_vid(
         date_added: Local::now().naive_utc(),
         is_expiry: exp.is_some(),
         expiration_time: exp,
+        password: None
     };
 
     let vid_data: Vec<u8> = vid_data.open().bytes().map(|x| x.unwrap()).collect();

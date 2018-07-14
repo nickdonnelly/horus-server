@@ -122,6 +122,7 @@ pub fn new_file(
         is_expiry: expire_time.is_some(),
         expiration_time: expire_time,
         download_counter: None, // defaults 0
+        password: None
     };
 
     let file_data: Vec<u8> = file_data.open().bytes().map(|x| x.unwrap()).collect();

@@ -1,6 +1,6 @@
 use std::boxed::Box;
 
-use diesel::{self, prelude::*};
+use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use rocket::request::{self, FromRequest, Request};
 use rocket::response::{Failure, status};
@@ -36,7 +36,6 @@ pub fn check(
     };
 
     if resource.check_password(submitted_password, &*conn) {
-        // TODO: get s3 string
         let signed_location = s3::get_s3_presigned_url(resource.get_s3_location());
 
         match signed_location {
@@ -107,10 +106,18 @@ fn get_passwordable_resource_by_id(
             Some(Box::new(img.unwrap()))
         },
         PasswordableResource::Video => {
-            None
+            use ::schema::horus_videos::dsl::*;
+            use ::models::HVideo;
+            let vid = horus_videos.find(res_id).get_result::<HVideo>(conn);
+            if vid.is_err() { return None }
+            Some(Box::new(vid.unwrap()))
         },
         PasswordableResource::File => {
-            None
+            use ::schema::horus_files::dsl::*;
+            use ::models::HFile;
+            let file = horus_files.find(res_id).get_result::<HFile>(conn);
+            if file.is_err() { return None }
+            Some(Box::new(file.unwrap()))
         }
     }
 }
