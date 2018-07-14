@@ -32,7 +32,7 @@ fn main()
                                  video::list, video::new_exp])
         .mount("/file", routes![files::get, files::delete,
                                 files::list, files::new, files::new_exp])
-        .mount("/manage", routes![manage::image, manage::video, manage::paste,
+        .mount("/manage", routes![manage::image, manage::video, manage::paste, manage::file,
                                   manage::my_images, manage::my_images_pageless,
                                   manage::my_videos, manage::my_videos_pageless,
                                   manage::my_files, manage::my_files_pageless,

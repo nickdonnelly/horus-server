@@ -293,6 +293,7 @@ pub fn show(vid_id: String, conn: DbConn) -> Option<Template>
     metatag += &video.id.clone();
     metatag += ".webm\" />";
     let context = contexts::ShowVideo {
+        password: video.password.is_some(),
         item: video,
         meta_tag: Some(metatag),
     };

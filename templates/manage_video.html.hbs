@@ -2,19 +2,23 @@
 <div class="img-cont">
     <figure>
         <span class="helper"></span>
-        <!-- embed here -->
-        <!--<img class="wide-img" alt="" src="/video/full/{{ id }}">-->
+        {{#if vid_src }}
+          <video controls src="{{ vid_src }}" />
+        {{ else }}
+          <video controls src="https://s3.eu-central-1.amazonaws.com/horuscdn/live/videos/{{ id }}.webm" />
+        {{/if }}
     </figure>
     <figcaption>
         <span>Uploaded on 23 May 2017</span>
         <br/>
         <span>Expires {{#if is_expiry }} {{ expiration_time }} {{ else }} Never {{/if }}</span>
         <br/>
+
         <ul class="img-options">
-            <li><a href="#">Delete Image</a></li>
-            <li id="img-pw" data-method="post" data-href="/video/{{ id }}"><a href="#">Password Protect</a></li>
-            <li><a href="#">Change Expire Date</a></li>
-            <li><a href="#">View Full Image</a></li>
+            <li id="img-delete" data-loc="videos" data-method="delete" data-href="/video/{{ id }}"><a href="#">Delete Video</a></li>
+            <li id="img-pw" data-method="put" data-type="video" data-href="/password/{{ id }}"><a href="#">{{#if password }} Change Password {{ else }} Add Password {{/if }}</a></li>
+            <li id="img-expire" data-method="post" data-href="/video/{{ id }}"><a href="#">Change Expire Date</a></li>
+            <li id="img-full"><a href="/video/{{ id }}">View Full Video</a></li>
         </ul>
     </figcaption>
 </div>

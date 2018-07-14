@@ -57,7 +57,21 @@ pub struct ManageVideo
     pub page_title: String,
     pub editable: bool,
     pub date_added: String,
-    pub is_expiry: bool
+    pub is_expiry: bool,
+    pub password: Option<String>,
+    pub vid_src: Option<String>
+}
+
+#[derive(Serialize)]
+pub struct ManageFile
+{
+    pub id: String,
+    pub filename: String,
+    pub page_title: String,
+    pub date_added: String,
+    pub is_expiry: bool,
+    pub password: Option<String>,
+    pub editable: bool
 }
 
 #[derive(Serialize)]
@@ -82,6 +96,7 @@ pub struct ShowVideo
 {
     pub item: HVideo,
     pub meta_tag: Option<String>,
+    pub password: bool,
 }
 
 #[derive(Serialize)]

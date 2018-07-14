@@ -1,0 +1,18 @@
+{{> header }}
+
+<div class="img-cont">
+    <figcaption>
+        <span>Uploaded {{ date_added }}</span>
+        <br/>
+        <span>Expires {{#if is_expiry }} {{ expiration_time }} {{ else }} Never {{/if }}</span>
+        <br/>
+        <ul class="img-options">
+            <li id="img-delete" data-loc="files" data-method="delete" data-href="/file/{{ id }}"><a href="#">Delete File</a></li>
+            <li id="img-pw" data-method="put" data-type="file" data-href="/password/{{ id }}"><a href="#">{{#if password }} Change Password {{ else }} Add Password {{/if }}</a></li>
+            <li id="img-expire" data-method="post" data-href="/file/{{ id }}"><a href="#">Change Expire Date</a></li>
+            <li id="img-full"><a href="/file/{{ id }}">View Full File</a></li>
+        </ul>
+    </figcaption>
+</div>
+
+{{> footer }}

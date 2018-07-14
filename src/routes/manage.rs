@@ -9,7 +9,7 @@ use DbConn;
 use models::{AuthToken, HFile, HImage, HPaste, HVideo, LicenseKey, SessionToken, User};
 use fields::Authentication;
 use contexts::{FileList, ImageList, PasteList, VideoList};
-use contexts::{ManageImage, ManagePaste, ManageVideo};
+use contexts::{ManageImage, ManagePaste, ManageVideo, ManageFile};
 use contexts::ShowAccount;
 use schema;
 use errors::AuthTokenError;
@@ -313,6 +313,13 @@ pub fn video(video_id: String, conn: DbConn, auth: Authentication) -> Option<Tem
     } else {
         ititle += video.title.unwrap().as_str()
     }
+
+    let path = if video.password == None {
+        None
+    } else {
+        Some(::dbtools::s3::get_s3_presigned_url(video.filepath).unwrap())
+    };
+
     let context = ManageVideo {
         id: video.id,
         title: ititle.clone(),
@@ -320,6 +327,8 @@ pub fn video(video_id: String, conn: DbConn, auth: Authentication) -> Option<Tem
         is_expiry: video.is_expiry,
         date_added: format!("{}", video.date_added),
         editable: true,
+        password: video.password,
+        vid_src: path
     };
 
     Some(Template::render("manage_video", &context))
@@ -363,6 +372,40 @@ pub fn image(image_id: String, conn: DbConn, auth: Authentication) -> Option<Tem
     };
 
     Some(Template::render("manage_image", &context))
+}
+
+#[get("/file/<file_id>")]
+pub fn file(file_id: String, conn: DbConn, auth: Authentication) -> Option<Template>
+{
+    use schema::horus_files::dsl::*;
+    let file = horus_files.find(file_id).get_result::<HFile>(&*conn);
+    if file.is_err() {
+        return None;
+    }
+
+    let mut file = file.unwrap();
+
+    if auth.get_userid() != file.owner {
+        return None;
+    }
+
+    let path = if file.password == None {
+        None
+    } else {
+        Some(::dbtools::s3::get_s3_presigned_url(file.filepath).unwrap())
+    };
+
+    let context = ManageFile {
+        id: file.id,
+        filename: file.filename.clone(),
+        page_title: file.filename.clone(),
+        is_expiry: file.is_expiry,
+        date_added: format!("{}", file.date_added.format("%d %b %Y\nat %H:%M")),
+        password: file.password.clone(),
+        editable: false
+    };
+
+    Some(Template::render("manage_file", &context))
 }
 
 #[get("/paste/<paste_id>")]

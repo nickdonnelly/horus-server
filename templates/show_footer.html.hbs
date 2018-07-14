@@ -5,7 +5,7 @@
 <div class="password-box" id="password-box">
   <h2>Who goes there?</h2>
   <h3>Access to this resource requires a password:</h3>
-  <form id="password-form" data-id="{{ item.id }}">
+  <form id="password-form" data-id="{{#if item.id }}{{ item.id }}{{ else }}{{ id }}{{/if }}">
     <input type="password" id="password-field" />
     <br>
     <div class="submit-container">
