@@ -5,13 +5,8 @@ GH mirror:
   stage: mirror
   image: debian:7-slim
   script:
-    - mkdir -p ~/.ssh
-    - echo -n "${GITMIRROR_DEPLOY_KEY}" > ~/.ssh/id_rsa
-    - chmod 400 ~/.ssh/id_rsa
     - apt-get update
     - apt-get install -y git
-    - eval "$(ssh-agent -s)"
-    - ssh-add ~/.ssh/id_rsa
     - git remote add github https://${GH_USERNAME}:${GH_PASSWORD}@github.com/nickdonnelly/horus-server.git
-    - git push github --all 
+    - git push github '*:*'
     - echo "Mirrored to Github"
