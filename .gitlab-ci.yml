@@ -8,5 +8,6 @@ GH mirror:
     - apt-get update
     - apt-get install -y git
     - git remote add github https://${GH_USERNAME}:${GH_PASSWORD}@github.com/nickdonnelly/horus-server.git
+    - git branch --list
     - git push github '*:*'
     - echo "Mirrored to Github"
