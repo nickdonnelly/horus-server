@@ -3,11 +3,7 @@ stages:
 
 GH mirror:
   stage: mirror
-  image: debian:7-slim
+  image: haffmans/git-mirror:latest
   script:
-    - apt-get update
-    - apt-get install -y git
-    - git remote add github https://${GH_USERNAME}:${GH_PASSWORD}@github.com/nickdonnelly/horus-server.git
-    - git branch --list
-    - git push github '*:*'
+    - git-mirror "${CI_PROJECT_DIR}" git@github.com:${GITHUB_REPOSITORY}
     - echo "Mirrored to Github"
