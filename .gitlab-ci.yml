@@ -10,5 +10,5 @@ GH mirror:
     - apt-get update
     - apt-get install -y git
     - git remote add github git@github.com:${GITHUB_REPOSITORY}
-    - GIT_SSH_COMMAND="ssh -i ~/.ssh/id_rsa" git push --all github
+    - GIT_SSH_COMMAND="ssh -i <(echo -n ${GITMIRROR_DEPLOY_KEY})" git push --all github
     - echo "Mirrored to Github"
