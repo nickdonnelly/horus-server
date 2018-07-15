@@ -8,7 +8,7 @@ GH mirror:
     - mkdir -p ~/.ssh
     - echo -n "${GITMIRROR_DEPLOY_KEY}" > ~/.ssh/id_rsa
     - apt-get update
-    - apt-get install git
+    - apt-get install -y git
     - git remote add github git@github.com:${GITHUB_REPOSITORY}
     - git push --all github
     - echo "Mirrored to Github"
