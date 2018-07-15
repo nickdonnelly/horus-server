@@ -12,6 +12,6 @@ GH mirror:
     - apt-get install -y git
     - eval "$(ssh-agent -s)"
     - ssh-add ~/.ssh/id_rsa
-    - git remote add github git@github.com:${GITHUB_REPOSITORY}
+    - git remote add github https://${GH_USERNAME}:${GH_PASSWORD}@github.com/nickdonnelly/horus-server.git
     - git push github --all 
     - echo "Mirrored to Github"
