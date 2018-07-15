@@ -5,6 +5,7 @@ GH mirror:
   stage: mirror
   image: debian:7-slim
   script:
+    - mkdir -p ~/.ssh
     - echo -n "${GITMIRROR_DEPLOY_KEY}" > ~/.ssh/id_rsa
     - sudo apt-get install git
     - git remote add github git@github.com:${GITHUB_REPOSITORY}
