@@ -3,10 +3,10 @@ stages:
 
 GH mirror:
   stage: mirror
-  image: alpine/git
+  image: debian:7-slim
   script:
     - echo -n "${GITMIRROR_DEPLOY_KEY}" > ~/.ssh/id_rsa
+    - sudo apt-get install git
     - git remote add github git@github.com:${GITHUB_REPOSITORY}
     - git push --all github
-    - git-mirror "${CI_PROJECT_DIR}" 
     - echo "Mirrored to Github"
