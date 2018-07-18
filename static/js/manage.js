@@ -110,15 +110,30 @@ $(document).ready(function(){
                     uploadAsImage(file_data, true);
                     break;
                 default:
-                    uploadAsFile(file_data);
+                    uploadAsFile(file.name, file_data);
             }
         };
         // Base64 the data
         reader.readAsDataURL(file);
     }
 
-    function uploadAsFile(file_data) {
-        
+    function uploadAsFile(file_name, file_data) {
+        $.ajax('/file/new', {
+            contentType: 'application/octet-stream',
+            beforeSend: function(xhr){
+                xhr.setRequestHeader("content-disposition", file_name);
+            },
+            method: 'POST',
+            data: file_data,
+            success: function(e) {
+                hideLoader();
+                notifySuccess('File upload successful');
+            }, 
+            failure: function(e) {
+                hideLoader();
+                notifyFailure('Something went wrong!');
+            }
+        });
     }
 
     function uploadAsImage(file_data, isVideo) {
@@ -138,7 +153,7 @@ $(document).ready(function(){
             data: file_data,
             success: function(e) {
                 hideLoader();
-                notifySuccess('Upload successful!');
+                notifySuccess('Upload successful');
             },
             failure: function(e) {
                 hideLoader();
