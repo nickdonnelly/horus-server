@@ -69,16 +69,16 @@ $(document).ready(function(){
         e.preventDefault();
         e.dataTransfer = e.originalEvent.dataTransfer;
         if(e.dataTransfer.items) {
+            showLoader();
             for(let i = 0; i < e.dataTransfer.items.length; i++){
                 if(e.dataTransfer.items[i].kind == 'file') {
                     let file = e.dataTransfer.items[i].getAsFile();
-                    console.log(file.name);
-                } else {
-                    console.log(e.dataTransfer.items[i].getAsFile().name, " is not a file");
+                    handleFileUpload(e.dataTransfer.items[i].getAsFile());
                 }
             }
         }
         upload_dialog.removeClass('active-drop');
+        e.dataTransfer.items.clear();
     });
 
     $('html').on('dragover', function(e) { 
@@ -90,6 +90,90 @@ $(document).ready(function(){
         upload_dialog.removeClass("active-drop");
     });
 
+    function showLoader(){
+        $('.loader').css('display', 'inline-block');
+    }
+
+    function hideLoader(){
+        $('.loader').css('display', 'none');
+    }
+
+    function handleFileUpload(file) {
+        let reader = new FileReader();
+        reader.onload = function(e){
+            let file_data = e.target.result;
+            switch(file.type) {
+                case "image/png":
+                    uploadAsImage(file_data, false);
+                    break;
+                case "video/webm":
+                    uploadAsImage(file_data, true);
+                    break;
+                default:
+                    uploadAsFile(file_data);
+            }
+        };
+        // Base64 the data
+        reader.readAsDataURL(file);
+    }
+
+    function uploadAsFile(file_data) {
+        
+    }
+
+    function uploadAsImage(file_data, isVideo) {
+        let uri = '';
+        let ctt = '';
+        if(isVideo) {
+            uri = '/video/new';
+            ctt = 'video/webm';
+        } else {
+            uri = '/image/new';
+            ctt = 'image/png';
+        }
+
+        $.ajax(uri, {
+            contentType: ctt,
+            method: 'POST',
+            data: file_data,
+            success: function(e) {
+                hideLoader();
+                notifySuccess('Upload successful!');
+            },
+            failure: function(e) {
+                hideLoader();
+                notifyFail('Something went wrong!');
+            }
+        });
+    }
+
+    let notify_box = $('#notify-box');
+
+    function notifySuccess(text) {
+        notify_box.removeClass('failure');
+        notify_box.addClass('success');
+        notify_box.text(text);
+        showNotify();
+    }
+
+    function notifyFailure(text) {
+        notify_box.removeClass('success');
+        notify_box.addClass('failure');
+        notify_box.css(text);
+        showNotify();
+    }
+
+    function showNotify() {
+        notify_box.css('transform', 'translateY(64px)');
+        notify_box.css('opacity', 1);
+
+        setTimeout(function(){
+            console.log('retracting');
+            notify_box.css('transform', 'none');
+            notify_box.css('opacity', 0);
+        }, 3000);
+    }
+    
 });
 
 (function($){

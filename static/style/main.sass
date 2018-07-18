@@ -3,6 +3,7 @@ $green: #418548
 $yellow: #C7BC39
 $lime: #CAF731
 $olive: #7ECD66
+$red: #ff0000
 
 $nav-background: $green
 $nav-text: $yellow
@@ -20,6 +21,8 @@ ul
 
 ul.nav-ul
   font-size: 0
+  position: relative
+  z-index: 5
 
 table, th, td 
   border-collapse: collapse
@@ -59,6 +62,26 @@ table, th, td
   &:hover
     transition: all 0.2s ease-in-out
     background: darken($nav-background, 20%)
+
+#notify-box
+  position: absolute
+  top: 0
+  left: 0
+  z-index: 0
+  text-align: center
+  line-height: 3em
+  height: 3em
+  width: 100%
+  opacity: 0
+  transition: 0.2s all ease-in-out
+
+.success
+  background: $blue
+  color: yellow
+
+.failure
+  background: $red
+  color: darken(white, 10%)
 
 .image-box
   margin-top: 1em
@@ -331,9 +354,7 @@ input[type="password"], input[type="text"]
   margin-right: 20px
   width: 64px
   height: 64px
-  border: none
-  background: none
-  color: none
+  display: none
 
 .loader:after 
   position: absolute
