@@ -62,6 +62,34 @@ $(document).ready(function(){
         toClose.style.opacity = 0;
         setTimeout(() => { toClose.style.display = "none"; }, 200);
     });
+
+    let upload_dialog = $('#upload-dialog');
+
+    upload_dialog.on('drop', function(e){
+        e.preventDefault();
+        e.dataTransfer = e.originalEvent.dataTransfer;
+        if(e.dataTransfer.items) {
+            for(let i = 0; i < e.dataTransfer.items.length; i++){
+                if(e.dataTransfer.items[i].kind == 'file') {
+                    let file = e.dataTransfer.items[i].getAsFile();
+                    console.log(file.name);
+                } else {
+                    console.log(e.dataTransfer.items[i].getAsFile().name, " is not a file");
+                }
+            }
+        }
+        upload_dialog.removeClass('active-drop');
+    });
+
+    $('html').on('dragover', function(e) { 
+        e.preventDefault(); 
+        upload_dialog.addClass("active-drop");
+    });
+
+    $('html').on('dragexit', function(e) {
+        upload_dialog.removeClass("active-drop");
+    });
+
 });
 
 (function($){
