@@ -196,11 +196,30 @@ fn new_img(
     }
 
     let result = result.unwrap();
+    create_thumbnail_job(&image.id, &raw_img_data, image.owner);
 
     Ok(status::Created(
         String::from("/image/") + result.id.as_str(),
         None,
     ))
+}
+
+fn create_thumbnail_job(image_id: &str, image_data: &Vec<u8>, owner: i32)
+{
+    use models::NewJob, JobPriority;
+    // TODO
+
+    let new_job = NewJob::new(owner,
+                              "thumbnail:image",
+                              Some(image_data),
+                              JobPriority::Normal);
+    let queue_result = job_juggler::enqueue_job(new_job);
+
+    if queue_result.is_err() {
+        eprintln!("Could not enqueue thumbnail job: {}", queue_result.err().unwrap());
+    }
+
+    queue_result.unwrap();
 }
 
 #[post("/new", format = "image/png", data = "<img_data>")]

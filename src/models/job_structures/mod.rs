@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 mod deployment;
 
 pub use self::deployment::Deployment;
+pub use self::thumbnail::CreateImageThumbnail;
 
 /// Turn a struct into a serialized vector of bytes to be passed
 /// as job_data to the database.
@@ -27,7 +28,4 @@ pub fn debinarize<'a, T: Deserialize<'a>>(to_debinarize: &'a [u8]) -> Option<T>
     } else {
         Some(deserialized.unwrap())
     }
-    //let r = deserialized.ok().unwrap();
-    //println!("Unwrapped.");
-    //r
 }
