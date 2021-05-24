@@ -1,8 +1,7 @@
 use diesel::{self, prelude::*};
-use rocket::response::Failure;
 use rocket::response::status;
 use rocket::http::Status;
-use rocket_contrib::Json;
+use rocket_contrib::json::Json;
 
 use DbConn;
 use models::{LicenseKey, PublicUser, User};
@@ -42,10 +41,10 @@ pub fn update(
     auth: Authentication,
     updated_values: Json<UserForm>,
     conn: DbConn,
-) -> Result<status::Accepted<()>, Failure>
+) -> Result<status::Accepted<()>, status::Custom<()>>
 {
     if auth.get_userid() != uid {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let user = updated_values.into_inner();
@@ -55,7 +54,7 @@ pub fn update(
         .execute(&*conn);
 
     if result.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
 
     Ok(status::Accepted(None))
@@ -63,10 +62,10 @@ pub fn update(
 
 // NOTE: Keep this is apikey: have the user enter it in a modal to delete their account.
 #[delete("/<uid>")]
-pub fn delete(uid: i32, apikey: LicenseKey, conn: DbConn) -> Result<status::Custom<()>, Failure>
+pub fn delete(uid: i32, apikey: LicenseKey, conn: DbConn) -> Result<status::Custom<()>, status::Custom<()>>
 {
     if !apikey.belongs_to(uid) {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let result = diesel::delete(horus_users.filter(id.eq(uid))).execute(&*conn);
@@ -76,7 +75,7 @@ pub fn delete(uid: i32, apikey: LicenseKey, conn: DbConn) -> Result<status::Cust
             "Database error while deleting user: {}",
             result.err().unwrap()
         );
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     Ok(status::Custom(Status::Ok, ()))

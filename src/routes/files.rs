@@ -6,10 +6,11 @@ use chrono::{Local, NaiveDateTime};
 #[allow(unused_imports)]
 use diesel::prelude::*;
 use rocket::request::Request;
-use rocket::response::{status, Failure, NamedFile, Responder, Response};
+use rocket::response::{status, NamedFile, Responder, Response};
 use rocket::http::{ContentType, Status};
 use rocket::data::Data;
-use rocket_contrib::{Json, Template};
+use rocket_contrib::json::Json;
+use rocket_contrib::templates::Template;
 
 use models::HFile;
 use fields::{Authentication, PrivilegeLevel};
@@ -47,12 +48,12 @@ pub fn list(
     page: u32,
     auth: Authentication,
     conn: DbConn,
-) -> Result<Json<Vec<HFile>>, Failure>
+) -> Result<Json<Vec<HFile>>, status::Custom<()>>
 {
     use schema::horus_files::dsl::*;
 
     if auth.get_userid() != uid && auth.get_privilege_level() == PrivilegeLevel::User {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let files = horus_files
@@ -64,7 +65,7 @@ pub fn list(
 
     if files.is_err() {
         println!("File selection failed with error: {}", files.err().unwrap());
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     Ok(Json(files.unwrap()))
@@ -76,7 +77,7 @@ pub fn new(
     file_name: FileName,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     new_file(file_data, file_name, None, auth, conn)
 }
@@ -89,12 +90,12 @@ pub fn new_exp(
     expd: Option<usize>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
-            return Err(Failure(Status::BadRequest));
+            return Err(status::Custom(Status::BadRequest, ()));
         }
         new_file(file_data, file_name, Some(exp.unwrap()), auth, conn)
     } else {
@@ -107,7 +108,7 @@ pub fn new_file(
     expire_time: Option<NaiveDateTime>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     use schema::horus_files;
     let fid: String = dbtools::get_random_char_id(8);
@@ -131,7 +132,7 @@ pub fn new_file(
     let s3result = dbtools::s3::resource_to_s3_named(&hfile.filename, &pathstr, &file_data);
 
     if s3result.is_err() {
-        return Err(Failure(Status::ServiceUnavailable));
+        return Err(status::Custom(Status::ServiceUnavailable, ()));
     }
 
     let result = diesel::insert_into(horus_files::table)
@@ -139,7 +140,7 @@ pub fn new_file(
         .get_result::<HFile>(&*conn);
 
     if result.is_err() {
-        return Err(Failure(Status::BadRequest));
+        return Err(status::Custom(Status::BadRequest, ()));
     }
     let result = result.unwrap();
     Ok(status::Created(
@@ -153,28 +154,28 @@ pub fn delete(
     file_id: String,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure>
+) -> Result<status::Custom<()>, status::Custom<()>>
 {
     use schema::horus_files::dsl::*;
     let hfile = horus_files.find(&file_id).get_result::<HFile>(&*conn);
     if hfile.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
     let hfile = hfile.unwrap();
 
     if auth.get_userid() != hfile.owner {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     delete_internal(hfile, conn)
 }
 
-fn delete_internal(hfile: HFile, conn: DbConn) -> Result<status::Custom<()>, Failure>
+fn delete_internal(hfile: HFile, conn: DbConn) -> Result<status::Custom<()>, status::Custom<()>>
 {
     let s3result = dbtools::s3::delete_s3_object(&hfile.filepath);
 
     if s3result.is_err() {
-        return Err(Failure(Status::ServiceUnavailable));
+        return Err(status::Custom(Status::ServiceUnavailable, ()));
     }
 
     let result = diesel::delete(&hfile).execute(&*conn);
@@ -183,7 +184,7 @@ fn delete_internal(hfile: HFile, conn: DbConn) -> Result<status::Custom<()>, Fai
             "Database error while deleting image: {}",
             result.err().unwrap()
         );
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     Ok(status::Custom(Status::Ok, ()))

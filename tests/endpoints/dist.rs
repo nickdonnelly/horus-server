@@ -130,7 +130,7 @@ fn unsetup_db()
 
 fn get_client() -> Client
 {
-    use rocket_contrib::Template;
+    use rocket_contrib::templates::Template;
     let rocket = rocket::ignite()
         .attach(Template::fairing())
         .mount(

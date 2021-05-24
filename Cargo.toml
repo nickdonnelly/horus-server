@@ -28,7 +28,7 @@ from_int = "0.1.2"
 from_int_derive = "0.1.2"
 
 [dependencies.rocket_contrib]
-version = "*"
+version = "0.4.10"
 default-features = false
 features = ["handlebars_templates", "json"]
 

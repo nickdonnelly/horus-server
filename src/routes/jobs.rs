@@ -1,7 +1,7 @@
 use diesel::prelude::*;
-use rocket::response::Failure;
+use rocket::response::status;
 use rocket::http::Status;
-use rocket_contrib::Json;
+use rocket_contrib::json::Json;
 
 use models::{HJob, JobStatus, User};
 use fields::{Authentication, PrivilegeLevel};
@@ -24,16 +24,16 @@ pub fn list_active_jobs(
     uid: i32,
     auth: Authentication,
     conn: DbConn,
-) -> Result<Json<Vec<ListJob>>, Failure>
+) -> Result<Json<Vec<ListJob>>, status::Custom<()>>
 {
     if auth.get_userid() != uid && auth.get_privilege_level() == PrivilegeLevel::User {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let user = horus_users.find(&uid).get_result::<User>(&*conn);
 
     if let Err(_) = user {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
 
     let user = user.unwrap();
@@ -63,7 +63,7 @@ pub fn list_active_jobs(
 
             Ok(Json(values))
         }
-        Err(_) => Err(Failure(Status::InternalServerError)),
+        Err(_) => Err(status::Custom(Status::InternalServerError, ())),
     }
 }
 
@@ -73,15 +73,15 @@ pub fn list_all_jobs(
     page: u32,
     auth: Authentication,
     conn: DbConn,
-) -> Result<Json<Vec<ListJob>>, Failure>
+) -> Result<Json<Vec<ListJob>>, status::Custom<()>>
 {
     if auth.get_userid() != uid && auth.get_privilege_level() == PrivilegeLevel::User {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let user = horus_users.find(&uid).get_result::<User>(&*conn);
     if user.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
     let user = user.unwrap();
 
@@ -110,7 +110,7 @@ pub fn list_all_jobs(
 
             Ok(Json(values))
         }
-        Err(_) => Err(Failure(Status::InternalServerError)),
+        Err(_) => Err(status::Custom(Status::InternalServerError, ())),
     }
 }
 
@@ -119,11 +119,11 @@ pub fn retrieve_job_status(
     job_id: i32,
     auth: Authentication,
     conn: DbConn,
-) -> Result<Json<i32>, Failure>
+) -> Result<Json<i32>, status::Custom<()>>
 {
     let status = poll_job(job_id, auth.get_userid(), conn);
     match status {
-        None => Err(Failure(Status::NotFound)),
+        None => Err(status::Custom(Status::NotFound, ())),
         Some(v) => Ok(Json(v)),
     }
 }

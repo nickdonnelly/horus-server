@@ -3,7 +3,7 @@ use std::boxed::Box;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use rocket::request::{self, FromRequest, Request};
-use rocket::response::{Failure, status};
+use rocket::response::{ Responder, status };
 use rocket::http::Status;
 use rocket::Outcome;
 
@@ -26,13 +26,13 @@ pub fn check(
     res_id: String,
     submitted_password: String,
     conn: DbConn) 
-    -> Result<status::Custom<String>, Failure>
+    -> Result<status::Custom<String>, status::Custom<()>>
 {
     let resource = get_passwordable_resource_by_id(res_id, res_type, &*conn);
 
     let resource = match resource {
         Some(r) => r,
-        _       => return Err(Failure(Status::NotFound))
+        _       => return Err(status::Custom(Status::NotFound, ()))
     };
 
     if resource.check_password(submitted_password, &*conn) {
@@ -40,10 +40,10 @@ pub fn check(
 
         match signed_location {
             Ok(link) => Ok(status::Custom(Status::Ok, link)),
-            Err(_) => Err(Failure(Status::InternalServerError))
+            Err(_) => Err(status::Custom(Status::InternalServerError, ()))
         }
     } else {
-        Err(Failure(Status::Unauthorized))
+        Err(status::Custom(Status::Unauthorized, ()))
     }
 }
 
@@ -54,16 +54,16 @@ pub fn set(
     submitted_password: String,
     auth: Authentication,
     conn: DbConn)
-    -> Result<status::Accepted<()>, Failure>
+    -> Result<status::Accepted<()>, status::Custom<()>>
 {
     let resource = get_passwordable_resource_by_id(res_id.clone(), res_type, &*conn);
     let mut resource = match resource {
         Some(r) => r,
-        None => return Err(Failure(Status::NotFound))
+        None => return Err(status::Custom(Status::NotFound, ()))
     };
-    
+
     if resource.owner() != auth.get_userid() {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let submitted_password: Option<String> = match submitted_password.as_str() {
@@ -75,7 +75,7 @@ pub fn set(
 
     if set_result.is_some() {
         eprintln!("Error changing password for {}: {}", res_id, set_result.unwrap());
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     let s3_result = if submitted_password == None {
@@ -87,12 +87,12 @@ pub fn set(
 
     match s3_result {
         Ok(()) => Ok(status::Accepted(None)),
-        Err(_) => Err(Failure(Status::InternalServerError))
+        Err(_) => Err(status::Custom(Status::InternalServerError, ()))
     }
 }
 
 fn get_passwordable_resource_by_id(
-    res_id: String, 
+    res_id: String,
     res_type: PasswordableResource,
     conn: &PgConnection)
     -> Option<Box<dyn Passwordable>>

@@ -3,7 +3,7 @@ extern crate time;
 use diesel::{self, prelude::*};
 use rocket::response::{status, Failure, Redirect};
 use rocket::http::{Cookie, Cookies, Status};
-use rocket_contrib::Template;
+use rocket_contrib::templates::Template;
 
 use DbConn;
 use models::{AuthToken, HFile, HImage, HPaste, HVideo, LicenseKey, SessionToken, User};

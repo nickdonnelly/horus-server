@@ -17,7 +17,7 @@ pub mod meta
 {
     use std::collections::HashMap;
 
-    use rocket_contrib::Template;
+    use rocket_contrib::templates::Template;
 
     #[get("/changelogs")]
     pub fn changelogs() -> Option<Template>

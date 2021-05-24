@@ -6,10 +6,11 @@ use std::io::Read;
 use chrono::{Local, NaiveDateTime};
 #[allow(unused_imports)]
 use diesel::{self, prelude::*};
-use rocket::response::{status, Failure, NamedFile};
+use rocket::response::{status, NamedFile};
 use rocket::data::Data;
 use rocket::http::Status;
-use rocket_contrib::{Json, Template};
+use rocket_contrib::json::Json;
+use rocket_contrib::templates::Template;
 
 use DbConn;
 use dbtools;
@@ -80,12 +81,12 @@ pub fn list(
     page: u32,
     auth: Authentication,
     conn: DbConn,
-) -> Result<Json<Vec<HImage>>, Failure>
+) -> Result<Json<Vec<HImage>>, status::Custom<()>>
 {
     use schema::horus_images::dsl::*;
 
     if auth.get_userid() != uid && auth.get_privilege_level() == PrivilegeLevel::User {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let images = horus_images
@@ -96,7 +97,7 @@ pub fn list(
         .get_results::<HImage>(&*conn);
 
     if images.is_err() {
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     Ok(Json(images.unwrap()))
@@ -107,31 +108,31 @@ pub fn delete(
     image_id: String,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure>
+) -> Result<status::Custom<()>, status::Custom<()>>
 {
     use schema::horus_images::dsl::*;
 
     let image = horus_images.find(&image_id).get_result::<HImage>(&*conn);
 
     if image.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
 
     let image = image.unwrap();
 
     if auth.get_userid() != image.owner {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     delete_internal(image, conn)
 }
 
-fn delete_internal(image: HImage, conn: DbConn) -> Result<status::Custom<()>, Failure>
+fn delete_internal(image: HImage, conn: DbConn) -> Result<status::Custom<()>, status::Custom<()>>
 {
     let s3result = dbtools::s3::delete_s3_object(&image.filepath);
 
     if s3result.is_err() {
-        return Err(Failure(Status::ServiceUnavailable));
+        return Err(status::Custom(Status::ServiceUnavailable, ()));
     }
 
     let result = diesel::delete(&image).execute(&*conn);
@@ -141,7 +142,7 @@ fn delete_internal(image: HImage, conn: DbConn) -> Result<status::Custom<()>, Fa
             "Database error while deleting image: {}",
             result.err().unwrap()
         );
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     Ok(status::Custom(Status::Ok, ()))
@@ -153,7 +154,7 @@ fn new_img(
     exp: Option<NaiveDateTime>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     use schema::horus_images;
     let iid: String = dbtools::get_random_char_id(8);
@@ -176,7 +177,7 @@ fn new_img(
 
     if raw_img_data.is_err() {
         println!("decode error");
-        return Err(Failure(Status::BadRequest));
+        return Err(status::Custom(Status::BadRequest, ()));
     }
 
     let raw_img_data = raw_img_data.unwrap();
@@ -184,7 +185,7 @@ fn new_img(
     let s3result = dbtools::s3::resource_to_s3(&pathstr, &raw_img_data);
 
     if s3result.is_err() {
-        return Err(Failure(Status::ServiceUnavailable));
+        return Err(status::Custom(Status::ServiceUnavailable, ()));
     }
 
     let result = diesel::insert_into(horus_images::table)
@@ -192,7 +193,7 @@ fn new_img(
         .get_result::<HImage>(&*conn);
 
     if result.is_err() {
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     let result = result.unwrap();
@@ -206,12 +207,12 @@ fn new_img(
 
 fn create_thumbnail_job(image_id: &str, image_data: &Vec<u8>, owner: i32)
 {
-    use models::NewJob, JobPriority;
+    use models::{NewJob, JobPriority};
     // TODO
 
     let new_job = NewJob::new(owner,
-                              "thumbnail:image",
-                              Some(image_data),
+                              "thumbnail:image".to_string(),
+                              Some(image_data.to_vec()),
                               JobPriority::Normal);
     let queue_result = job_juggler::enqueue_job(new_job);
 
@@ -227,7 +228,7 @@ pub fn new(
     img_data: Data,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     new_img(img_data, String::from("Horus Image"), None, auth, conn)
 }
@@ -242,12 +243,12 @@ pub fn new_exp(
     expd: Option<usize>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
-            return Err(Failure(Status::BadRequest));
+            return Err(status::Custom(Status::BadRequest, ()));
         }
         new_img(
             img_data,
@@ -273,12 +274,12 @@ pub fn new_titled(
     expd: Option<usize>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
-            return Err(Failure(Status::BadRequest));
+            return Err(status::Custom(Status::BadRequest, ()));
         }
         new_img(img_data, title, Some(exp.unwrap()), auth, conn)
     } else {
@@ -292,7 +293,7 @@ pub fn update(
     updated_values: Json<HImageChangesetForm>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Accepted<()>, Failure>
+) -> Result<status::Accepted<()>, status::Custom<()>>
 {
     use schema::horus_images::dsl::*;
 
@@ -301,12 +302,12 @@ pub fn update(
         .first::<HImage>(&*conn);
 
     if img.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
     let mut img = img.unwrap();
 
     if auth.get_userid() != img.owner {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let img_update = updated_values.into_inner();
@@ -325,7 +326,7 @@ pub fn update(
 
     match result {
         Ok(_) => Ok(status::Accepted(None)),
-        Err(_) => Err(Failure(Status::InternalServerError)),
+        Err(_) => Err(status::Custom(Status::InternalServerError, ())),
     }
 }
 

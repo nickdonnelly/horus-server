@@ -4,7 +4,7 @@ use rand::{self, Rng};
 
 use rocket::http::Status;
 use rocket::data::Data;
-use rocket::response::{status, Failure, Redirect};
+use rocket::response::{status, Redirect};
 
 use {dbtools, DbConn};
 use schema::{self, deployment_keys::dsl::*};
@@ -48,7 +48,7 @@ pub fn get_version(plat: Option<String>, conn: DbConn) -> Result<String, status:
 }
 
 #[get("/latest/<plat>")]
-pub fn get_latest(plat: String, conn: DbConn, _auth: Authentication) -> Result<Redirect, Failure>
+pub fn get_latest(plat: String, conn: DbConn, _auth: Authentication) -> Result<Redirect, status::Custom<()>>
 {
     use schema::horus_versions::dsl::*;
 
@@ -58,14 +58,14 @@ pub fn get_latest(plat: String, conn: DbConn, _auth: Authentication) -> Result<R
         .first::<HorusVersion>(&*conn);
 
     if ver.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
 
     let ver = ver.unwrap();
     let url = dbtools::s3::get_s3_presigned_url(ver.aws_path());
 
     if url.is_err() {
-        Err(Failure(Status::ServiceUnavailable))
+        Err(status::Custom(Status::ServiceUnavailable, ()))
     } else {
         let url = url.unwrap();
         Ok(Redirect::to(&url))
@@ -78,7 +78,7 @@ pub fn enable_deployment(
     platform: String,
     conn: DbConn,
     depkey: DeploymentKey,
-) -> Result<status::Custom<()>, Failure>
+) -> Result<status::Custom<()>, status::Custom<()>>
 {
     use schema::horus_versions;
     // Verify key is the one used to deploy originally.
@@ -87,13 +87,13 @@ pub fn enable_deployment(
         .first(&*conn);
 
     if dbobj.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
 
     let mut version: HorusVersion = dbobj.unwrap();
 
     if version.deployment_key_hash() != depkey.hash() {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     // we are authed, make the change
@@ -104,7 +104,7 @@ pub fn enable_deployment(
         .execute(&*conn);
 
     if db_result.is_err() {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     } else {
         db_result.unwrap();
     }
@@ -120,14 +120,14 @@ pub fn deploy(
     version: String,
     update_package: Data,
     depkey: DeploymentKey, // encompasses license key
-) -> Result<status::Custom<String>, Failure>
+) -> Result<status::Custom<String>, status::Custom<()>>
 {
     use std::io::Read;
 
     // not more than xxx.xxx.xxx not less than x.x.x
     // TODO: Regex this.
     if version.len() > 11 || version.len() < 5 {
-        return Err(Failure(Status::BadRequest));
+        return Err(status::Custom(Status::BadRequest, ()));
     }
 
     let file_data: Vec<u8> = update_package.open().bytes().map(|x| x.unwrap()).collect();
@@ -146,7 +146,7 @@ pub fn deploy(
     let queue_result = job_juggler::enqueue_job(new_job);
 
     if queue_result.is_err() {
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     queue_result.unwrap();

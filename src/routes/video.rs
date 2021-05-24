@@ -5,10 +5,11 @@ use std::path::Path;
 
 use chrono::{Local, NaiveDateTime};
 use diesel::{self, prelude::*};
-use rocket::response::{status, Failure, NamedFile};
+use rocket::response::{status, NamedFile};
 use rocket::data::Data;
 use rocket::http::Status;
-use rocket_contrib::{Json, Template};
+use rocket_contrib::templates::Template;
+use rocket_contrib::json::Json;
 
 use DbConn;
 use dbtools;
@@ -23,7 +24,7 @@ fn new_vid(
     exp: Option<NaiveDateTime>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     use schema::horus_videos;
     let iid = dbtools::get_random_char_id(8);
@@ -43,7 +44,7 @@ fn new_vid(
     let vid_data: Vec<u8> = vid_data.open().bytes().map(|x| x.unwrap()).collect();
 
     if vid_data.len() < 23 {
-        return Err(Failure(Status::BadRequest));
+        return Err(status::Custom(Status::BadRequest, ()));
     }
 
     // 1 more character due too "webm" vs "png"
@@ -54,7 +55,7 @@ fn new_vid(
             "Couldn't decode webm data: {}",
             vid_data_decoded.err().unwrap()
         );
-        return Err(Failure(Status::BadRequest));
+        return Err(status::Custom(Status::BadRequest, ()));
     }
 
     let vid_data_decoded = vid_data_decoded.unwrap();
@@ -62,7 +63,7 @@ fn new_vid(
     let s3result = dbtools::s3::resource_to_s3(&pathstr, &vid_data_decoded);
 
     if s3result.is_err() {
-        return Err(Failure(Status::ServiceUnavailable));
+        return Err(status::Custom(Status::ServiceUnavailable, ()));
     }
 
     let result = diesel::insert_into(horus_videos::table)
@@ -70,7 +71,7 @@ fn new_vid(
         .get_result::<HVideo>(&*conn);
 
     if result.is_err() {
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     let result = result.unwrap();
@@ -86,7 +87,7 @@ pub fn new(
     vid_data: Data,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     new_vid(vid_data, String::from("Horus Video"), None, auth, conn)
 }
@@ -101,12 +102,12 @@ pub fn new_exp(
     expd: Option<usize>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
-            return Err(Failure(Status::BadRequest));
+            return Err(status::Custom(Status::BadRequest, ()));
         }
         new_vid(
             vid_data,
@@ -134,12 +135,12 @@ pub fn new_titled(
     expd: Option<usize>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     if expt.is_some() && expd.is_some() {
         let exp = conv::get_dt_from_duration(expt.unwrap(), expd.unwrap() as isize);
         if exp.is_err() {
-            return Err(Failure(Status::BadRequest));
+            return Err(status::Custom(Status::BadRequest, ()));
         }
         new_vid(vid_data, title, Some(exp.unwrap()), auth, conn)
     } else {
@@ -153,7 +154,7 @@ pub fn list(
     page: u32,
     auth: Authentication,
     conn: DbConn,
-) -> Result<Json<Vec<HVideo>>, Failure>
+) -> Result<Json<Vec<HVideo>>, status::Custom<()>>
 {
     use schema::horus_videos::dsl::*;
 
@@ -162,7 +163,7 @@ pub fn list(
             "Unauthorized video list attempt by auth with userid: {}",
             auth.get_userid()
         );
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let videos = horus_videos
@@ -174,7 +175,7 @@ pub fn list(
 
     if videos.is_err() {
         println!(": {}", videos.err().unwrap());
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     Ok(Json(videos.unwrap()))
@@ -185,30 +186,30 @@ pub fn delete(
     vid_id: String,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure>
+) -> Result<status::Custom<()>, status::Custom<()>>
 {
     use schema::horus_videos::dsl::*;
     let video = horus_videos.find(&vid_id).get_result::<HVideo>(&*conn);
 
     if video.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
 
     let video = video.unwrap();
 
     if auth.get_userid() != video.owner {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     delete_internal(video, conn)
 }
 
-fn delete_internal(video: HVideo, conn: DbConn) -> Result<status::Custom<()>, Failure>
+fn delete_internal(video: HVideo, conn: DbConn) -> Result<status::Custom<()>, status::Custom<()>>
 {
     let s3result = dbtools::s3::delete_s3_object(&video.filepath);
 
     if s3result.is_err() {
-        return Err(Failure(Status::ServiceUnavailable));
+        return Err(status::Custom(Status::ServiceUnavailable, ()));
     }
 
     let result = diesel::delete(&video).execute(&*conn);
@@ -218,7 +219,7 @@ fn delete_internal(video: HVideo, conn: DbConn) -> Result<status::Custom<()>, Fa
             "Database error while deleting video: {}",
             result.err().unwrap()
         );
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     Ok(status::Custom(Status::Ok, ()))
@@ -230,20 +231,20 @@ pub fn update(
     updated_values: Json<HVideoChangesetForm>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Accepted<()>, Failure>
+) -> Result<status::Accepted<()>, status::Custom<()>>
 {
     use schema::horus_videos::dsl::*;
 
     let vid = horus_videos.filter(id.eq(&vid_id)).first::<HVideo>(&*conn);
 
     if vid.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
 
     let mut vid = vid.unwrap();
 
     if auth.get_userid() != vid.owner {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let vid_update = updated_values.into_inner();
@@ -261,7 +262,7 @@ pub fn update(
     let result = vid.save_changes::<HVideo>(&*conn);
     match result {
         Ok(_) => Ok(status::Accepted(None)),
-        Err(_) => Err(Failure(Status::InternalServerError)),
+        Err(_) => Err(status::Custom(Status::InternalServerError, ())),
     }
 }
 

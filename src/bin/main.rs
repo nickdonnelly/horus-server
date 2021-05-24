@@ -6,7 +6,7 @@ extern crate rocket;
 extern crate rocket_contrib;
 
 use horus_server::*;
-use rocket_contrib::Template;
+use rocket_contrib::templates::Template;
 use rocket::response::NamedFile;
 use std::path::Path;
 

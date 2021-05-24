@@ -15,7 +15,6 @@ pub struct CreateImageThumbnail {
 
 impl ExecutableJob for CreateImageThumbnail {
     fn execute(self, conn: &PgConnection) -> (Box<Self>, JobResult) {
-        
         // We only need imagemagick for one command, so we run it directly.
     }
 }

@@ -2,8 +2,8 @@
 use diesel::{self, prelude::*};
 use chrono::{Date, Duration, Local};
 use rand::{self, Rng};
-use rocket::{http::Status, response::{status, Failure}};
-use rocket_contrib::Json;
+use rocket::{http::Status, response::status};
+use rocket_contrib::json::Json;
 
 use DbConn;
 use schema;
@@ -17,10 +17,10 @@ use schema::horus_licenses::dsl::*;
 pub fn issue(
     uid: i32,
     auth: Authentication,
-) -> Result<status::Created<Json<(License, LicenseKey)>>, Failure>
+) -> Result<status::Created<Json<(License, LicenseKey)>>, status::Custom<()>>
 {
     if auth.get_privilege_level() == PrivilegeLevel::User {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     Ok(status::Created(

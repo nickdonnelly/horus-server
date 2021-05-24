@@ -1,8 +1,8 @@
 use diesel::{self, prelude::*};
-use rocket::response::{status, Failure};
+use rocket::response::status;
 use rocket::http::Status;
-use rocket_contrib::Json;
-use rocket_contrib::Template;
+use rocket_contrib::json::Json;
+use rocket_contrib::templates::Template;
 
 use DbConn;
 use {contexts, conv};
@@ -40,10 +40,10 @@ pub fn list(
     page: u32,
     auth: Authentication,
     conn: DbConn,
-) -> Result<Json<Vec<HPaste>>, Failure>
+) -> Result<Json<Vec<HPaste>>, status::Custom<()>>
 {
     if auth.get_userid() != uid {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let pastes = horus_pastes
@@ -58,7 +58,7 @@ pub fn list(
             "Paste selection failed with error: {}",
             pastes.err().unwrap()
         );
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     Ok(Json(pastes.unwrap()))
@@ -70,7 +70,7 @@ pub fn new(
     paste: Json<HNewPasteForm>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Created<()>, Failure>
+) -> Result<status::Created<()>, status::Custom<()>>
 {
     use schema::horus_pastes;
 
@@ -83,7 +83,7 @@ pub fn new(
         .get_result::<HPaste>(&*conn);
 
     if result.is_err() {
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     let result = result.unwrap();
@@ -94,7 +94,7 @@ pub fn new(
     ))
 }
 
-fn delete_internal(paste: HPaste, conn: DbConn) -> Result<status::Custom<()>, Failure>
+fn delete_internal(paste: HPaste, conn: DbConn) -> Result<status::Custom<()>, status::Custom<()>>
 {
     let result = diesel::delete(&paste).execute(&*conn);
 
@@ -103,7 +103,7 @@ fn delete_internal(paste: HPaste, conn: DbConn) -> Result<status::Custom<()>, Fa
             "Databse error while deleting paste: {}",
             result.err().unwrap()
         );
-        return Err(Failure(Status::InternalServerError));
+        return Err(status::Custom(Status::InternalServerError, ()));
     }
 
     Ok(status::Custom(Status::Ok, ()))
@@ -114,18 +114,18 @@ pub fn delete(
     paste_id: String,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Custom<()>, Failure>
+) -> Result<status::Custom<()>, status::Custom<()>>
 {
     let paste = horus_pastes.find(paste_id).get_result::<HPaste>(&*conn);
 
     if paste.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
 
     let paste = paste.unwrap();
 
     if auth.get_userid() != paste.owner {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     delete_internal(paste, conn)
@@ -137,19 +137,19 @@ pub fn update(
     updated_values: Json<HPasteChangesetForm>,
     auth: Authentication,
     conn: DbConn,
-) -> Result<status::Accepted<()>, Failure>
+) -> Result<status::Accepted<()>, status::Custom<()>>
 {
     let paste = horus_pastes
         .filter(id.eq(&paste_id))
         .first::<HPaste>(&*conn);
 
     if paste.is_err() {
-        return Err(Failure(Status::NotFound));
+        return Err(status::Custom(Status::NotFound, ()));
     }
     let mut paste = paste.unwrap();
 
     if auth.get_userid() != paste.owner {
-        return Err(Failure(Status::Unauthorized));
+        return Err(status::Custom(Status::Unauthorized, ()));
     }
 
     let paste_update = updated_values.into_inner();
@@ -167,6 +167,6 @@ pub fn update(
     let result = paste.save_changes::<HPaste>(&*conn);
     match result {
         Ok(_) => Ok(status::Accepted(None)),
-        Err(_) => Err(Failure(Status::InternalServerError)),
+        Err(_) => Err(status::Custom(Status::InternalServerError, ())),
     }
 }
