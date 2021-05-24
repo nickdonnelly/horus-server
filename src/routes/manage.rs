@@ -1,7 +1,7 @@
 extern crate time;
 
 use diesel::{self, prelude::*};
-use rocket::response::{status, Failure, Redirect};
+use rocket::response::{status, Redirect};
 use rocket::http::{Cookie, Cookies, Status};
 use rocket_contrib::templates::Template;
 
@@ -27,7 +27,7 @@ pub struct AuthRequest
 /// Overwrites any current auth tokens for the user making the request.
 #[get("/request_auth_url")]
 pub fn request_auth_url(apikey: LicenseKey, conn: DbConn)
-    -> Result<status::Custom<String>, Failure>
+    -> Result<status::Custom<String>, status::Custom<()>>
 {
     use schema::auth_tokens::dsl::*;
     use fields::PrivilegeLevel;
@@ -49,7 +49,7 @@ pub fn request_auth_url(apikey: LicenseKey, conn: DbConn)
             .get_result::<AuthToken>(&*conn);
 
         if insert_result.is_err() {
-            return Err(Failure(Status::InternalServerError));
+            return Err(status::Custom(Status::InternalServerError, ()));
         }
 
         let insert_result = insert_result.unwrap();
@@ -61,7 +61,7 @@ pub fn request_auth_url(apikey: LicenseKey, conn: DbConn)
         let update_result = usertoken.save_changes::<AuthToken>(&*conn);
 
         if update_result.is_err() {
-            return Err(Failure(Status::InternalServerError));
+            return Err(status::Custom(Status::InternalServerError, ()));
         }
         let update_result = update_result.unwrap();
 
@@ -77,20 +77,20 @@ pub fn request_auth_cookie(
     mut cookies: Cookies,
     auth_req: AuthRequest,
     conn: DbConn,
-) -> Result<Redirect, Failure>
+) -> Result<Redirect, status::Custom<()>>
 {
     let redirect_url = auth_req.redirect_path.clone();
 
     let token_result = auth_req.into_token();
     if token_result.is_err() {
         return match token_result {
-            Err(AuthTokenError::ConsumeFailure) => Err(Failure(Status::InternalServerError)),
-            Err(AuthTokenError::Invalid) => Err(Failure(Status::InternalServerError)),
-            Err(AuthTokenError::Expired) => Err(Failure(Status::BadRequest)),
-            Err(AuthTokenError::NotFound) => Err(Failure(Status::NotFound)),
+            Err(AuthTokenError::ConsumeFailure) => Err(status::Custom(Status::InternalServerError, ())),
+            Err(AuthTokenError::Invalid) => Err(status::Custom(Status::InternalServerError, ())),
+            Err(AuthTokenError::Expired) => Err(status::Custom(Status::BadRequest, ())),
+            Err(AuthTokenError::NotFound) => Err(status::Custom(Status::NotFound, ())),
 
             // never fires, but has to be here for exhaustiveness..
-            Ok(_) => Err(Failure(Status::InternalServerError)),
+            Ok(_) => Err(status::Custom(Status::InternalServerError, ())),
         };
     }
     let token_result = token_result.unwrap();
@@ -102,7 +102,7 @@ pub fn request_auth_cookie(
             .execute(&*conn);
 
         if insert_new_result.is_err() {
-            return Err(Failure(Status::InternalServerError));
+            return Err(status::Custom(Status::InternalServerError, ()));
         }
     }
 

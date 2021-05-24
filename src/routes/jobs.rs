@@ -53,8 +53,8 @@ pub fn list_active_jobs(
         Ok(values) => {
             let values = values
                 .iter()
-                .map(|&(id, ref name, status, _priority)| ListJob {
-                    id: id,
+                .map(|&(job_id, ref name, status, _priority)| ListJob {
+                    id: job_id,
                     job_name: name.clone(),
                     job_status: status,
                     priority: _priority,
@@ -100,8 +100,8 @@ pub fn list_all_jobs(
         Ok(values) => {
             let values = values
                 .iter()
-                .map(|&(id, ref name, status, _priority)| ListJob {
-                    id: id,
+                .map(|&(job_id, ref name, status, _priority)| ListJob {
+                    id: job_id,
                     job_name: name.clone(),
                     job_status: status,
                     priority: _priority,
