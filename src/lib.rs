@@ -1,6 +1,4 @@
-#![feature(custom_derive, plugin)]
-#![plugin(rocket_codegen)]
-#![plugin(dotenv_macros)]
+#![feature(plugin, decl_macro)]
 #![recursion_limit = "128"] // For diesel schema inference.
 
 #[macro_use]
@@ -16,10 +14,12 @@ extern crate serde_derive;
 #[allow(unused_extern_crates)]
 extern crate serde_json;
 
+#[macro_use] extern crate dotenv_codegen;
+
 extern crate chrono;
 extern crate r2d2;
 extern crate r2d2_diesel;
-extern crate rocket;
+#[macro_use] extern crate rocket;
 #[allow(unused_imports)]
 #[macro_use]
 extern crate rocket_contrib;

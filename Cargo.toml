@@ -5,11 +5,11 @@ authors = ["Nicholas Donnelly <nick@donnelly.cc>"]
 
 [dependencies]
 horus_server_derive = { path = "horus-server-derive" }
-rocket = { version = "0.3.6", features = ["tls"] }
-rocket_codegen = "0.3.6"
-diesel = { version = "1.0.0", features = ["chrono", "postgres"] }
-dotenv = "0.10.*"
-dotenv_macros = "0.10.*"
+rocket = { version = "0.4.10", features = ["tls"] }
+rocket_codegen = "0.4.10"
+diesel = { version = "1.4.4", features = ["chrono", "postgres"] }
+dotenv = "0.15.0"
+dotenv_codegen = "0.15.0"
 r2d2-diesel = "*"
 r2d2 = "*"
 serde = "1.0"
