@@ -218,7 +218,7 @@ fn create_thumbnail_job(image_id: &str, image_data: &Vec<u8>, owner: i32)
     let queue_result = job_juggler::enqueue_job(new_job);
 
     if queue_result.is_err() {
-        eprintln!("Could not enqueue thumbnail job: {}", queue_result.err().unwrap());
+        eprintln!("Could not enqueue thumbnail job: {}", queue_result.as_ref().err().unwrap());
     }
 
     queue_result.unwrap();

@@ -15,7 +15,7 @@ use contexts::ShowAccount;
 use schema;
 use errors::AuthTokenError;
 
-#[derive(FromForm)]
+#[derive(FromForm, Clone)]
 pub struct AuthRequest
 {
     redirect_path: String,
@@ -73,7 +73,7 @@ pub fn request_auth_url(apikey: LicenseKey, conn: DbConn)
 
 /// Stores auth cookie + redirects user to redirect_path
 /// This should be a SESSION token not an AUTH
-#[get("/request_auth?<auth_req>")]
+#[get("/request_auth?<auth_req..>")]
 pub fn request_auth_cookie(
     mut cookies: Cookies,
     auth_req: Form<AuthRequest>,
@@ -82,7 +82,7 @@ pub fn request_auth_cookie(
 {
     let redirect_url = auth_req.redirect_path.clone();
 
-    let token_result = auth_req.into_token();
+    let token_result = auth_req.clone().into_token();
     if token_result.is_err() {
         return match token_result {
             Err(AuthTokenError::ConsumeFailure) => Err(status::Custom(Status::InternalServerError, ())),
@@ -113,7 +113,7 @@ pub fn request_auth_cookie(
 
     cookies.remove_private(Cookie::named("horus_session"));
     cookies.add_private(scookie);
-    Ok(Redirect::to(&redirect_url))
+    Ok(Redirect::to(redirect_url.as_str()))
 }
 
 #[get("/account")]

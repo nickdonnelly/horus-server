@@ -5,6 +5,7 @@ use rand::{self, Rng};
 use rocket::http::Status;
 use rocket::data::Data;
 use rocket::response::{status, Redirect};
+use rocket::http::uri::Uri;
 
 use {dbtools, DbConn};
 use schema::{self, deployment_keys::dsl::*};
@@ -68,7 +69,7 @@ pub fn get_latest(plat: String, conn: DbConn, _auth: Authentication) -> Result<R
         Err(status::Custom(Status::ServiceUnavailable, ()))
     } else {
         let url = url.unwrap();
-        Ok(Redirect::to(&url))
+        Ok(Redirect::to(Uri::try_from(url.as_str())))
     }
 }
 
