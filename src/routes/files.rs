@@ -214,7 +214,7 @@ impl Responder<'static> for DownloadableFile
 // This is not to do with files as user-uploaded bits. This
 // just serves the static assets for the manage page.
 #[get("/<file..>")]
-fn static_asset(file: PathBuf) -> Option<NamedFile>
+pub fn static_asset(file: PathBuf) -> Option<NamedFile>
 {
     NamedFile::open(Path::new("static/").join(file)).ok()
 }

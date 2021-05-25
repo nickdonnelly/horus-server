@@ -69,7 +69,7 @@ pub fn get_latest(plat: String, conn: DbConn, _auth: Authentication) -> Result<R
         Err(status::Custom(Status::ServiceUnavailable, ()))
     } else {
         let url = url.unwrap();
-        Ok(Redirect::to(Uri::try_from(url.as_str())))
+        Ok(Redirect::to(url))
     }
 }
 
