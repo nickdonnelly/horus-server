@@ -2,6 +2,7 @@ extern crate time;
 
 use diesel::{self, prelude::*};
 use rocket::response::{status, Redirect};
+use rocket::request::Form;
 use rocket::http::{Cookie, Cookies, Status};
 use rocket_contrib::templates::Template;
 
@@ -18,7 +19,7 @@ use errors::AuthTokenError;
 pub struct AuthRequest
 {
     redirect_path: String,
-    pub auth_secret: String,
+    pub auth_secret: String
 }
 
 /// Gives dtapp a URL to open in the users browser that will auth
@@ -75,7 +76,7 @@ pub fn request_auth_url(apikey: LicenseKey, conn: DbConn)
 #[get("/request_auth?<auth_req>")]
 pub fn request_auth_cookie(
     mut cookies: Cookies,
-    auth_req: AuthRequest,
+    auth_req: Form<AuthRequest>,
     conn: DbConn,
 ) -> Result<Redirect, status::Custom<()>>
 {

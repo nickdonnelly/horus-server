@@ -20,6 +20,7 @@ fn main()
     println!("Igniting rocket...");
     rocket::ignite()
         .attach(Template::fairing())
+        .register(catchers![routes::http_errors::not_found])
         .mount("/user", routes![user::show, user::update])
         .mount("/key", routes![key::validity_check])
         .mount("/paste", routes![paste::new, paste::update, paste::list, 

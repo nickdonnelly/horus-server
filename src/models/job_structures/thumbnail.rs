@@ -16,12 +16,6 @@ pub struct CreateImageThumbnail {
 impl ExecutableJob for CreateImageThumbnail {
     fn execute(self, conn: &PgConnection) -> (Box<Self>, JobResult) {
         // We only need imagemagick for one command, so we run it directly.
+        (Box::new(self), JobResult::FailedWithReason(String::from("not implemented")))
     }
-}
-
-/// A job that can be executed
-pub trait ExecutableJob
-{
-    /// Execute this job, returning the object itself at the end alongside the result.
-    fn execute(self, conn: &PgConnection) -> (Box<Self>, JobResult);
 }

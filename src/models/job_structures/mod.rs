@@ -2,10 +2,10 @@ use bincode::{self, Config};
 use serde::{Deserialize, Serialize};
 
 mod deployment;
-//mod thumbnail;
+mod thumbnail;
 
 pub use self::deployment::Deployment;
-//pub use self::thumbnail::CreateImageThumbnail;
+pub use self::thumbnail::CreateImageThumbnail;
 
 /// Turn a struct into a serialized vector of bytes to be passed
 /// as job_data to the database.

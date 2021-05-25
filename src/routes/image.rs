@@ -18,6 +18,7 @@ use {contexts, conv};
 use models::HImage;
 use fields::{Authentication, PrivilegeLevel};
 use forms::HImageChangesetForm;
+use job_juggler;
 
 #[get("/<image_id>")]
 pub fn show(image_id: String, conn: DbConn) -> Option<Template>

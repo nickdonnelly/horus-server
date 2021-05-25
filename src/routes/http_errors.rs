@@ -6,12 +6,12 @@ struct Context404 {
     uri: String
 }
 
-#[error(404)]
-fn not_found(req: &Request) -> Template
+#[catch(404)]
+pub fn not_found(req: &Request) -> Template
 {
 
     let context = Context404 {
-        uri: req.uri().as_str().to_string()
+        uri: req.uri().to_string()
     };
 
     Template::render("errors/404", &context)

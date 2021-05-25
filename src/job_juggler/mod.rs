@@ -10,6 +10,7 @@ use diesel::pg::PgConnection;
 use {dbtools, schema};
 use models::{HJob, JobPriority, JobStatus, NewJob};
 use schema::horus_jobs::dsl::*;
+use models::job_structures;
 
 mod job_types;
 pub use self::job_types::{ExecutableJob, LoggableJob};
@@ -174,9 +175,6 @@ impl JobJuggler
 
         let data = job.job_data.unwrap();
         match job.job_name.as_str() {
-            "thumbnail:image" => {
-                debinarize::CreateThumbnail(data.as_slice()).unwrap()
-            }, // TODO: thumbnail video
             "deployment:deploy:win64" | "deployment:deploy:linux" | _ => {
                 debinarize::<Deployment>(data.as_slice()).unwrap()
             },
