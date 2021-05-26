@@ -113,7 +113,7 @@ pub fn request_auth_cookie(
 
     cookies.remove_private(Cookie::named("horus_session"));
     cookies.add_private(scookie);
-    Ok(Redirect::to(redirect_url))
+    Ok(Redirect::to(format!("/manage/{}", &redirect_url)))
 }
 
 #[get("/account")]
